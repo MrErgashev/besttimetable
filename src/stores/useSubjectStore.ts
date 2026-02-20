@@ -40,6 +40,22 @@ export const useSubjectStore = create<SubjectState>()(
         return subject;
       },
 
+      addSubjects: (items) => {
+        const now = new Date().toISOString();
+        const currentCount = get().subjects.length;
+        const newSubjects = items.map((data, i) => ({
+          ...data,
+          color:
+            data.color ||
+            SUBJECT_COLORS[(currentCount + i) % SUBJECT_COLORS.length],
+          id: nanoid(),
+          created_at: now,
+          updated_at: now,
+        }));
+        set((s) => ({ subjects: [...s.subjects, ...newSubjects] }));
+        return newSubjects.length;
+      },
+
       updateSubject: (id, data) =>
         set((s) => ({
           subjects: s.subjects.map((sub) =>
@@ -49,8 +65,26 @@ export const useSubjectStore = create<SubjectState>()(
           ),
         })),
 
+      bulkUpdateSubjects: (ids, data) => {
+        const idSet = new Set(ids);
+        set((s) => ({
+          subjects: s.subjects.map((sub) =>
+            idSet.has(sub.id)
+              ? { ...sub, ...data, updated_at: new Date().toISOString() }
+              : sub
+          ),
+        }));
+      },
+
       deleteSubject: (id) =>
         set((s) => ({ subjects: s.subjects.filter((sub) => sub.id !== id) })),
+
+      deleteSubjects: (ids) => {
+        const idSet = new Set(ids);
+        set((s) => ({
+          subjects: s.subjects.filter((sub) => !idSet.has(sub.id)),
+        }));
+      },
 
       getSubjectById: (id) => get().subjects.find((sub) => sub.id === id),
     }),

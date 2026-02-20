@@ -34,6 +34,18 @@ export const useGroupStore = create<GroupState>()(
         return group;
       },
 
+      addGroups: (items) => {
+        const now = new Date().toISOString();
+        const newGroups = items.map((data) => ({
+          ...data,
+          id: nanoid(),
+          created_at: now,
+          updated_at: now,
+        }));
+        set((s) => ({ groups: [...s.groups, ...newGroups] }));
+        return newGroups.length;
+      },
+
       updateGroup: (id, data) =>
         set((s) => ({
           groups: s.groups.map((g) =>
@@ -43,8 +55,26 @@ export const useGroupStore = create<GroupState>()(
           ),
         })),
 
+      bulkUpdateGroups: (ids, data) => {
+        const idSet = new Set(ids);
+        set((s) => ({
+          groups: s.groups.map((g) =>
+            idSet.has(g.id)
+              ? { ...g, ...data, updated_at: new Date().toISOString() }
+              : g
+          ),
+        }));
+      },
+
       deleteGroup: (id) =>
         set((s) => ({ groups: s.groups.filter((g) => g.id !== id) })),
+
+      deleteGroups: (ids) => {
+        const idSet = new Set(ids);
+        set((s) => ({
+          groups: s.groups.filter((g) => !idSet.has(g.id)),
+        }));
+      },
 
       getGroupById: (id) => get().groups.find((g) => g.id === id),
     }),

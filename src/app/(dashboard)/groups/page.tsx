@@ -11,14 +11,26 @@ import { GlassModal } from "@/components/ui/GlassModal";
 import { Badge } from "@/components/ui/Badge";
 import { Spinner } from "@/components/ui/Spinner";
 import { DataTable, type Column } from "@/components/crud/DataTable";
+import { PasteBulkEntry } from "@/components/import/PasteBulkEntry";
+import { MasterDataImportWizard } from "@/components/import/MasterDataImportWizard";
 import { TRACK_LABELS } from "@/lib/constants";
 import type { Group, TrackKey } from "@/lib/types";
 
 export default function GroupsPage() {
   const hydrated = useHydration();
-  const { groups, addGroup, updateGroup, deleteGroup } = useGroupStore();
+  const {
+    groups,
+    addGroup,
+    addGroups,
+    updateGroup,
+    deleteGroup,
+    deleteGroups,
+    bulkUpdateGroups,
+  } = useGroupStore();
   const [showForm, setShowForm] = useState(false);
   const [editTarget, setEditTarget] = useState<Group | null>(null);
+  const [showPaste, setShowPaste] = useState(false);
+  const [showImport, setShowImport] = useState(false);
 
   if (!hydrated) return <Spinner className="py-20" />;
 
@@ -54,15 +66,60 @@ export default function GroupsPage() {
             {groups.length} ta guruh
           </p>
         </div>
-        <Button
-          onClick={() => {
-            setEditTarget(null);
-            setShowForm(true);
-          }}
-        >
-          + Qo&apos;shish
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button variant="ghost" onClick={() => setShowImport(true)}>
+            Import
+          </Button>
+          <Button variant="secondary" onClick={() => setShowPaste(true)}>
+            Paste
+          </Button>
+          <Button
+            onClick={() => {
+              setEditTarget(null);
+              setShowForm(true);
+            }}
+          >
+            + Qo&apos;shish
+          </Button>
+        </div>
       </div>
+
+      {/* Import Modal */}
+      <GlassModal
+        open={showImport}
+        onClose={() => setShowImport(false)}
+        title="Guruhlarni import qilish"
+        size="lg"
+      >
+        <MasterDataImportWizard
+          entityType="groups"
+          existingItems={groups as unknown as Record<string, unknown>[]}
+          onImport={(items) =>
+            addGroups(
+              items as Omit<Group, "id" | "created_at" | "updated_at">[]
+            )
+          }
+          onClose={() => setShowImport(false)}
+        />
+      </GlassModal>
+
+      {/* Paste Modal */}
+      <GlassModal
+        open={showPaste}
+        onClose={() => setShowPaste(false)}
+        title="Guruhlarni qo'yish (Paste)"
+        size="lg"
+      >
+        <PasteBulkEntry
+          entityType="groups"
+          onImport={(items) =>
+            addGroups(
+              items as Omit<Group, "id" | "created_at" | "updated_at">[]
+            )
+          }
+          onClose={() => setShowPaste(false)}
+        />
+      </GlassModal>
 
       <GlassCard padding="none">
         <DataTable
@@ -75,6 +132,26 @@ export default function GroupsPage() {
           onDelete={(g) => deleteGroup(g.id)}
           searchKeys={["name"]}
           emptyLabel="Guruhlar yo'q. Birinchisini qo'shing!"
+          selectable
+          onBulkDelete={(items) => deleteGroups(items.map((g) => g.id))}
+          onBulkEdit={(items, changes) =>
+            bulkUpdateGroups(
+              items.map((g) => g.id),
+              changes as Partial<Group>
+            )
+          }
+          bulkEditFields={[
+            {
+              key: "track",
+              label: "Trek",
+              type: "select",
+              options: Object.entries(TRACK_LABELS).map(([v, l]) => ({
+                value: v,
+                label: l,
+              })),
+            },
+            { key: "student_count", label: "Talabalar soni", type: "number" },
+          ]}
         />
       </GlassCard>
 
@@ -93,6 +170,9 @@ export default function GroupsPage() {
             }
             setShowForm(false);
           }}
+          onSubmitAndContinue={editTarget ? undefined : (data) => {
+            addGroup(data as Omit<Group, "id" | "created_at" | "updated_at">);
+          }}
         />
       </GlassModal>
     </div>
@@ -102,9 +182,11 @@ export default function GroupsPage() {
 function GroupForm({
   initial,
   onSubmit,
+  onSubmitAndContinue,
 }: {
   initial: Group | null;
   onSubmit: (data: Partial<Group>) => void;
+  onSubmitAndContinue?: (data: Partial<Group>) => void;
 }) {
   const [name, setName] = useState(initial?.name || "");
   const [course, setCourse] = useState(initial?.course?.toString() || "1");
@@ -113,20 +195,42 @@ function GroupForm({
     initial?.student_count?.toString() || "25"
   );
   const [departmentId] = useState(initial?.department_id || "default");
+  const [addedCount, setAddedCount] = useState(0);
 
-  function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    onSubmit({
+  function buildData() {
+    return {
       name,
       course: parseInt(course) || 1,
       track,
       student_count: parseInt(studentCount) || 25,
       department_id: departmentId,
-    });
+    };
+  }
+
+  function resetForm() {
+    setName("");
+    setStudentCount("25");
+  }
+
+  function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    onSubmit(buildData());
+  }
+
+  function handleSubmitAndContinue() {
+    if (!name) return;
+    onSubmitAndContinue?.(buildData());
+    setAddedCount((c) => c + 1);
+    resetForm();
   }
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
+      {addedCount > 0 && (
+        <div className="text-sm text-[var(--color-success)] bg-[var(--color-success)]/10 px-3 py-2 rounded-[10px]">
+          {addedCount} ta guruh qo&apos;shildi
+        </div>
+      )}
       <Input
         label="Guruh nomi"
         value={name}
@@ -166,6 +270,11 @@ function GroupForm({
         max="500"
       />
       <div className="flex justify-end gap-3 pt-2">
+        {!initial && onSubmitAndContinue && (
+          <Button type="button" variant="secondary" onClick={handleSubmitAndContinue}>
+            Saqlash va yana qo&apos;shish
+          </Button>
+        )}
         <Button type="submit">{initial ? "Saqlash" : "Qo'shish"}</Button>
       </div>
     </form>

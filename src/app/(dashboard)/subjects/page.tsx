@@ -9,15 +9,26 @@ import { Input } from "@/components/ui/Input";
 import { GlassModal } from "@/components/ui/GlassModal";
 import { Spinner } from "@/components/ui/Spinner";
 import { DataTable, type Column } from "@/components/crud/DataTable";
+import { PasteBulkEntry } from "@/components/import/PasteBulkEntry";
+import { MasterDataImportWizard } from "@/components/import/MasterDataImportWizard";
 import { SUBJECT_COLORS } from "@/lib/constants";
 import type { Subject } from "@/lib/types";
 
 export default function SubjectsPage() {
   const hydrated = useHydration();
-  const { subjects, addSubject, updateSubject, deleteSubject } =
-    useSubjectStore();
+  const {
+    subjects,
+    addSubject,
+    addSubjects,
+    updateSubject,
+    deleteSubject,
+    deleteSubjects,
+    bulkUpdateSubjects,
+  } = useSubjectStore();
   const [showForm, setShowForm] = useState(false);
   const [editTarget, setEditTarget] = useState<Subject | null>(null);
+  const [showPaste, setShowPaste] = useState(false);
+  const [showImport, setShowImport] = useState(false);
 
   if (!hydrated) return <Spinner className="py-20" />;
 
@@ -60,15 +71,60 @@ export default function SubjectsPage() {
             {subjects.length} ta fan
           </p>
         </div>
-        <Button
-          onClick={() => {
-            setEditTarget(null);
-            setShowForm(true);
-          }}
-        >
-          + Qo&apos;shish
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button variant="ghost" onClick={() => setShowImport(true)}>
+            Import
+          </Button>
+          <Button variant="secondary" onClick={() => setShowPaste(true)}>
+            Paste
+          </Button>
+          <Button
+            onClick={() => {
+              setEditTarget(null);
+              setShowForm(true);
+            }}
+          >
+            + Qo&apos;shish
+          </Button>
+        </div>
       </div>
+
+      {/* Import Modal */}
+      <GlassModal
+        open={showImport}
+        onClose={() => setShowImport(false)}
+        title="Fanlarni import qilish"
+        size="lg"
+      >
+        <MasterDataImportWizard
+          entityType="subjects"
+          existingItems={subjects as unknown as Record<string, unknown>[]}
+          onImport={(items) =>
+            addSubjects(
+              items as Omit<Subject, "id" | "created_at" | "updated_at">[]
+            )
+          }
+          onClose={() => setShowImport(false)}
+        />
+      </GlassModal>
+
+      {/* Paste Modal */}
+      <GlassModal
+        open={showPaste}
+        onClose={() => setShowPaste(false)}
+        title="Fanlarni qo'yish (Paste)"
+        size="lg"
+      >
+        <PasteBulkEntry
+          entityType="subjects"
+          onImport={(items) =>
+            addSubjects(
+              items as Omit<Subject, "id" | "created_at" | "updated_at">[]
+            )
+          }
+          onClose={() => setShowPaste(false)}
+        />
+      </GlassModal>
 
       <GlassCard padding="none">
         <DataTable
@@ -81,6 +137,14 @@ export default function SubjectsPage() {
           onDelete={(s) => deleteSubject(s.id)}
           searchKeys={["name", "short_name"]}
           emptyLabel="Fanlar yo'q. Birinchisini qo'shing!"
+          selectable
+          onBulkDelete={(items) => deleteSubjects(items.map((s) => s.id))}
+          onBulkEdit={(items, changes) =>
+            bulkUpdateSubjects(
+              items.map((s) => s.id),
+              changes as Partial<Subject>
+            )
+          }
         />
       </GlassCard>
 
@@ -102,6 +166,9 @@ export default function SubjectsPage() {
             }
             setShowForm(false);
           }}
+          onSubmitAndContinue={editTarget ? undefined : (data) => {
+            addSubject(data as Omit<Subject, "id" | "created_at" | "updated_at">);
+          }}
         />
       </GlassModal>
     </div>
@@ -112,10 +179,12 @@ function SubjectForm({
   initial,
   subjectCount,
   onSubmit,
+  onSubmitAndContinue,
 }: {
   initial: Subject | null;
   subjectCount: number;
   onSubmit: (data: Partial<Subject>) => void;
+  onSubmitAndContinue?: (data: Partial<Subject>) => void;
 }) {
   const [name, setName] = useState(initial?.name || "");
   const [shortName, setShortName] = useState(initial?.short_name || "");
@@ -125,19 +194,43 @@ function SubjectForm({
   const [requiresLab, setRequiresLab] = useState(
     initial?.requires_lab || false
   );
+  const [addedCount, setAddedCount] = useState(0);
 
-  function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    onSubmit({
+  function buildData() {
+    return {
       name,
       short_name: shortName || name.slice(0, 3),
       color,
       requires_lab: requiresLab,
-    });
+    };
+  }
+
+  function resetForm() {
+    setName("");
+    setShortName("");
+    setColor(SUBJECT_COLORS[(subjectCount + addedCount + 1) % SUBJECT_COLORS.length]);
+    setRequiresLab(false);
+  }
+
+  function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    onSubmit(buildData());
+  }
+
+  function handleSubmitAndContinue() {
+    if (!name) return;
+    onSubmitAndContinue?.(buildData());
+    setAddedCount((c) => c + 1);
+    resetForm();
   }
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
+      {addedCount > 0 && (
+        <div className="text-sm text-[var(--color-success)] bg-[var(--color-success)]/10 px-3 py-2 rounded-[10px]">
+          {addedCount} ta fan qo&apos;shildi
+        </div>
+      )}
       <Input
         label="Fan nomi"
         value={name}
@@ -179,6 +272,11 @@ function SubjectForm({
         <span className="text-sm">Laboratoriya talab qilinadi</span>
       </label>
       <div className="flex justify-end gap-3 pt-2">
+        {!initial && onSubmitAndContinue && (
+          <Button type="button" variant="secondary" onClick={handleSubmitAndContinue}>
+            Saqlash va yana qo&apos;shish
+          </Button>
+        )}
         <Button type="submit">{initial ? "Saqlash" : "Qo'shish"}</Button>
       </div>
     </form>

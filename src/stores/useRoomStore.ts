@@ -34,6 +34,18 @@ export const useRoomStore = create<RoomState>()(
         return room;
       },
 
+      addRooms: (items) => {
+        const now = new Date().toISOString();
+        const newRooms = items.map((data) => ({
+          ...data,
+          id: nanoid(),
+          created_at: now,
+          updated_at: now,
+        }));
+        set((s) => ({ rooms: [...s.rooms, ...newRooms] }));
+        return newRooms.length;
+      },
+
       updateRoom: (id, data) =>
         set((s) => ({
           rooms: s.rooms.map((r) =>
@@ -43,8 +55,26 @@ export const useRoomStore = create<RoomState>()(
           ),
         })),
 
+      bulkUpdateRooms: (ids, data) => {
+        const idSet = new Set(ids);
+        set((s) => ({
+          rooms: s.rooms.map((r) =>
+            idSet.has(r.id)
+              ? { ...r, ...data, updated_at: new Date().toISOString() }
+              : r
+          ),
+        }));
+      },
+
       deleteRoom: (id) =>
         set((s) => ({ rooms: s.rooms.filter((r) => r.id !== id) })),
+
+      deleteRooms: (ids) => {
+        const idSet = new Set(ids);
+        set((s) => ({
+          rooms: s.rooms.filter((r) => !idSet.has(r.id)),
+        }));
+      },
 
       getRoomById: (id) => get().rooms.find((r) => r.id === id),
     }),

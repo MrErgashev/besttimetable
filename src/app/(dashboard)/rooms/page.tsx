@@ -11,14 +11,26 @@ import { GlassModal } from "@/components/ui/GlassModal";
 import { Badge } from "@/components/ui/Badge";
 import { Spinner } from "@/components/ui/Spinner";
 import { DataTable, type Column } from "@/components/crud/DataTable";
+import { PasteBulkEntry } from "@/components/import/PasteBulkEntry";
+import { MasterDataImportWizard } from "@/components/import/MasterDataImportWizard";
 import { ROOM_TYPE_LABELS } from "@/lib/constants";
 import type { Room, RoomType } from "@/lib/types";
 
 export default function RoomsPage() {
   const hydrated = useHydration();
-  const { rooms, addRoom, updateRoom, deleteRoom } = useRoomStore();
+  const {
+    rooms,
+    addRoom,
+    addRooms,
+    updateRoom,
+    deleteRoom,
+    deleteRooms,
+    bulkUpdateRooms,
+  } = useRoomStore();
   const [showForm, setShowForm] = useState(false);
   const [editTarget, setEditTarget] = useState<Room | null>(null);
+  const [showPaste, setShowPaste] = useState(false);
+  const [showImport, setShowImport] = useState(false);
 
   if (!hydrated) return <Spinner className="py-20" />;
 
@@ -63,15 +75,60 @@ export default function RoomsPage() {
             {rooms.length} ta xona
           </p>
         </div>
-        <Button
-          onClick={() => {
-            setEditTarget(null);
-            setShowForm(true);
-          }}
-        >
-          + Qo&apos;shish
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button variant="ghost" onClick={() => setShowImport(true)}>
+            Import
+          </Button>
+          <Button variant="secondary" onClick={() => setShowPaste(true)}>
+            Paste
+          </Button>
+          <Button
+            onClick={() => {
+              setEditTarget(null);
+              setShowForm(true);
+            }}
+          >
+            + Qo&apos;shish
+          </Button>
+        </div>
       </div>
+
+      {/* Import Modal */}
+      <GlassModal
+        open={showImport}
+        onClose={() => setShowImport(false)}
+        title="Xonalarni import qilish"
+        size="lg"
+      >
+        <MasterDataImportWizard
+          entityType="rooms"
+          existingItems={rooms as unknown as Record<string, unknown>[]}
+          onImport={(items) =>
+            addRooms(
+              items as Omit<Room, "id" | "created_at" | "updated_at">[]
+            )
+          }
+          onClose={() => setShowImport(false)}
+        />
+      </GlassModal>
+
+      {/* Paste Modal */}
+      <GlassModal
+        open={showPaste}
+        onClose={() => setShowPaste(false)}
+        title="Xonalarni qo'yish (Paste)"
+        size="lg"
+      >
+        <PasteBulkEntry
+          entityType="rooms"
+          onImport={(items) =>
+            addRooms(
+              items as Omit<Room, "id" | "created_at" | "updated_at">[]
+            )
+          }
+          onClose={() => setShowPaste(false)}
+        />
+      </GlassModal>
 
       <GlassCard padding="none">
         <DataTable
@@ -84,6 +141,27 @@ export default function RoomsPage() {
           onDelete={(r) => deleteRoom(r.id)}
           searchKeys={["name", "building"]}
           emptyLabel="Xonalar yo'q. Birinchisini qo'shing!"
+          selectable
+          onBulkDelete={(items) => deleteRooms(items.map((r) => r.id))}
+          onBulkEdit={(items, changes) =>
+            bulkUpdateRooms(
+              items.map((r) => r.id),
+              changes as Partial<Room>
+            )
+          }
+          bulkEditFields={[
+            { key: "building", label: "Bino", type: "string" },
+            {
+              key: "type",
+              label: "Turi",
+              type: "select",
+              options: Object.entries(ROOM_TYPE_LABELS).map(([v, l]) => ({
+                value: v,
+                label: l,
+              })),
+            },
+            { key: "capacity", label: "Sig'imi", type: "number" },
+          ]}
         />
       </GlassCard>
 
@@ -102,6 +180,9 @@ export default function RoomsPage() {
             }
             setShowForm(false);
           }}
+          onSubmitAndContinue={editTarget ? undefined : (data) => {
+            addRoom(data as Omit<Room, "id" | "created_at" | "updated_at">);
+          }}
         />
       </GlassModal>
     </div>
@@ -111,9 +192,11 @@ export default function RoomsPage() {
 function RoomForm({
   initial,
   onSubmit,
+  onSubmitAndContinue,
 }: {
   initial: Room | null;
   onSubmit: (data: Partial<Room>) => void;
+  onSubmitAndContinue?: (data: Partial<Room>) => void;
 }) {
   const [name, setName] = useState(initial?.name || "");
   const [building, setBuilding] = useState(initial?.building || "");
@@ -122,20 +205,42 @@ function RoomForm({
   );
   const [type, setType] = useState<RoomType>(initial?.type || "oddiy");
   const [floor, setFloor] = useState(initial?.floor?.toString() || "");
+  const [addedCount, setAddedCount] = useState(0);
 
-  function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    onSubmit({
+  function buildData() {
+    return {
       name,
       building: building || undefined,
       capacity: parseInt(capacity) || 30,
       type,
       floor: floor ? parseInt(floor) : undefined,
-    });
+    };
+  }
+
+  function resetForm() {
+    setName("");
+    setFloor("");
+  }
+
+  function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    onSubmit(buildData());
+  }
+
+  function handleSubmitAndContinue() {
+    if (!name) return;
+    onSubmitAndContinue?.(buildData());
+    setAddedCount((c) => c + 1);
+    resetForm();
   }
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
+      {addedCount > 0 && (
+        <div className="text-sm text-[var(--color-success)] bg-[var(--color-success)]/10 px-3 py-2 rounded-[10px]">
+          {addedCount} ta xona qo&apos;shildi
+        </div>
+      )}
       <Input
         label="Xona nomi"
         value={name}
@@ -180,6 +285,11 @@ function RoomForm({
         />
       </div>
       <div className="flex justify-end gap-3 pt-2">
+        {!initial && onSubmitAndContinue && (
+          <Button type="button" variant="secondary" onClick={handleSubmitAndContinue}>
+            Saqlash va yana qo&apos;shish
+          </Button>
+        )}
         <Button type="submit">{initial ? "Saqlash" : "Qo'shish"}</Button>
       </div>
     </form>

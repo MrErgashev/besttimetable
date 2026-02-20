@@ -15,6 +15,13 @@ export interface Column<T> {
   primary?: boolean;
 }
 
+export interface BulkEditField {
+  key: string;
+  label: string;
+  type: "string" | "number" | "select";
+  options?: { value: string; label: string }[];
+}
+
 interface DataTableProps<T extends { id: string }> {
   data: T[];
   columns: Column<T>[];
@@ -22,6 +29,11 @@ interface DataTableProps<T extends { id: string }> {
   onDelete?: (item: T) => void;
   searchKeys?: (keyof T)[];
   emptyLabel?: string;
+  /** Enable checkbox selection for bulk operations */
+  selectable?: boolean;
+  onBulkDelete?: (items: T[]) => void;
+  onBulkEdit?: (items: T[], changes: Record<string, unknown>) => void;
+  bulkEditFields?: BulkEditField[];
 }
 
 export function DataTable<T extends { id: string }>({
@@ -31,6 +43,10 @@ export function DataTable<T extends { id: string }>({
   onDelete,
   searchKeys = [],
   emptyLabel = "Ma'lumot yo'q",
+  selectable = false,
+  onBulkDelete,
+  onBulkEdit,
+  bulkEditFields,
 }: DataTableProps<T>) {
   const [search, setSearch] = useState("");
   const [sortKey, setSortKey] = useState<string | null>(null);
@@ -38,6 +54,10 @@ export function DataTable<T extends { id: string }>({
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [page, setPage] = useState(0);
   const perPage = 10;
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [showBulkEdit, setShowBulkEdit] = useState(false);
+  const [bulkEditValues, setBulkEditValues] = useState<Record<string, string>>({});
+  const [confirmBulkDelete, setConfirmBulkDelete] = useState(false);
 
   const filtered = useMemo(() => {
     let result = data;
@@ -80,8 +100,171 @@ export function DataTable<T extends { id: string }>({
 
   const primaryCol = columns.find((c) => c.primary) || columns[0];
 
+  // ─── Selection helpers ───────────────────────────────────────────────
+  const selectedItems = useMemo(
+    () => data.filter((item) => selectedIds.has(item.id)),
+    [data, selectedIds]
+  );
+
+  const allFilteredSelected =
+    filtered.length > 0 && filtered.every((item) => selectedIds.has(item.id));
+
+  function toggleSelectAll() {
+    if (allFilteredSelected) {
+      setSelectedIds(new Set());
+    } else {
+      setSelectedIds(new Set(filtered.map((item) => item.id)));
+    }
+  }
+
+  function toggleSelect(id: string) {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }
+
+  function handleBulkDelete() {
+    if (onBulkDelete && selectedItems.length > 0) {
+      onBulkDelete(selectedItems);
+      setSelectedIds(new Set());
+      setConfirmBulkDelete(false);
+    }
+  }
+
+  function handleBulkEditApply() {
+    if (onBulkEdit && selectedItems.length > 0) {
+      const changes: Record<string, unknown> = {};
+      for (const [key, val] of Object.entries(bulkEditValues)) {
+        if (val !== "") {
+          const field = bulkEditFields?.find((f) => f.key === key);
+          changes[key] = field?.type === "number" ? Number(val) : val;
+        }
+      }
+      if (Object.keys(changes).length > 0) {
+        onBulkEdit(selectedItems, changes);
+        setSelectedIds(new Set());
+        setShowBulkEdit(false);
+        setBulkEditValues({});
+      }
+    }
+  }
+
   return (
     <div>
+      {/* Bulk Action Bar */}
+      {selectable && selectedIds.size > 0 && (
+        <div className="flex items-center justify-between gap-3 px-4 py-2.5 bg-[var(--color-accent)]/10 border-b border-[var(--color-accent)]/20">
+          <span className="text-sm font-medium text-[var(--color-accent)]">
+            {selectedIds.size} ta tanlangan
+          </span>
+          <div className="flex items-center gap-2">
+            {onBulkEdit && bulkEditFields && bulkEditFields.length > 0 && (
+              <Button
+                variant="secondary"
+                size="sm"
+                onClick={() => setShowBulkEdit(!showBulkEdit)}
+              >
+                Tahrirlash
+              </Button>
+            )}
+            {onBulkDelete && (
+              <>
+                {confirmBulkDelete ? (
+                  <div className="flex items-center gap-1">
+                    <Button
+                      variant="danger"
+                      size="sm"
+                      onClick={handleBulkDelete}
+                    >
+                      Ha, o&apos;chirish
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setConfirmBulkDelete(false)}
+                    >
+                      Bekor
+                    </Button>
+                  </div>
+                ) : (
+                  <Button
+                    variant="danger"
+                    size="sm"
+                    onClick={() => setConfirmBulkDelete(true)}
+                  >
+                    O&apos;chirish
+                  </Button>
+                )}
+              </>
+            )}
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => {
+                setSelectedIds(new Set());
+                setConfirmBulkDelete(false);
+              }}
+            >
+              Bekor
+            </Button>
+          </div>
+        </div>
+      )}
+
+      {/* Bulk Edit Panel */}
+      {showBulkEdit && bulkEditFields && (
+        <div className="px-4 py-3 bg-[var(--surface-secondary)] border-b border-[var(--border)] space-y-3">
+          <p className="text-sm text-[var(--muted)]">
+            {selectedIds.size} ta elementga qo&apos;llash:
+          </p>
+          <div className="flex flex-wrap items-end gap-3">
+            {bulkEditFields.map((field) => (
+              <div key={field.key} className="flex flex-col gap-1">
+                <label className="text-xs text-[var(--muted)]">{field.label}</label>
+                {field.type === "select" && field.options ? (
+                  <select
+                    value={bulkEditValues[field.key] || ""}
+                    onChange={(e) =>
+                      setBulkEditValues((prev) => ({
+                        ...prev,
+                        [field.key]: e.target.value,
+                      }))
+                    }
+                    className="h-9 px-2 rounded-[8px] text-sm bg-[var(--surface)] border border-[var(--border)] text-[var(--foreground)]"
+                  >
+                    <option value="">— Tanlanmagan —</option>
+                    {field.options.map((opt) => (
+                      <option key={opt.value} value={opt.value}>
+                        {opt.label}
+                      </option>
+                    ))}
+                  </select>
+                ) : (
+                  <input
+                    type={field.type === "number" ? "number" : "text"}
+                    value={bulkEditValues[field.key] || ""}
+                    onChange={(e) =>
+                      setBulkEditValues((prev) => ({
+                        ...prev,
+                        [field.key]: e.target.value,
+                      }))
+                    }
+                    className="h-9 px-2 rounded-[8px] text-sm bg-[var(--surface)] border border-[var(--border)] text-[var(--foreground)] w-[120px]"
+                    placeholder={field.label}
+                  />
+                )}
+              </div>
+            ))}
+            <Button size="sm" onClick={handleBulkEditApply}>
+              Qo&apos;llash
+            </Button>
+          </div>
+        </div>
+      )}
+
       {/* Search */}
       {searchKeys.length > 0 && (
         <div className="p-4 border-b border-[var(--border)]">
@@ -117,6 +300,16 @@ export function DataTable<T extends { id: string }>({
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-[var(--border)]">
+              {selectable && (
+                <th className="px-3 py-3 w-10">
+                  <input
+                    type="checkbox"
+                    checked={allFilteredSelected && filtered.length > 0}
+                    onChange={toggleSelectAll}
+                    className="w-4 h-4 rounded border-[var(--border)] text-[var(--color-accent)] focus:ring-[var(--color-accent)]"
+                  />
+                </th>
+              )}
               {columns.map((col) => (
                 <th
                   key={col.key}
@@ -147,7 +340,7 @@ export function DataTable<T extends { id: string }>({
             {paginated.length === 0 ? (
               <tr>
                 <td
-                  colSpan={columns.length + (onEdit || onDelete ? 1 : 0)}
+                  colSpan={columns.length + (onEdit || onDelete ? 1 : 0) + (selectable ? 1 : 0)}
                   className="px-4 py-12 text-center text-[var(--muted)]"
                 >
                   {emptyLabel}
@@ -157,8 +350,21 @@ export function DataTable<T extends { id: string }>({
               paginated.map((item) => (
                 <tr
                   key={item.id}
-                  className="border-b border-[var(--border)] hover:bg-[var(--surface-secondary)] transition-colors"
+                  className={cn(
+                    "border-b border-[var(--border)] hover:bg-[var(--surface-secondary)] transition-colors",
+                    selectedIds.has(item.id) && "bg-[var(--color-accent)]/5"
+                  )}
                 >
+                  {selectable && (
+                    <td className="px-3 py-3 w-10">
+                      <input
+                        type="checkbox"
+                        checked={selectedIds.has(item.id)}
+                        onChange={() => toggleSelect(item.id)}
+                        className="w-4 h-4 rounded border-[var(--border)] text-[var(--color-accent)] focus:ring-[var(--color-accent)]"
+                      />
+                    </td>
+                  )}
                   {columns.map((col) => (
                     <td
                       key={col.key}
@@ -239,10 +445,23 @@ export function DataTable<T extends { id: string }>({
           paginated.map((item) => (
             <div
               key={item.id}
-              className="px-4 py-3 active:bg-[var(--surface-secondary)] transition-colors"
+              className={cn(
+                "px-4 py-3 active:bg-[var(--surface-secondary)] transition-colors",
+                selectedIds.has(item.id) && "bg-[var(--color-accent)]/5"
+              )}
               onClick={() => onEdit && onEdit(item)}
             >
               <div className="flex items-center justify-between">
+                {selectable && (
+                  <div className="mr-3" onClick={(e) => e.stopPropagation()}>
+                    <input
+                      type="checkbox"
+                      checked={selectedIds.has(item.id)}
+                      onChange={() => toggleSelect(item.id)}
+                      className="w-4 h-4 rounded border-[var(--border)] text-[var(--color-accent)] focus:ring-[var(--color-accent)]"
+                    />
+                  </div>
+                )}
                 <div className="flex-1 min-w-0">
                   {/* Primary label */}
                   <p className="text-[15px] font-medium text-[var(--foreground)] truncate">

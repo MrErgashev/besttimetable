@@ -9,14 +9,25 @@ import { Input } from "@/components/ui/Input";
 import { GlassModal } from "@/components/ui/GlassModal";
 import { Spinner } from "@/components/ui/Spinner";
 import { DataTable, type Column } from "@/components/crud/DataTable";
+import { PasteBulkEntry } from "@/components/import/PasteBulkEntry";
+import { MasterDataImportWizard } from "@/components/import/MasterDataImportWizard";
 import type { Teacher } from "@/lib/types";
 
 export default function TeachersPage() {
   const hydrated = useHydration();
-  const { teachers, addTeacher, updateTeacher, deleteTeacher } =
-    useTeacherStore();
+  const {
+    teachers,
+    addTeacher,
+    addTeachers,
+    updateTeacher,
+    deleteTeacher,
+    deleteTeachers,
+    bulkUpdateTeachers,
+  } = useTeacherStore();
   const [showForm, setShowForm] = useState(false);
   const [editTarget, setEditTarget] = useState<Teacher | null>(null);
+  const [showPaste, setShowPaste] = useState(false);
+  const [showImport, setShowImport] = useState(false);
 
   if (!hydrated) return <Spinner className="py-20" />;
 
@@ -71,7 +82,15 @@ export default function TeachersPage() {
             {teachers.length} ta o&apos;qituvchi
           </p>
         </div>
-        <Button onClick={openAdd}>+ Qo&apos;shish</Button>
+        <div className="flex items-center gap-2">
+          <Button variant="ghost" onClick={() => setShowImport(true)}>
+            Import
+          </Button>
+          <Button variant="secondary" onClick={() => setShowPaste(true)}>
+            Paste
+          </Button>
+          <Button onClick={openAdd}>+ Qo&apos;shish</Button>
+        </div>
       </div>
 
       {/* Table */}
@@ -83,8 +102,56 @@ export default function TeachersPage() {
           onDelete={(t) => deleteTeacher(t.id)}
           searchKeys={["first_name", "last_name", "short_name", "email"]}
           emptyLabel="O'qituvchilar yo'q. Birinchisini qo'shing!"
+          selectable
+          onBulkDelete={(items) => deleteTeachers(items.map((t) => t.id))}
+          onBulkEdit={(items, changes) =>
+            bulkUpdateTeachers(
+              items.map((t) => t.id),
+              changes as Partial<Teacher>
+            )
+          }
+          bulkEditFields={[
+            { key: "max_weekly_hours", label: "Max soat/hafta", type: "number" },
+          ]}
         />
       </GlassCard>
+
+      {/* Import Modal */}
+      <GlassModal
+        open={showImport}
+        onClose={() => setShowImport(false)}
+        title="O'qituvchilarni import qilish"
+        size="lg"
+      >
+        <MasterDataImportWizard
+          entityType="teachers"
+          existingItems={teachers as unknown as Record<string, unknown>[]}
+          onImport={(items) =>
+            addTeachers(
+              items as Omit<Teacher, "id" | "created_at" | "updated_at">[]
+            )
+          }
+          onClose={() => setShowImport(false)}
+        />
+      </GlassModal>
+
+      {/* Paste Modal */}
+      <GlassModal
+        open={showPaste}
+        onClose={() => setShowPaste(false)}
+        title="O'qituvchilarni qo'yish (Paste)"
+        size="lg"
+      >
+        <PasteBulkEntry
+          entityType="teachers"
+          onImport={(items) =>
+            addTeachers(
+              items as Omit<Teacher, "id" | "created_at" | "updated_at">[]
+            )
+          }
+          onClose={() => setShowPaste(false)}
+        />
+      </GlassModal>
 
       {/* Form Modal */}
       <GlassModal
@@ -105,6 +172,9 @@ export default function TeachersPage() {
             }
             setShowForm(false);
           }}
+          onSubmitAndContinue={editTarget ? undefined : (data) => {
+            addTeacher(data as Omit<Teacher, "id" | "created_at" | "updated_at">);
+          }}
         />
       </GlassModal>
     </div>
@@ -114,10 +184,12 @@ export default function TeachersPage() {
 function TeacherForm({
   initial,
   onSubmit,
+  onSubmitAndContinue,
 }: {
   initial: Teacher | null;
   onSuccess: () => void;
   onSubmit: (data: Partial<Teacher>) => void;
+  onSubmitAndContinue?: (data: Partial<Teacher>) => void;
 }) {
   const [firstName, setFirstName] = useState(initial?.first_name || "");
   const [lastName, setLastName] = useState(initial?.last_name || "");
@@ -126,22 +198,47 @@ function TeacherForm({
   const [maxHours, setMaxHours] = useState(
     initial?.max_weekly_hours?.toString() || "18"
   );
+  const [addedCount, setAddedCount] = useState(0);
 
-  function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
+  function buildData() {
     const shortName = `${lastName} ${firstName.charAt(0)}.`;
-    onSubmit({
+    return {
       first_name: firstName,
       last_name: lastName,
       short_name: shortName,
       email: email || undefined,
       phone: phone || undefined,
       max_weekly_hours: parseInt(maxHours) || 18,
-    });
+    };
+  }
+
+  function resetForm() {
+    setFirstName("");
+    setLastName("");
+    setEmail("");
+    setPhone("");
+    setMaxHours("18");
+  }
+
+  function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    onSubmit(buildData());
+  }
+
+  function handleSubmitAndContinue() {
+    if (!firstName || !lastName) return;
+    onSubmitAndContinue?.(buildData());
+    setAddedCount((c) => c + 1);
+    resetForm();
   }
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
+      {addedCount > 0 && (
+        <div className="text-sm text-[var(--color-success)] bg-[var(--color-success)]/10 px-3 py-2 rounded-[10px]">
+          {addedCount} ta o&apos;qituvchi qo&apos;shildi
+        </div>
+      )}
       <div className="grid grid-cols-2 gap-4">
         <Input
           label="Ism"
@@ -182,6 +279,11 @@ function TeacherForm({
         max="40"
       />
       <div className="flex justify-end gap-3 pt-2">
+        {!initial && onSubmitAndContinue && (
+          <Button type="button" variant="secondary" onClick={handleSubmitAndContinue}>
+            Saqlash va yana qo&apos;shish
+          </Button>
+        )}
         <Button type="submit">
           {initial ? "Saqlash" : "Qo'shish"}
         </Button>

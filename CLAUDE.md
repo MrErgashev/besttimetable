@@ -21,7 +21,7 @@ Ta'lim muassasalari uchun dars jadvalini yaratish, boshqarish va optimallashtiri
 
 ```bash
 npm run dev      # Development server
-npm run build    # Production build
+npm run build    # Production build (xotira yetmasa: NODE_OPTIONS="--max-old-space-size=8192" npm run build)
 npm run start    # Production server
 npm run lint     # ESLint
 ```
@@ -47,12 +47,12 @@ src/
     layout.tsx        # Root layout
     providers.tsx     # ThemeProvider va boshqalar
   components/
-    layout/           # Sidebar, Topbar
+    layout/           # Sidebar, Topbar, BottomTabBar, MobileHeader
     timetable/        # TimetableGrid, CellAssignModal, LessonCard
-    crud/             # DataTable (umumiy CRUD jadval)
-    ui/               # Button, Input, Select, Badge, GlassCard, GlassModal, Spinner, ThemeToggle
+    crud/             # DataTable (umumiy CRUD jadval, mobil karta + desktop jadval)
+    ui/               # Card, SheetModal, Button, Input, Select, Badge, FAB, SegmentControl, Skeleton, Spinner, ThemeToggle, GlassCard (re-export), GlassModal (re-export)
   stores/             # Zustand store'lar (barchasi persist bilan)
-  hooks/              # useAuth, useHydration, useRealtimeSchedule
+  hooks/              # useAuth, useHydration, useMediaQuery, useRealtimeSchedule
   lib/
     types.ts          # Barcha TypeScript tiplar
     constants.ts      # DAYS, TIME_SLOTS, TRACK_LABELS, ROOM_TYPE_LABELS, NAV_ITEMS
@@ -155,13 +155,81 @@ Barcha store'lar `zustand/middleware` dan `persist` ishlatadi — ma'lumotlar lo
 
 Standart cheklovlar (`DEFAULT_CONSTRAINTS`): max 3 ketma-ket dars, 1 tanaffus, 1-kurs uchun ertalab, tekis taqsimlash.
 
-## UI Patterns
+## Dizayn Tizimi (Apple Design Language)
 
-- **Glass-morphism dizayn** — `GlassCard`, `GlassModal` komponentlari
-- **cn() utility** — Tailwind klasslarini birlashtirish uchun (`@/lib/utils`)
-- **Komponentlar:** `Button`, `Input`, `Select`, `Badge`, `Spinner`, `ThemeToggle`
-- **DataTable** — Umumiy CRUD jadval komponenti (`components/crud/DataTable.tsx`)
-- **Sidebar + Topbar** layout
+Mobile-first PWA dizayn. Solid surface'lar, OLED qora dark mode (#000000), #007AFF aksent rang.
+
+### CSS O'zgaruvchilari (globals.css)
+
+Ranglar CSS custom properties orqali boshqariladi (`@theme inline` Tailwind CSS 4 formatida):
+
+| O'zgaruvchi | Light | Dark | Vazifa |
+|-------------|-------|------|--------|
+| `--color-accent` | #007AFF | #0A84FF | Asosiy aksent (Apple Blue) |
+| `--color-danger` | #FF3B30 | #FF453A | Xatolik/o'chirish |
+| `--color-success` | #34C759 | #30D158 | Muvaffaqiyat |
+| `--color-warning` | #FF9500 | #FF9F0A | Ogohlantirish |
+| `--background` | #F5F5F7 | #000000 | Sahifa foni |
+| `--surface` | #FFFFFF | #1C1C1E | Karta/panel foni |
+| `--surface-secondary` | #F2F2F7 | #2C2C2E | Ichki element foni |
+| `--foreground` | #1D1D1F | #F5F5F7 | Asosiy matn |
+| `--muted` | #86868B | #98989D | Ikkinchi darajali matn |
+| `--border` | #D2D2D7 | #38383A | Chegaralar |
+
+### UI Komponentlar
+
+| Komponent | Fayl | Vazifa |
+|-----------|------|--------|
+| `Card` | `ui/Card.tsx` | Apple-style karta (rounded-[16px], shadow) |
+| `SheetModal` | `ui/SheetModal.tsx` | Bottom sheet (mobil) / modal (desktop) |
+| `Button` | `ui/Button.tsx` | Tugma (primary, secondary, ghost, danger) |
+| `Input` | `ui/Input.tsx` | Matn kiritish (h-12 mobil, h-10 desktop) |
+| `Select` | `ui/Select.tsx` | Tanlash |
+| `Badge` | `ui/Badge.tsx` | Status belgi |
+| `FAB` | `ui/FAB.tsx` | Floating Action Button (mobil uchun) |
+| `SegmentControl` | `ui/SegmentControl.tsx` | iOS-style segment tanlash |
+| `Skeleton` | `ui/Skeleton.tsx` | Yuklanish placeholder |
+| `Spinner` | `ui/Spinner.tsx` | Yuklanish animatsiya |
+| `ThemeToggle` | `ui/ThemeToggle.tsx` | Qorong'u/yorug' rejim |
+| `GlassCard` | `ui/GlassCard.tsx` | → `Card` ga re-export (backwards compat) |
+| `GlassModal` | `ui/GlassModal.tsx` | → `SheetModal` ga re-export (backwards compat) |
+
+### Layout Komponentlar
+
+| Komponent | Fayl | Ko'rinish |
+|-----------|------|-----------|
+| `Sidebar` | `layout/Sidebar.tsx` | Desktop (hidden lg:flex) |
+| `Topbar` | `layout/Topbar.tsx` | Desktop (hidden md:flex) |
+| `BottomTabBar` | `layout/BottomTabBar.tsx` | Mobil (lg:hidden) |
+| `MobileHeader` | `layout/MobileHeader.tsx` | Mobil (md:hidden) |
+
+### Responsive Strategiya
+
+- **Mobil (< 768px):** BottomTabBar + MobileHeader, DataTable karta ko'rinishida, TimetableGrid kun tab'lari
+- **Planshet (768px–1024px):** Topbar, DataTable jadval, TimetableGrid to'liq jadval
+- **Desktop (≥ 1024px):** Sidebar + Topbar, to'liq layout
+
+### Utility Klasslar (globals.css)
+
+- `apple-card` — Karta stili (surface bg, border, rounded-[16px], shadow)
+- `apple-card-interactive` — Bosiluvchi karta (hover/active efektlar)
+- `cn()` — Tailwind klasslarini birlashtirish (`@/lib/utils`)
+
+### PWA
+
+- `public/manifest.json` — PWA manifest (standalone, #007AFF theme)
+- `public/icons/icon-192.png`, `icon-512.png` — Ilova ikonkalari
+- Viewport: `viewport-fit=cover`, `user-scalable=no`
+- Safe area: `env(safe-area-inset-*)` CSS o'zgaruvchilari
+
+### Hooks
+
+| Hook | Fayl | Vazifa |
+|------|------|--------|
+| `useAuth` | `hooks/useAuth.ts` | Foydalanuvchi autentifikatsiya konteksti |
+| `useHydration` | `hooks/useHydration.ts` | Zustand hydration holati |
+| `useMediaQuery` | `hooks/useMediaQuery.ts` | Responsive breakpoint tekshiruvi |
+| `useRealtimeSchedule` | `hooks/useRealtimeSchedule.ts` | Supabase realtime obuna |
 
 ## Muhit O'zgaruvchilari (.env.local)
 
@@ -182,6 +250,12 @@ TELEGRAM_BOT_TOKEN=optional
 - Interfeys tili: o'zbek (labellar, xabarlar)
 - ID generatsiya: nanoid
 - Xona turlari: `oddiy`, `laboratoriya`, `kompyuter_xona`, `majlis_xonasi`
+- Ranglar faqat CSS o'zgaruvchilari orqali: `var(--color-accent)`, `var(--surface)`, va h.k. (hardcoded ranglar ishlatilmasin)
+- Tailwind CSS 4: `@theme inline` blokida o'zgaruvchilar, `tailwind.config.ts` fayli YO'Q
+- Hydration xatoliklarini oldini olish: `useSyncExternalStore` pattern (ThemeToggle'da namuna)
+- GlassCard/GlassModal import'lari hali ishlaydi (Card/SheetModal ga re-export)
+- Mobil komponentlar: `md:hidden` / `hidden md:flex` / `hidden lg:flex` pattern
+- **O'zgartirmaslik kerak:** stores, types, constants, utils, generator, import/export logic, supabase, middleware, tsconfig, postcss
 
 ## Testlar
 

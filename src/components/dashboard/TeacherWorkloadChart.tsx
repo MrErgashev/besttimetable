@@ -1,16 +1,6 @@
 "use client";
 
 import { useMemo } from "react";
-import {
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  Tooltip,
-  ResponsiveContainer,
-  Cell,
-  ReferenceLine,
-} from "recharts";
 import type { Teacher, ScheduleEntry } from "@/lib/types";
 
 interface TeacherWorkloadChartProps {
@@ -32,7 +22,6 @@ export function TeacherWorkloadChart({
           name: t.short_name,
           actual,
           max,
-          remaining: Math.max(0, max - actual),
           percent,
           overloaded: actual > max,
         };
@@ -49,79 +38,70 @@ export function TeacherWorkloadChart({
     );
   }
 
+  const maxVal = Math.max(...data.map((d) => Math.max(d.actual, d.max)));
+
   return (
-    <div className="w-full h-[280px]">
-      <ResponsiveContainer width="100%" height="100%">
-        <BarChart
-          data={data}
-          layout="vertical"
-          margin={{ top: 4, right: 40, left: 0, bottom: 4 }}
-          barSize={14}
-        >
-          <XAxis
-            type="number"
-            tick={{ fontSize: 11, fill: "var(--muted)" }}
-            axisLine={false}
-            tickLine={false}
-          />
-          <YAxis
-            type="category"
-            dataKey="name"
-            width={80}
-            tick={{ fontSize: 12, fill: "var(--foreground)" }}
-            axisLine={false}
-            tickLine={false}
-          />
-          <Tooltip
-            content={({ active, payload }) => {
-              if (!active || !payload?.length) return null;
-              const d = payload[0].payload;
-              return (
-                <div className="apple-card px-3 py-2 text-xs">
-                  <p className="font-semibold">{d.name}</p>
-                  <p>
-                    Haqiqiy: <span className="font-medium">{d.actual}</span> /{" "}
-                    {d.max} soat
-                  </p>
-                  <p>
-                    Foiz:{" "}
-                    <span
-                      className={
-                        d.overloaded
-                          ? "text-[var(--color-danger)]"
-                          : "text-[var(--color-accent)]"
-                      }
-                    >
-                      {d.percent}%
-                    </span>
-                  </p>
-                </div>
-              );
-            }}
-          />
-          <ReferenceLine x={0} stroke="var(--border-strong)" />
-          <Bar dataKey="actual" stackId="load" radius={[0, 0, 0, 0]}>
-            {data.map((entry, index) => (
-              <Cell
-                key={index}
-                fill={
-                  entry.overloaded
+    <div className="space-y-2.5">
+      {data.map((d) => {
+        const barWidth = maxVal > 0 ? Math.min(100, (d.actual / maxVal) * 100) : 0;
+        const limitPos = maxVal > 0 ? Math.min(100, (d.max / maxVal) * 100) : 0;
+
+        return (
+          <div key={d.name} className="group">
+            <div className="flex items-center justify-between mb-1">
+              <span className="text-xs font-medium text-[var(--foreground)] truncate max-w-[100px]">
+                {d.name}
+              </span>
+              <span
+                className={`text-[11px] font-medium ${
+                  d.overloaded
+                    ? "text-[var(--color-danger)]"
+                    : d.percent >= 80
+                      ? "text-[var(--color-warning)]"
+                      : "text-[var(--muted)]"
+                }`}
+              >
+                {d.actual}/{d.max} ({d.percent}%)
+              </span>
+            </div>
+            <div className="relative h-2 bg-[var(--surface-secondary)] rounded-full overflow-hidden">
+              <div
+                className="absolute inset-y-0 left-0 rounded-full transition-all duration-500"
+                style={{
+                  width: `${barWidth}%`,
+                  backgroundColor: d.overloaded
                     ? "var(--color-danger)"
-                    : "var(--color-accent)"
-                }
-                opacity={0.85}
+                    : d.percent >= 80
+                      ? "var(--color-warning)"
+                      : "var(--color-accent)",
+                  opacity: 0.85,
+                }}
               />
-            ))}
-          </Bar>
-          <Bar
-            dataKey="remaining"
-            stackId="load"
-            fill="var(--surface-secondary)"
-            radius={[0, 4, 4, 0]}
-            opacity={0.5}
-          />
-        </BarChart>
-      </ResponsiveContainer>
+              {/* Max limit marker */}
+              <div
+                className="absolute inset-y-0 w-[2px] bg-[var(--foreground)] opacity-20 rounded-full"
+                style={{ left: `${limitPos}%` }}
+              />
+            </div>
+          </div>
+        );
+      })}
+
+      {/* Legend */}
+      <div className="flex items-center justify-center gap-4 pt-2">
+        <div className="flex items-center gap-1.5">
+          <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: "var(--color-accent)", opacity: 0.85 }} />
+          <span className="text-[10px] text-[var(--muted)]">Normal</span>
+        </div>
+        <div className="flex items-center gap-1.5">
+          <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: "var(--color-warning)", opacity: 0.85 }} />
+          <span className="text-[10px] text-[var(--muted)]">Yuqori</span>
+        </div>
+        <div className="flex items-center gap-1.5">
+          <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: "var(--color-danger)", opacity: 0.85 }} />
+          <span className="text-[10px] text-[var(--muted)]">Oshgan</span>
+        </div>
+      </div>
     </div>
   );
 }

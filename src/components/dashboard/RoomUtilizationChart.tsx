@@ -1,7 +1,6 @@
 "use client";
 
 import { useMemo } from "react";
-import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from "recharts";
 import type { Room, ScheduleEntry } from "@/lib/types";
 import { ROOM_TYPE_LABELS } from "@/lib/constants";
 
@@ -56,47 +55,71 @@ export function RoomUtilizationChart({
     );
   }
 
+  // SVG donut calculations
+  const radius = 52;
+  const circumference = 2 * Math.PI * radius;
+  const strokeWidth = 12;
+
+  // Build donut segments
+  const segments = useMemo(() => {
+    const total = chartData.reduce((sum, d) => sum + d.value, 0);
+    if (total === 0) return [];
+
+    let offset = 0;
+    return chartData
+      .filter((d) => d.value > 0)
+      .map((d) => {
+        const pct = d.value / total;
+        const length = pct * circumference;
+        const seg = {
+          ...d,
+          dasharray: `${length} ${circumference - length}`,
+          dashoffset: -offset,
+          color: TYPE_COLORS[d.type] || "var(--muted)",
+        };
+        offset += length;
+        return seg;
+      });
+  }, [chartData, circumference]);
+
   return (
     <div className="flex flex-col items-center">
-      <div className="w-full h-[220px] relative">
-        <ResponsiveContainer width="100%" height="100%">
-          <PieChart>
-            <Pie
-              data={chartData}
-              cx="50%"
-              cy="50%"
-              innerRadius={60}
-              outerRadius={85}
-              dataKey="value"
-              strokeWidth={2}
-              stroke="var(--surface-solid)"
-            >
-              {chartData.map((entry, index) => (
-                <Cell
-                  key={index}
-                  fill={TYPE_COLORS[entry.type] || "var(--muted)"}
-                  opacity={0.85}
-                />
-              ))}
-            </Pie>
-            <Tooltip
-              content={({ active, payload }) => {
-                if (!active || !payload?.length) return null;
-                const d = payload[0].payload;
-                return (
-                  <div className="apple-card px-3 py-2 text-xs">
-                    <p className="font-semibold">{d.name}</p>
-                    <p>
-                      Band: {d.value} / {d.total}
-                    </p>
-                  </div>
-                );
-              }}
+      {/* SVG Donut */}
+      <div className="relative w-[160px] h-[160px]">
+        <svg
+          viewBox="0 0 128 128"
+          className="w-full h-full -rotate-90"
+        >
+          {/* Background ring */}
+          <circle
+            cx="64"
+            cy="64"
+            r={radius}
+            fill="none"
+            stroke="var(--surface-secondary)"
+            strokeWidth={strokeWidth}
+            opacity={0.4}
+          />
+          {/* Data segments */}
+          {segments.map((seg) => (
+            <circle
+              key={seg.type}
+              cx="64"
+              cy="64"
+              r={radius}
+              fill="none"
+              stroke={seg.color}
+              strokeWidth={strokeWidth}
+              strokeDasharray={seg.dasharray}
+              strokeDashoffset={seg.dashoffset}
+              strokeLinecap="round"
+              opacity={0.85}
+              className="transition-all duration-500"
             />
-          </PieChart>
-        </ResponsiveContainer>
+          ))}
+        </svg>
         {/* Center label */}
-        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+        <div className="absolute inset-0 flex items-center justify-center">
           <div className="text-center">
             <div className="text-2xl font-bold text-[var(--foreground)]">
               {utilPercent}%
@@ -109,14 +132,13 @@ export function RoomUtilizationChart({
       </div>
 
       {/* Legend */}
-      <div className="flex flex-wrap justify-center gap-3 mt-2">
+      <div className="flex flex-wrap justify-center gap-3 mt-3">
         {chartData.map((item) => (
           <div key={item.type} className="flex items-center gap-1.5">
             <div
               className="w-2.5 h-2.5 rounded-full"
               style={{
-                backgroundColor:
-                  TYPE_COLORS[item.type] || "var(--muted)",
+                backgroundColor: TYPE_COLORS[item.type] || "var(--muted)",
               }}
             />
             <span className="text-xs text-[var(--muted)]">

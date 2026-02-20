@@ -2,7 +2,6 @@
 
 import { useMemo } from "react";
 import Link from "next/link";
-import dynamic from "next/dynamic";
 import { useTeacherStore } from "@/stores/useTeacherStore";
 import { useGroupStore } from "@/stores/useGroupStore";
 import { useSubjectStore } from "@/stores/useSubjectStore";
@@ -15,22 +14,8 @@ import { Spinner } from "@/components/ui/Spinner";
 import { AlertsPanel } from "@/components/dashboard/AlertsPanel";
 import { ScheduleHeatmap } from "@/components/dashboard/ScheduleHeatmap";
 import { QuickStats } from "@/components/dashboard/QuickStats";
-
-const TeacherWorkloadChart = dynamic(
-  () =>
-    import("@/components/dashboard/TeacherWorkloadChart").then(
-      (m) => m.TeacherWorkloadChart
-    ),
-  { ssr: false, loading: () => <div className="h-[280px]" /> }
-);
-
-const RoomUtilizationChart = dynamic(
-  () =>
-    import("@/components/dashboard/RoomUtilizationChart").then(
-      (m) => m.RoomUtilizationChart
-    ),
-  { ssr: false, loading: () => <div className="h-[280px]" /> }
-);
+import { TeacherWorkloadChart } from "@/components/dashboard/TeacherWorkloadChart";
+import { RoomUtilizationChart } from "@/components/dashboard/RoomUtilizationChart";
 
 // ─── Teacher Dashboard ──────────────────────────────────────────────────────
 function TeacherDashboard() {

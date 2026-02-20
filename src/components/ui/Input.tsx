@@ -1,7 +1,7 @@
 "use client";
 
 import { cn } from "@/lib/utils";
-import { forwardRef, InputHTMLAttributes } from "react";
+import { forwardRef, InputHTMLAttributes, useId } from "react";
 
 interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
   label?: string;
@@ -10,7 +10,9 @@ interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
 
 const Input = forwardRef<HTMLInputElement, InputProps>(
   ({ label, error, className, id, ...props }, ref) => {
-    const inputId = id || label?.toLowerCase().replace(/\s+/g, "-");
+    const generatedId = useId();
+    const inputId = id || generatedId;
+    const errorId = `${inputId}-error`;
 
     return (
       <div className="flex flex-col gap-1.5">
@@ -25,6 +27,8 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
         <input
           ref={ref}
           id={inputId}
+          aria-invalid={error ? true : undefined}
+          aria-describedby={error ? errorId : undefined}
           className={cn(
             "h-12 md:h-11 w-full rounded-[var(--radius)] border bg-[var(--glass-bg)] backdrop-blur-[var(--glass-blur-light)] px-4 text-[15px] text-[var(--foreground)] placeholder:text-[var(--muted-light)] transition-all duration-300 [transition-timing-function:var(--spring-smooth)]",
             "focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)]/25 focus:border-[var(--color-accent)]/50",
@@ -34,7 +38,11 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
           )}
           {...props}
         />
-        {error && <p className="text-[12px] text-[var(--color-danger)]">{error}</p>}
+        {error && (
+          <p id={errorId} role="alert" className="text-[12px] text-[var(--color-danger)]">
+            {error}
+          </p>
+        )}
       </div>
     );
   }

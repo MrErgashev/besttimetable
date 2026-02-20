@@ -13,8 +13,6 @@ import { Badge } from "@/components/ui/Badge";
 import { Select } from "@/components/ui/Select";
 import { Spinner } from "@/components/ui/Spinner";
 
-import { parseExcelFile } from "@/lib/import/excel-parser";
-import { parseWordFile } from "@/lib/import/word-parser";
 import { mapParsedRows, type MappingResult } from "@/lib/import/mapper";
 import type { ParsedRow } from "@/lib/import/excel-parser";
 
@@ -61,6 +59,7 @@ export default function ImportPage() {
         const buffer = await file.arrayBuffer();
 
         if (ext === "xlsx") {
+          const { parseExcelFile } = await import("@/lib/import/excel-parser");
           const result = parseExcelFile(buffer);
           const allRows = result.sheets.flatMap((s) => s.rows);
           setParsedRows(allRows);
@@ -68,6 +67,7 @@ export default function ImportPage() {
             `${result.sheets.length} ta varoq, ${result.format} format, ${result.totalRows} ta qator`
           );
         } else {
+          const { parseWordFile } = await import("@/lib/import/word-parser");
           const result = await parseWordFile(buffer);
           const allRows = result.tables.flatMap((t) => t.rows);
           setParsedRows(allRows);

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useMemo, Fragment } from "react";
+import { useState, useCallback, useMemo, Fragment, memo } from "react";
 import {
   DndContext,
   DragOverlay,
@@ -324,7 +324,7 @@ interface DroppableCellProps {
   onRemove?: () => void;
 }
 
-function DroppableCell({
+const DroppableCell = memo(function DroppableCell({
   day,
   slot,
   entry,
@@ -364,4 +364,4 @@ function DroppableCell({
       )}
     </td>
   );
-}
+});

@@ -11,12 +11,6 @@ import { GlassCard } from "@/components/ui/GlassCard";
 import { Button } from "@/components/ui/Button";
 import { Select } from "@/components/ui/Select";
 import { Spinner } from "@/components/ui/Spinner";
-import { exportGroupPDF, exportTeacherPDF, exportRoomPDF } from "@/lib/export/pdf";
-import {
-  exportGroupExcel,
-  exportTeacherExcel,
-  exportAllGroupsExcel,
-} from "@/lib/export/excel";
 
 type ExportView = "group" | "teacher" | "room" | "all";
 type ExportFormat = "pdf" | "excel";
@@ -36,19 +30,33 @@ export default function ExportPage() {
 
   const ctx = { entries, teachers, subjects, rooms, groups };
 
-  function handleExport() {
+  async function handleExport() {
     setExporting(true);
     try {
       if (view === "all") {
+        const { exportAllGroupsExcel } = await import("@/lib/export/excel");
         exportAllGroupsExcel(ctx);
       } else if (view === "group" && selectedId) {
-        if (format === "pdf") exportGroupPDF(selectedId, ctx);
-        else exportGroupExcel(selectedId, ctx);
+        if (format === "pdf") {
+          const { exportGroupPDF } = await import("@/lib/export/pdf");
+          exportGroupPDF(selectedId, ctx);
+        } else {
+          const { exportGroupExcel } = await import("@/lib/export/excel");
+          exportGroupExcel(selectedId, ctx);
+        }
       } else if (view === "teacher" && selectedId) {
-        if (format === "pdf") exportTeacherPDF(selectedId, ctx);
-        else exportTeacherExcel(selectedId, ctx);
+        if (format === "pdf") {
+          const { exportTeacherPDF } = await import("@/lib/export/pdf");
+          exportTeacherPDF(selectedId, ctx);
+        } else {
+          const { exportTeacherExcel } = await import("@/lib/export/excel");
+          exportTeacherExcel(selectedId, ctx);
+        }
       } else if (view === "room" && selectedId) {
-        if (format === "pdf") exportRoomPDF(selectedId, ctx);
+        if (format === "pdf") {
+          const { exportRoomPDF } = await import("@/lib/export/pdf");
+          exportRoomPDF(selectedId, ctx);
+        }
       }
     } catch (err) {
       console.error("Export error:", err);
@@ -127,7 +135,7 @@ export default function ExportPage() {
                       className="accent-[#007AFF]"
                     />
                     <span className="flex items-center gap-1">
-                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
                         <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" />
                         <path d="M14 2v6h6M16 13H8M16 17H8M10 9H8" />
                       </svg>
@@ -144,7 +152,7 @@ export default function ExportPage() {
                       className="accent-[#007AFF]"
                     />
                     <span className="flex items-center gap-1">
-                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
                         <rect x="3" y="3" width="18" height="18" rx="2" />
                         <path d="M3 9h18M3 15h18M9 3v18M15 3v18" />
                       </svg>
@@ -172,7 +180,7 @@ export default function ExportPage() {
               </span>
             ) : (
               <>
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="inline mr-2">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="inline mr-2" aria-hidden="true">
                   <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3" />
                 </svg>
                 Yuklab olish

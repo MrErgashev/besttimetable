@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useCallback } from "react";
+import { useEffect, useCallback, useRef } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { useTimetableStore } from "@/stores/useTimetableStore";
 import type { ScheduleEntry } from "@/lib/types";
@@ -10,8 +10,8 @@ import type { ScheduleEntry } from "@/lib/types";
  * Boshqa admin dars qo'ysa/o'chirsa/ko'chirsa — grid darhol yangilanadi.
  */
 export function useRealtimeSchedule() {
-  const { entries, bulkLoad } = useTimetableStore();
-  const supabase = createClient();
+  const supabaseRef = useRef(createClient());
+  const supabase = supabaseRef.current;
 
   // Boshlang'ich yuklash
   const fetchEntries = useCallback(async () => {
@@ -23,23 +23,10 @@ export function useRealtimeSchedule() {
 
     if (data && !error) {
       const rows = data as unknown as Record<string, unknown>[];
-      const mapped: ScheduleEntry[] = rows.map((row) => ({
-        id: row.id as string,
-        period_id: row.period_id as string,
-        day: row.day as ScheduleEntry["day"],
-        slot_id: row.slot_id as string,
-        group_ids: (row.group_ids as string[]) || [],
-        subject_id: row.subject_id as string,
-        teacher_id: row.teacher_id as string,
-        room_id: row.room_id as string,
-        is_manual: row.is_manual as boolean,
-        created_by: (row.created_by as string) || "unknown",
-        created_at: row.created_at as string,
-        updated_at: row.updated_at as string,
-      }));
-      bulkLoad(mapped);
+      const mapped: ScheduleEntry[] = rows.map((row) => mapRow(row));
+      useTimetableStore.getState().bulkLoad(mapped);
     }
-  }, [supabase, bulkLoad]);
+  }, [supabase]);
 
   // Realtime subscription
   useEffect(() => {
@@ -88,7 +75,7 @@ export function useRealtimeSchedule() {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [supabase, fetchEntries]);
 
   return { refetch: fetchEntries };
 }

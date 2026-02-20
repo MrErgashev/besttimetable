@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { createClient } from "@/lib/supabase/client";
 import type { User } from "@supabase/supabase-js";
 import type { AppUser } from "@/lib/types";
@@ -20,40 +20,44 @@ export function useAuth() {
     error: null,
   });
 
-  const supabase = createClient();
+  const supabaseRef = useRef(createClient());
+  const supabase = supabaseRef.current;
 
-  async function fetchProfile(userId: string) {
-    try {
-      const { data, error } = await supabase
-        .from("app_users")
-        .select("*")
-        .eq("id", userId)
-        .single();
+  const fetchProfile = useCallback(
+    async (userId: string) => {
+      try {
+        const { data, error } = await supabase
+          .from("app_users")
+          .select("*")
+          .eq("id", userId)
+          .single();
 
-      if (error) {
-        setState((s) => ({ ...s, error: error.message }));
-        return;
+        if (error) {
+          setState((s) => ({ ...s, error: error.message }));
+          return;
+        }
+
+        if (data) {
+          const row = data as Record<string, unknown>;
+          setState((s) => ({
+            ...s,
+            profile: {
+              id: row.id as string,
+              email: row.email as string,
+              full_name: (row.full_name as string) || "",
+              role: (row.role as AppUser["role"]) || "student",
+              department_id: (row.department_id as string) || undefined,
+              telegram_chat_id: (row.telegram_chat_id as string) || undefined,
+              created_at: row.created_at as string,
+            },
+          }));
+        }
+      } catch {
+        // Supabase ulanmagan bo'lsa xatolik bo'lmasligi uchun
       }
-
-      if (data) {
-        const row = data as Record<string, unknown>;
-        setState((s) => ({
-          ...s,
-          profile: {
-            id: row.id as string,
-            email: row.email as string,
-            full_name: (row.full_name as string) || "",
-            role: (row.role as AppUser["role"]) || "student",
-            department_id: (row.department_id as string) || undefined,
-            telegram_chat_id: (row.telegram_chat_id as string) || undefined,
-            created_at: row.created_at as string,
-          },
-        }));
-      }
-    } catch {
-      // Supabase ulanmagan bo'lsa xatolik bo'lmasligi uchun
-    }
-  }
+    },
+    [supabase]
+  );
 
   // Sessiya tinglash
   useEffect(() => {
@@ -80,7 +84,7 @@ export function useAuth() {
     });
 
     return () => subscription.unsubscribe();
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [supabase, fetchProfile]);
 
   // Login
   const signIn = useCallback(

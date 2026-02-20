@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useTeacherStore } from "@/stores/useTeacherStore";
 import { useGroupStore } from "@/stores/useGroupStore";
 import { useSubjectStore } from "@/stores/useSubjectStore";
@@ -27,6 +27,12 @@ export default function SettingsPage() {
 
   const [showClearConfirm, setShowClearConfirm] = useState(false);
   const [clearTarget, setClearTarget] = useState<string>("");
+  const [showTestAccounts, setShowTestAccounts] = useState(true);
+
+  useEffect(() => {
+    const stored = localStorage.getItem("showTestAccounts");
+    setShowTestAccounts(stored !== "false");
+  }, []);
 
   if (!hydrated) return <Spinner className="py-20" />;
 
@@ -83,6 +89,40 @@ export default function SettingsPage() {
             <span className="text-[var(--muted)]">Ma&apos;lumot saqlash</span>
             <Badge>Lokal (localStorage)</Badge>
           </div>
+        </div>
+      </GlassCard>
+
+      {/* Demo rejim */}
+      <GlassCard>
+        <h2 className="text-lg font-semibold mb-4">Demo rejim</h2>
+        <div className="flex items-center justify-between">
+          <div>
+            <p className="text-sm font-medium">Test hisoblarni ko&apos;rsatish</p>
+            <p className="text-xs text-[var(--muted)] mt-0.5">
+              Login sahifasida test hisoblar ko&apos;rsatiladi.
+              <br />
+              Rahbariyatga ko&apos;rsatish uchun o&apos;chirib qo&apos;ying.
+            </p>
+          </div>
+          <button
+            type="button"
+            role="switch"
+            aria-checked={showTestAccounts}
+            onClick={() => {
+              const next = !showTestAccounts;
+              setShowTestAccounts(next);
+              localStorage.setItem("showTestAccounts", String(next));
+            }}
+            className={`relative inline-flex h-7 w-12 shrink-0 cursor-pointer items-center rounded-full border-2 border-transparent transition-colors duration-300 [transition-timing-function:var(--spring-smooth)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)]/30 ${
+              showTestAccounts ? "bg-[var(--color-accent)]" : "bg-[var(--muted-light)]"
+            }`}
+          >
+            <span
+              className={`pointer-events-none inline-block h-5 w-5 rounded-full bg-white shadow-md transition-transform duration-300 [transition-timing-function:var(--spring-bounce)] ${
+                showTestAccounts ? "translate-x-5" : "translate-x-0.5"
+              }`}
+            />
+          </button>
         </div>
       </GlassCard>
 

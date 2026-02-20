@@ -1,13 +1,16 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { ThemeToggle } from "@/components/ui/ThemeToggle";
 import { Shield, UserCog, GraduationCap, BookOpen } from "lucide-react";
 import { MeshBackground } from "@/components/ui/MeshBackground";
+
+const SHOW_TEST_ACCOUNTS_KEY = "showTestAccounts";
 
 const TEST_ACCOUNTS = [
   {
@@ -54,6 +57,15 @@ export default function LoginPage() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [showTestAccounts, setShowTestAccounts] = useState(false);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+    const stored = localStorage.getItem(SHOW_TEST_ACCOUNTS_KEY);
+    // Default: true (ko'rsatish), faqat aniq "false" bo'lsa yashirish
+    setShowTestAccounts(stored !== "false");
+  }, []);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -94,85 +106,99 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="bg-[var(--background)] min-h-screen flex items-center justify-center p-4 relative">
+    <div className="bg-[var(--background)] min-h-screen flex flex-col items-center justify-center p-4 relative">
       <MeshBackground />
+
+      {/* Theme toggle */}
       <div className="fixed top-4 right-4 z-20">
         <ThemeToggle />
       </div>
 
-      <div className="w-full max-w-lg relative z-10">
-        <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-[var(--color-accent)]">
-            BestTimetable
-          </h1>
-          <p className="text-sm text-[var(--muted)] mt-2">
+      <div className="w-full max-w-[400px] relative z-10 flex flex-col items-center">
+        {/* Logo va sarlavha */}
+        <div className="text-center mb-6">
+          <div className="flex justify-center mb-4">
+            <Image
+              src="/images/oriental-logo.svg"
+              alt="Oriental Universiteti"
+              width={80}
+              height={80}
+              className="drop-shadow-md"
+              priority
+            />
+          </div>
+          <h1 className="text-xl font-semibold text-[var(--foreground)]">
             Dars jadvali boshqaruv tizimi
+          </h1>
+        </div>
+
+        {/* Login karta */}
+        <div className="w-full apple-card rounded-[var(--radius-xl)] p-6 md:p-8">
+          <h2 className="text-lg font-semibold text-center mb-6">
+            Tizimga kirish
+          </h2>
+
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <Input
+              label="Email"
+              type="email"
+              placeholder="email@example.com"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+            />
+            <Input
+              label="Parol"
+              type="password"
+              placeholder="Parolingiz"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+            />
+
+            {error && (
+              <div className="p-3 rounded-[var(--radius)] bg-[var(--color-danger)]/12 backdrop-blur-sm border border-[var(--color-danger)]/20 text-[var(--color-danger)] text-sm text-center">
+                {error}
+              </div>
+            )}
+
+            <Button
+              type="submit"
+              className="w-full"
+              size="lg"
+              disabled={loading}
+            >
+              {loading ? "Kirilyapti..." : "Kirish"}
+            </Button>
+          </form>
+
+          <p className="mt-5 text-center text-[13px] text-[var(--muted)] leading-relaxed">
+            Dars jadvalingizni oson rejalashtiring,
+            <br />
+            vaqtingizni tejang
           </p>
         </div>
 
-        <div className="grid gap-6 md:grid-cols-2">
-          {/* Login form */}
-          <div className="apple-card rounded-[20px] p-6">
-            <h2 className="text-xl font-semibold mb-6">Tizimga kirish</h2>
-
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <Input
-                label="Email"
-                type="email"
-                placeholder="email@example.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-              />
-              <Input
-                label="Parol"
-                type="password"
-                placeholder="Parolingiz"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-              />
-
-              {error && (
-                <div className="p-3 rounded-[var(--radius)] bg-[var(--color-danger)]/12 backdrop-blur-sm border border-[var(--color-danger)]/20 text-[var(--color-danger)] text-sm">
-                  {error}
-                </div>
-              )}
-
-              <Button
-                type="submit"
-                className="w-full"
-                size="lg"
-                disabled={loading}
-              >
-                {loading ? "Kirilyapti..." : "Kirish"}
-              </Button>
-            </form>
-
-            <div className="mt-4 text-center text-xs text-[var(--muted)]">
-              Foydalanuvchilar admin tomonidan yaratiladi
-            </div>
-          </div>
-
-          {/* Test accounts */}
-          <div className="apple-card rounded-[20px] p-6">
-            <h2 className="text-sm font-semibold mb-4 text-[var(--muted)]">
+        {/* Test accounts — shartli ko'rsatish */}
+        {mounted && showTestAccounts && (
+          <div className="w-full apple-card rounded-[var(--radius-xl)] p-5 mt-4 animate-[slide-up_0.4s_var(--spring-smooth)_both]">
+            <h3 className="text-sm font-semibold mb-3 text-[var(--muted)]">
               Test hisoblar
-            </h2>
+            </h3>
 
-            <div className="space-y-2.5">
+            <div className="space-y-2">
               {TEST_ACCOUNTS.map((acc) => (
                 <button
                   key={acc.email}
                   type="button"
                   onClick={() => fillCredentials(acc.email, acc.password)}
-                  className="w-full flex items-center gap-3 p-3 rounded-[var(--radius)]
+                  className="w-full flex items-center gap-3 p-2.5 rounded-[var(--radius)]
                     bg-[var(--glass-bg)] backdrop-blur-[var(--glass-blur-light)] hover:bg-[var(--glass-bg-heavy)] border border-[var(--glass-border-subtle)] transition-all duration-300 [transition-timing-function:var(--spring-smooth)] text-left group"
                 >
                   <div
-                    className={`w-9 h-9 rounded-lg ${acc.bg} flex items-center justify-center shrink-0`}
+                    className={`w-8 h-8 rounded-lg ${acc.bg} flex items-center justify-center shrink-0`}
                   >
-                    <acc.icon className={`w-4.5 h-4.5 ${acc.color}`} />
+                    <acc.icon className={`w-4 h-4 ${acc.color}`} />
                   </div>
                   <div className="min-w-0 flex-1">
                     <div className="text-sm font-medium truncate">
@@ -189,14 +215,15 @@ export default function LoginPage() {
               ))}
             </div>
 
-            <div className="mt-4 p-2.5 rounded-[var(--radius-sm)] bg-[var(--color-warning)]/12 backdrop-blur-sm border border-[var(--color-warning)]/20 text-[var(--color-warning)] text-xs">
+            <div className="mt-3 p-2 rounded-[var(--radius-sm)] bg-[var(--color-warning)]/12 backdrop-blur-sm border border-[var(--color-warning)]/20 text-[var(--color-warning)] text-xs text-center">
               <strong>Parol:</strong> Test1234! (barchasi uchun)
             </div>
           </div>
-        </div>
+        )}
 
+        {/* Footer */}
         <p className="text-center text-xs text-[var(--muted-light)] mt-6">
-          BestTimetable &copy; 2026
+          Oriental Universiteti Dars jadvali boshqaruv tizimi &copy; 2026
         </p>
       </div>
     </div>

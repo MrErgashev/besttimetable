@@ -179,7 +179,7 @@ export default function GeneratePage() {
     <div className="max-w-7xl mx-auto space-y-6">
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-[28px] font-bold tracking-tight md:text-[32px]">Avtomatik jadval tuzish</h1>
+          <h1 className="text-2xl font-bold">Avtomatik jadval tuzish</h1>
           <p className="text-sm text-[var(--muted)] mt-1">
             Dars yuklamalarini kiriting va avtomatik jadval tuzilsin
           </p>
@@ -330,7 +330,7 @@ export default function GeneratePage() {
                       max_consecutive_lessons: parseInt(e.target.value),
                     })
                   }
-                  className="bg-[var(--surface-solid)] border border-[var(--border)] rounded-[12px] px-2 py-1 text-sm"
+                  className="glass-subtle rounded px-2 py-1 text-sm"
                 >
                   <option value="2">2</option>
                   <option value="3">3</option>
@@ -376,7 +376,7 @@ export default function GeneratePage() {
                 </div>
                 <div className="h-2 bg-[var(--surface)] rounded-full overflow-hidden">
                   <div
-                    className="h-full bg-gradient-to-r from-[var(--color-accent)] to-[#5856D6] rounded-full transition-all duration-300"
+                    className="h-full bg-gradient-to-r from-indigo-500 to-violet-500 rounded-full transition-all duration-300"
                     style={{
                       width: `${progress.total ? (progress.placed / progress.total) * 100 : 0}%`,
                     }}
@@ -524,7 +524,7 @@ export default function GeneratePage() {
               step="1.5"
               value={loadWeeklyHours}
               onChange={(e) => setLoadWeeklyHours(e.target.value)}
-              className="w-full bg-[var(--surface-solid)] border border-[var(--border)] rounded-[12px] px-3 py-2 text-sm"
+              className="w-full glass-subtle rounded-xl px-3 py-2 text-sm"
             />
           </div>
           <Select

@@ -15,7 +15,7 @@ const TEST_ACCOUNTS = [
     password: "Test1234!",
     icon: Shield,
     color: "text-red-500",
-    bg: "bg-red-50 dark:bg-red-900/20",
+    bg: "bg-red-500/10",
     desc: "Tizimni to'liq boshqaradi",
   },
   {
@@ -23,8 +23,8 @@ const TEST_ACCOUNTS = [
     email: "admin@timetable.uz",
     password: "Test1234!",
     icon: UserCog,
-    color: "text-[var(--color-accent)]",
-    bg: "bg-blue-50 dark:bg-blue-900/20",
+    color: "text-blue-500",
+    bg: "bg-blue-500/10",
     desc: "Bo'lim jadvalini boshqaradi",
   },
   {
@@ -32,8 +32,8 @@ const TEST_ACCOUNTS = [
     email: "teacher@timetable.uz",
     password: "Test1234!",
     icon: BookOpen,
-    color: "text-[var(--color-success)]",
-    bg: "bg-emerald-50 dark:bg-emerald-900/20",
+    color: "text-green-500",
+    bg: "bg-green-500/10",
     desc: "O'z jadvalini ko'radi",
   },
   {
@@ -41,8 +41,8 @@ const TEST_ACCOUNTS = [
     email: "student@timetable.uz",
     password: "Test1234!",
     icon: GraduationCap,
-    color: "text-purple-500",
-    bg: "bg-purple-50 dark:bg-purple-900/20",
+    color: "text-violet-500",
+    bg: "bg-violet-500/10",
     desc: "Faqat jadval ko'radi",
   },
 ];
@@ -93,15 +93,14 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 bg-[var(--background)]">
-      <div className="fixed top-4 right-4" style={{ paddingTop: "var(--safe-area-top)" }}>
+    <div className="bg-ambient min-h-screen flex items-center justify-center p-4">
+      <div className="fixed top-4 right-4">
         <ThemeToggle />
       </div>
 
-      <div className="w-full max-w-lg animate-[scale-in_0.3s_cubic-bezier(0.32,0.72,0,1)]">
-        {/* Logo */}
+      <div className="w-full max-w-lg">
         <div className="text-center mb-8">
-          <h1 className="text-[32px] font-bold text-[var(--foreground)] tracking-tight">
+          <h1 className="text-3xl font-bold bg-gradient-to-r from-indigo-500 to-violet-500 bg-clip-text text-transparent">
             BestTimetable
           </h1>
           <p className="text-sm text-[var(--muted)] mt-2">
@@ -111,7 +110,7 @@ export default function LoginPage() {
 
         <div className="grid gap-6 md:grid-cols-2">
           {/* Login form */}
-          <div className="bg-[var(--surface)] border border-[var(--border)] rounded-[20px] p-6 shadow-[var(--shadow-xl)]">
+          <div className="glass-strong rounded-2xl p-6">
             <h2 className="text-xl font-semibold mb-6">Tizimga kirish</h2>
 
             <form onSubmit={handleSubmit} className="space-y-4">
@@ -133,7 +132,7 @@ export default function LoginPage() {
               />
 
               {error && (
-                <div className="p-3 rounded-[12px] bg-red-50 dark:bg-red-900/30 text-red-700 dark:text-red-400 text-sm">
+                <div className="p-3 rounded-xl bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 text-sm">
                   {error}
                 </div>
               )}
@@ -154,7 +153,7 @@ export default function LoginPage() {
           </div>
 
           {/* Test accounts */}
-          <div className="bg-[var(--surface)] border border-[var(--border)] rounded-[20px] p-6 shadow-[var(--shadow-xl)]">
+          <div className="glass-strong rounded-2xl p-6">
             <h2 className="text-sm font-semibold mb-4 text-[var(--muted)]">
               Test hisoblar
             </h2>
@@ -165,11 +164,11 @@ export default function LoginPage() {
                   key={acc.email}
                   type="button"
                   onClick={() => fillCredentials(acc.email, acc.password)}
-                  className="w-full flex items-center gap-3 p-3 rounded-[12px]
-                    bg-[var(--surface-hover)] hover:bg-[var(--surface-hover)] transition-all text-left group active:scale-[0.98]"
+                  className="w-full flex items-center gap-3 p-3 rounded-xl
+                    glass hover:bg-[var(--surface-hover)] transition-all text-left group"
                 >
                   <div
-                    className={`w-9 h-9 rounded-[10px] ${acc.bg} flex items-center justify-center shrink-0`}
+                    className={`w-9 h-9 rounded-lg ${acc.bg} flex items-center justify-center shrink-0`}
                   >
                     <acc.icon className={`w-4.5 h-4.5 ${acc.color}`} />
                   </div>
@@ -181,14 +180,14 @@ export default function LoginPage() {
                       {acc.desc}
                     </div>
                   </div>
-                  <div className="text-xs text-[var(--color-accent)] opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
+                  <div className="text-xs text-accent opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
                     Kirish
                   </div>
                 </button>
               ))}
             </div>
 
-            <div className="mt-4 p-2.5 rounded-[10px] bg-amber-50 dark:bg-amber-900/20 text-amber-600 dark:text-amber-400 text-xs">
+            <div className="mt-4 p-2.5 rounded-lg bg-amber-500/10 text-amber-600 dark:text-amber-400 text-xs">
               <strong>Parol:</strong> Test1234! (barchasi uchun)
             </div>
           </div>

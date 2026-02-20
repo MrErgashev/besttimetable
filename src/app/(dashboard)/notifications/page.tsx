@@ -13,7 +13,7 @@ export default function NotificationsPage() {
   return (
     <div className="max-w-2xl mx-auto space-y-6">
       <div>
-        <h1 className="text-[28px] font-bold tracking-tight md:text-[32px]">Bildirishnomalar</h1>
+        <h1 className="text-2xl font-bold">Bildirishnomalar</h1>
         <p className="text-sm text-[var(--muted)] mt-1">
           Jadval o&apos;zgarishlari haqida bildirishnomalar
         </p>
@@ -43,7 +43,7 @@ export default function NotificationsPage() {
         <h2 className="text-lg font-semibold mb-3">Qanday ishlaydi?</h2>
         <div className="space-y-3 text-sm">
           <div className="flex gap-3">
-            <div className="w-6 h-6 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center text-xs font-bold text-[var(--color-accent)] flex-shrink-0">
+            <div className="w-6 h-6 rounded-full bg-indigo-100 dark:bg-indigo-900/30 flex items-center justify-center text-xs font-bold text-indigo-500 flex-shrink-0">
               1
             </div>
             <div>
@@ -54,7 +54,7 @@ export default function NotificationsPage() {
             </div>
           </div>
           <div className="flex gap-3">
-            <div className="w-6 h-6 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center text-xs font-bold text-[var(--color-accent)] flex-shrink-0">
+            <div className="w-6 h-6 rounded-full bg-indigo-100 dark:bg-indigo-900/30 flex items-center justify-center text-xs font-bold text-indigo-500 flex-shrink-0">
               2
             </div>
             <div>
@@ -65,7 +65,7 @@ export default function NotificationsPage() {
             </div>
           </div>
           <div className="flex gap-3">
-            <div className="w-6 h-6 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center text-xs font-bold text-[var(--color-accent)] flex-shrink-0">
+            <div className="w-6 h-6 rounded-full bg-indigo-100 dark:bg-indigo-900/30 flex items-center justify-center text-xs font-bold text-indigo-500 flex-shrink-0">
               3
             </div>
             <div>

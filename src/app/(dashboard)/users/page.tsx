@@ -28,7 +28,7 @@ const ROLE_CONFIG: Record<
   super_admin: { label: "Super Admin", color: "red", icon: Shield },
   admin: { label: "Admin", color: "blue", icon: UserCog },
   teacher: { label: "O'qituvchi", color: "green", icon: BookOpen },
-  student: { label: "Talaba", color: "purple", icon: GraduationCap },
+  student: { label: "Talaba", color: "violet", icon: GraduationCap },
 };
 
 export default function UsersPage() {
@@ -183,7 +183,7 @@ export default function UsersPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-[28px] font-bold tracking-tight md:text-[32px]">Foydalanuvchilar</h1>
+          <h1 className="text-2xl font-bold">Foydalanuvchilar</h1>
           <p className="text-sm text-[var(--muted)] mt-1">
             Tizim foydalanuvchilarini boshqarish
           </p>
@@ -196,12 +196,12 @@ export default function UsersPage() {
 
       {/* Xabarlar */}
       {successMsg && (
-        <div className="p-3 rounded-[12px] bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 text-sm">
+        <div className="p-3 rounded-xl bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 text-sm">
           {successMsg}
         </div>
       )}
       {error && (
-        <div className="p-3 rounded-[12px] bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 text-sm">
+        <div className="p-3 rounded-xl bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 text-sm">
           {error}
         </div>
       )}
@@ -224,7 +224,7 @@ export default function UsersPage() {
           <div className="text-xs text-[var(--muted)]">O&apos;qituvchilar</div>
         </GlassCard>
         <GlassCard className="p-4 text-center">
-          <GraduationCap className="w-5 h-5 mx-auto mb-1 text-[#5856D6]" />
+          <GraduationCap className="w-5 h-5 mx-auto mb-1 text-violet-500" />
           <div className="text-2xl font-bold">{stats.students}</div>
           <div className="text-xs text-[var(--muted)]">Talabalar</div>
         </GlassCard>
@@ -240,7 +240,7 @@ export default function UsersPage() {
               placeholder="Ism yoki email bo'yicha qidirish..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="w-full pl-10 pr-4 py-2.5 text-sm rounded-[12px] bg-[var(--surface-solid)] border border-[var(--border)] text-[var(--foreground)] focus:border-[var(--color-accent)] focus:ring-2 focus:ring-[var(--color-accent)]/20 focus:outline-none"
+              className="w-full pl-10 pr-4 py-2.5 text-sm rounded-xl bg-[var(--surface-solid)] border border-[var(--border)] text-[var(--foreground)] focus:border-accent focus:ring-2 focus:ring-accent/20 focus:outline-none"
             />
           </div>
           <Select
@@ -281,10 +281,10 @@ export default function UsersPage() {
               return (
                 <div
                   key={user.id}
-                  className="flex items-center gap-4 p-4 hover:bg-[var(--surface-hover)] transition-colors"
+                  className="flex items-center gap-4 p-4 hover:bg-[var(--surface)] transition-colors"
                 >
                   <div
-                    className={`w-10 h-10 rounded-[12px] bg-${config.color}-500/10 flex items-center justify-center shrink-0`}
+                    className={`w-10 h-10 rounded-xl bg-${config.color}-500/10 flex items-center justify-center shrink-0`}
                   >
                     <Icon
                       className={`w-5 h-5 text-${config.color}-500`}
@@ -378,7 +378,7 @@ export default function UsersPage() {
           />
 
           {formError && (
-            <div className="p-3 rounded-[12px] bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 text-sm">
+            <div className="p-3 rounded-xl bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 text-sm">
               {formError}
             </div>
           )}

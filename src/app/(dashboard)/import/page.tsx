@@ -129,7 +129,7 @@ export default function ImportPage() {
   return (
     <div className="max-w-4xl mx-auto space-y-6">
       <div>
-        <h1 className="text-[28px] font-bold tracking-tight md:text-[32px]">Import</h1>
+        <h1 className="text-2xl font-bold">Import</h1>
         <p className="text-sm text-[var(--muted)] mt-1">
           Excel (.xlsx) yoki Word (.docx) fayldan dars jadvalini yuklash
         </p>
@@ -143,7 +143,7 @@ export default function ImportPage() {
             <div
               className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full ${
                 step === s
-                  ? "bg-[var(--color-accent)]/10 text-[var(--color-accent)] font-semibold"
+                  ? "bg-indigo-500/10 text-indigo-500 font-semibold"
                   : "text-[var(--muted)]"
               }`}
             >
@@ -175,7 +175,7 @@ export default function ImportPage() {
       {step === "upload" && (
         <GlassCard>
           <div
-            className="border-2 border-dashed border-[var(--border)] rounded-[16px] p-12 text-center cursor-pointer hover:border-[var(--color-accent)] transition-colors"
+            className="border-2 border-dashed border-[var(--border)] rounded-xl p-12 text-center cursor-pointer hover:border-indigo-400 transition-colors"
             onClick={() => fileInputRef.current?.click()}
           >
             <input

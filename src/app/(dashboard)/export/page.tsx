@@ -80,7 +80,7 @@ export default function ExportPage() {
   return (
     <div className="max-w-2xl mx-auto space-y-6">
       <div>
-        <h1 className="text-[28px] font-bold tracking-tight md:text-[32px]">Eksport</h1>
+        <h1 className="text-2xl font-bold">Eksport</h1>
         <p className="text-sm text-[var(--muted)] mt-1">
           Dars jadvalini PDF yoki Excel formatida yuklab olish
         </p>
@@ -124,7 +124,7 @@ export default function ExportPage() {
                       value="pdf"
                       checked={format === "pdf"}
                       onChange={() => setFormat("pdf")}
-                      className="accent-[var(--color-accent)]"
+                      className="accent-indigo-500"
                     />
                     <span className="flex items-center gap-1">
                       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -141,7 +141,7 @@ export default function ExportPage() {
                       value="excel"
                       checked={format === "excel"}
                       onChange={() => setFormat("excel")}
-                      className="accent-[var(--color-accent)]"
+                      className="accent-indigo-500"
                     />
                     <span className="flex items-center gap-1">
                       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">

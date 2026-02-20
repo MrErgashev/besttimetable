@@ -63,7 +63,7 @@ export default function SettingsPage() {
   return (
     <div className="max-w-2xl mx-auto space-y-6">
       <div>
-        <h1 className="text-[28px] font-bold tracking-tight md:text-[32px]">Sozlamalar</h1>
+        <h1 className="text-2xl font-bold">Sozlamalar</h1>
         <p className="text-sm text-[var(--muted)] mt-1">Tizim sozlamalari va ma&apos;lumotlar boshqaruvi</p>
       </div>
 

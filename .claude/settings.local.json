@@ -52,7 +52,11 @@
       "Bash(__NEW_LINE_202d2c8c4fa8a4f5__ curl -s -X POST \"https://wkgspvuxarpwqpgvhotx.supabase.co/auth/v1/admin/users\" -H \"apikey: $SERVICE_KEY\" -H \"Authorization: Bearer $SERVICE_KEY\" -H \"Content-Type: application/json\" --data-raw '{\"\"email\"\":\"\"superadmin@timetable.uz\"\",\"\"password\"\":\"\"Test1234\\\\u0021\"\",\"\"email_confirm\"\":true,\"\"user_metadata\"\":{\"\"full_name\"\":\"\"Super Admin\"\",\"\"role\"\":\"\"super_admin\"\"}}')",
       "Bash(node scripts/create-test-users.mjs:*)",
       "Bash(npm run lint:*)",
-      "Bash(git -C . rev-parse:*)"
+      "Bash(git -C . rev-parse:*)",
+      "Bash(python3:*)",
+      "Bash(python -c:*)",
+      "Bash(python -u -c:*)",
+      "Bash(python:*)"
     ]
   }
 }

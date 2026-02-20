@@ -55,7 +55,7 @@ export default function SubstitutionsPage() {
   return (
     <div className="max-w-4xl mx-auto space-y-6">
       <div>
-        <h1 className="text-[28px] font-bold tracking-tight md:text-[32px]">O&apos;rinbosar boshqaruvi</h1>
+        <h1 className="text-2xl font-bold">O&apos;rinbosar boshqaruvi</h1>
         <p className="text-sm text-[var(--muted)] mt-1">
           O&apos;qituvchi kelmasa, o&apos;rniga boshqa o&apos;qituvchi tayinlash
         </p>
@@ -103,12 +103,12 @@ export default function SubstitutionsPage() {
                     return (
                       <div
                         key={entry.id}
-                        className="flex items-center justify-between py-2 px-3 rounded-lg bg-[var(--surface-solid)] border border-[var(--border)]"
+                        className="flex items-center justify-between py-2 px-3 rounded-lg glass-subtle"
                       >
                         <div className="flex items-center gap-3">
                           <span
                             className="w-1 h-8 rounded-full"
-                            style={{ backgroundColor: subject?.color || "#007AFF" }}
+                            style={{ backgroundColor: subject?.color || "#6366f1" }}
                           />
                           <div>
                             <div className="text-sm font-medium">

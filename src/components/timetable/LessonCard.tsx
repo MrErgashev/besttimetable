@@ -36,26 +36,32 @@ export function LessonCard({
   return (
     <div
       ref={setNodeRef}
-      style={{ ...style, borderLeftColor: subject?.color || "#007AFF" }}
+      style={{ ...style, borderLeftColor: subject?.color || "#6366f1" }}
       {...listeners}
       {...attributes}
       className={cn(
-        "relative rounded-[10px] border-l-4 p-2 cursor-grab active:cursor-grabbing",
-        "bg-[var(--surface-hover)] border border-[var(--border)] text-xs select-none transition-all h-full",
-        isDragging && "opacity-60 shadow-[var(--shadow-xl)] rotate-1 scale-105 z-50",
-        hasConflict && "ring-2 ring-[var(--color-danger)]/50 ring-inset"
+        "relative rounded-lg border-l-4 p-2 cursor-grab active:cursor-grabbing",
+        "glass-subtle text-xs select-none transition-all h-full",
+        isDragging && "opacity-60 shadow-2xl rotate-1 scale-105 z-50",
+        hasConflict && "ring-2 ring-red-500/50 ring-inset"
       )}
     >
+      {/* Fan nomi */}
       <div className="font-semibold truncate text-[var(--foreground)]">
         {subject?.short_name || "?"}
       </div>
+
+      {/* O'qituvchi */}
       <div className="truncate text-[var(--muted)] mt-0.5">
         {teacher?.short_name || "?"}
       </div>
+
+      {/* Xona */}
       <div className="truncate text-[var(--muted-light)]">
         {room?.name || "?"}
       </div>
 
+      {/* Manual indicator */}
       {entry.is_manual && (
         <div
           className="absolute top-1 right-1 w-1.5 h-1.5 rounded-full bg-amber-400"
@@ -63,6 +69,7 @@ export function LessonCard({
         />
       )}
 
+      {/* Remove button */}
       {onRemove && (
         <button
           onClick={(e) => {
@@ -70,7 +77,7 @@ export function LessonCard({
             onRemove();
           }}
           onPointerDown={(e) => e.stopPropagation()}
-          className="absolute top-0.5 right-0.5 p-0.5 rounded-[6px] text-[var(--muted-light)] hover:text-[var(--color-danger)] opacity-0 group-hover:opacity-100 transition-opacity"
+          className="absolute top-0.5 right-0.5 p-0.5 rounded text-[var(--muted-light)] hover:text-danger opacity-0 group-hover:opacity-100 transition-opacity"
           title="O'chirish"
         >
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -82,7 +89,7 @@ export function LessonCard({
   );
 }
 
-/** Drag overlay versiyasi */
+/** Drag overlay versiyasi — store bilan bog'lanmagan */
 export function LessonCardOverlay({ entry }: { entry: ScheduleEntry }) {
   const subject = useSubjectStore((s) => s.getSubjectById(entry.subject_id));
   const teacher = useTeacherStore((s) => s.getTeacherById(entry.teacher_id));
@@ -90,8 +97,8 @@ export function LessonCardOverlay({ entry }: { entry: ScheduleEntry }) {
 
   return (
     <div
-      style={{ borderLeftColor: subject?.color || "#007AFF" }}
-      className="rounded-[10px] border-l-4 p-2 bg-[var(--surface)] border border-[var(--border)] text-xs select-none shadow-[var(--shadow-xl)] rotate-2 scale-110 w-32"
+      style={{ borderLeftColor: subject?.color || "#6366f1" }}
+      className="rounded-lg border-l-4 p-2 glass-strong text-xs select-none shadow-2xl rotate-2 scale-110 w-32"
     >
       <div className="font-semibold truncate text-[var(--foreground)]">
         {subject?.short_name || "?"}

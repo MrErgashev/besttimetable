@@ -121,8 +121,8 @@ export default function LoginPage() {
             <Image
               src="/images/oriental-logo.png"
               alt="Oriental Universiteti"
-              width={80}
-              height={80}
+              width={160}
+              height={160}
               className="drop-shadow-md"
               priority
             />

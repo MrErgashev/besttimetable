@@ -121,10 +121,10 @@ export function TimetableGrid({ groupId }: TimetableGridProps) {
               key={day.key}
               onClick={() => setMobileDay(day.key)}
               className={cn(
-                "flex-shrink-0 px-4 py-2 rounded-full text-[13px] font-medium transition-all",
+                "flex-shrink-0 px-4 py-2 rounded-full text-[13px] font-medium transition-all duration-300 [transition-timing-function:var(--spring-smooth)]",
                 mobileDay === day.key
-                  ? "bg-[var(--color-accent)] text-white"
-                  : "bg-[var(--surface-secondary)] text-[var(--muted)]"
+                  ? "bg-[var(--color-accent)]/85 text-white backdrop-blur-sm border border-white/20 shadow-[0_2px_8px_rgba(0,122,255,0.2)]"
+                  : "bg-[var(--glass-bg)] backdrop-blur-sm text-[var(--muted)] border border-[var(--glass-border-subtle)]"
               )}
             >
               {day.short}
@@ -179,7 +179,7 @@ export function TimetableGrid({ groupId }: TimetableGridProps) {
                         ) : (
                           <button
                             onClick={() => setAssignModal({ day: mobileDay, slot })}
-                            className="w-full h-full min-h-[56px] rounded-[10px] border-2 border-dashed border-[var(--border)] flex items-center justify-center text-[var(--muted)] text-xs active:bg-[var(--surface-secondary)] transition-colors"
+                            className="w-full h-full min-h-[56px] rounded-[var(--radius-sm)] border-2 border-dashed border-[var(--glass-border)] flex items-center justify-center text-[var(--muted)] text-xs active:bg-[var(--glass-bg)] transition-all duration-300"
                           >
                             + Qo&apos;shish
                           </button>
@@ -194,19 +194,19 @@ export function TimetableGrid({ groupId }: TimetableGridProps) {
         </div>
 
         {/* Desktop Table View */}
-        <div className="hidden md:block apple-card rounded-[16px] overflow-hidden">
+        <div className="hidden md:block apple-card rounded-[var(--radius-lg)] overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full border-collapse min-w-[700px]">
               {/* Header */}
               <thead>
                 <tr>
-                  <th className="w-28 px-3 py-3 text-left text-xs font-semibold text-[var(--muted)] bg-[var(--surface-secondary)]">
+                  <th className="w-28 px-3 py-3 text-left text-xs font-semibold text-[var(--muted)] bg-[var(--glass-bg)]/50 backdrop-blur-sm">
                     Vaqt
                   </th>
                   {DAYS.map((day) => (
                     <th
                       key={day.key}
-                      className="px-3 py-3 text-center text-xs font-semibold text-[var(--muted)] bg-[var(--surface-secondary)]"
+                      className="px-3 py-3 text-center text-xs font-semibold text-[var(--muted)] bg-[var(--glass-bg)]/50 backdrop-blur-sm"
                     >
                       <span className="hidden sm:inline">{day.label}</span>
                       <span className="sm:hidden">{day.short}</span>
@@ -224,13 +224,13 @@ export function TimetableGrid({ groupId }: TimetableGridProps) {
                           colSpan={6}
                           className={cn(
                             "px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider",
-                            trackIdx > 0 && "border-t-2 border-[var(--border)]",
+                            trackIdx > 0 && "border-t-2 border-[var(--glass-border-subtle)]",
                             track === "kunduzgi" &&
-                              "text-[var(--color-accent)] bg-[var(--color-accent)]/5",
+                              "text-[var(--color-accent)] bg-[var(--color-accent)]/8 backdrop-blur-sm",
                             track === "sirtqi" &&
-                              "text-[var(--color-warning)] bg-[var(--color-warning)]/5",
+                              "text-[var(--color-warning)] bg-[var(--color-warning)]/8 backdrop-blur-sm",
                             track === "kechki" &&
-                              "text-purple-500 bg-purple-500/5"
+                              "text-purple-500 bg-purple-500/8 backdrop-blur-sm"
                           )}
                         >
                           {TRACK_LABELS[track]}
@@ -241,7 +241,7 @@ export function TimetableGrid({ groupId }: TimetableGridProps) {
                       {slots.map((slot) => (
                         <tr
                           key={slot.id}
-                          className="group border-b border-[var(--border)]"
+                          className="group border-b border-[var(--glass-border-subtle)]"
                         >
                           {/* Time label */}
                           <td className="px-3 py-1 text-left align-top">
@@ -339,11 +339,11 @@ function DroppableCell({
     <td
       ref={setNodeRef}
       className={cn(
-        "relative h-[72px] min-w-[120px] p-1 transition-colors align-top",
-        "border-l border-[var(--border)]",
-        isOver && "bg-[var(--color-accent)]/10",
+        "relative h-[72px] min-w-[120px] p-1 transition-all duration-200 align-top",
+        "border-l border-[var(--glass-border-subtle)]",
+        isOver && "bg-[var(--color-accent)]/12 backdrop-blur-sm",
         !entry &&
-          "cursor-pointer hover:bg-[var(--surface-secondary)] group/cell"
+          "cursor-pointer hover:bg-[var(--glass-bg)] group/cell"
       )}
       onClick={() => !entry && onClickEmpty()}
     >
@@ -357,7 +357,7 @@ function DroppableCell({
         </div>
       ) : (
         <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover/cell:opacity-100 transition-opacity">
-          <span className="text-[10px] text-[var(--muted)] bg-[var(--surface-secondary)] rounded-[8px] px-2 py-1">
+          <span className="text-[10px] text-[var(--muted)] bg-[var(--glass-bg)] backdrop-blur-sm rounded-[var(--radius-sm)] px-2 py-1">
             + Qo&apos;shish
           </span>
         </div>

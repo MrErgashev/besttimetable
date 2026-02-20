@@ -132,7 +132,7 @@ export default function LoginPage() {
               />
 
               {error && (
-                <div className="p-3 rounded-xl bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 text-sm">
+                <div className="p-3 rounded-[var(--radius)] bg-[var(--color-danger)]/12 backdrop-blur-sm border border-[var(--color-danger)]/20 text-[var(--color-danger)] text-sm">
                   {error}
                 </div>
               )}
@@ -164,8 +164,8 @@ export default function LoginPage() {
                   key={acc.email}
                   type="button"
                   onClick={() => fillCredentials(acc.email, acc.password)}
-                  className="w-full flex items-center gap-3 p-3 rounded-[12px]
-                    bg-[var(--surface-secondary)] hover:bg-[var(--surface-hover)] transition-all text-left group"
+                  className="w-full flex items-center gap-3 p-3 rounded-[var(--radius)]
+                    bg-[var(--glass-bg)] backdrop-blur-[var(--glass-blur-light)] hover:bg-[var(--glass-bg-heavy)] border border-[var(--glass-border-subtle)] transition-all duration-300 [transition-timing-function:var(--spring-smooth)] text-left group"
                 >
                   <div
                     className={`w-9 h-9 rounded-lg ${acc.bg} flex items-center justify-center shrink-0`}
@@ -187,7 +187,7 @@ export default function LoginPage() {
               ))}
             </div>
 
-            <div className="mt-4 p-2.5 rounded-lg bg-amber-500/10 text-amber-600 dark:text-amber-400 text-xs">
+            <div className="mt-4 p-2.5 rounded-[var(--radius-sm)] bg-[var(--color-warning)]/12 backdrop-blur-sm border border-[var(--color-warning)]/20 text-[var(--color-warning)] text-xs">
               <strong>Parol:</strong> Test1234! (barchasi uchun)
             </div>
           </div>

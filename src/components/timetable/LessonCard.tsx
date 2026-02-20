@@ -40,10 +40,13 @@ export function LessonCard({
       {...listeners}
       {...attributes}
       className={cn(
-        "relative rounded-[10px] border-l-4 p-2 cursor-grab active:cursor-grabbing",
-        "bg-[var(--surface-secondary)] text-xs select-none transition-all h-full",
-        isDragging && "opacity-60 shadow-2xl rotate-1 scale-105 z-50",
-        hasConflict && "ring-2 ring-[var(--color-danger)]/50 ring-inset"
+        "relative rounded-[var(--radius-sm)] border-l-4 p-2 cursor-grab active:cursor-grabbing",
+        "bg-[var(--glass-bg)] backdrop-blur-[var(--glass-blur-light)] text-xs select-none",
+        "transition-all duration-300 [transition-timing-function:var(--spring-smooth)] h-full",
+        "border border-[var(--glass-border-subtle)] border-l-4",
+        "shadow-[inset_0_1px_0_0_var(--glass-highlight)]",
+        isDragging && "opacity-80 shadow-2xl rotate-2 scale-110 z-50 backdrop-blur-lg",
+        hasConflict && "ring-2 ring-[var(--color-danger)]/40 ring-inset"
       )}
     >
       {/* Fan nomi */}
@@ -98,7 +101,7 @@ export function LessonCardOverlay({ entry }: { entry: ScheduleEntry }) {
   return (
     <div
       style={{ borderLeftColor: subject?.color || "#007AFF" }}
-      className="rounded-[10px] border-l-4 p-2 bg-[var(--surface)] shadow-2xl text-xs select-none rotate-2 scale-110 w-32 border border-[var(--border)]"
+      className="rounded-[var(--radius-sm)] border-l-4 p-2 bg-[var(--glass-bg-heavy)] backdrop-blur-[var(--glass-blur)] shadow-[var(--shadow-xl),inset_0_1px_0_0_var(--glass-highlight)] text-xs select-none rotate-2 scale-110 w-32 border border-[var(--glass-border)]"
     >
       <div className="font-semibold truncate text-[var(--foreground)]">
         {subject?.short_name || "?"}

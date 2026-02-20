@@ -18,7 +18,7 @@ export function SegmentControl<T extends string>({
   return (
     <div
       className={cn(
-        "inline-flex items-center gap-0.5 p-0.5 rounded-[10px] bg-[var(--surface-secondary)]",
+        "inline-flex items-center gap-1 p-1 rounded-[var(--radius)] bg-[var(--glass-bg)] backdrop-blur-[var(--glass-blur-light)] border border-[var(--glass-border-subtle)]",
         className
       )}
     >
@@ -27,10 +27,10 @@ export function SegmentControl<T extends string>({
           key={opt.value}
           onClick={() => onChange(opt.value)}
           className={cn(
-            "px-4 py-2 text-sm font-medium rounded-[8px] transition-all duration-200",
+            "px-4 py-2 text-sm font-medium rounded-[calc(var(--radius)-4px)] transition-all duration-300 [transition-timing-function:var(--spring-smooth)]",
             value === opt.value
-              ? "bg-[var(--surface)] text-[var(--foreground)] shadow-sm"
-              : "text-[var(--muted)] hover:text-[var(--foreground)]"
+              ? "bg-[var(--glass-bg-heavy)] backdrop-blur-sm text-[var(--foreground)] shadow-sm border border-[var(--glass-border)] shadow-[0_1px_4px_rgba(0,0,0,0.06),inset_0_1px_0_0_var(--glass-highlight)]"
+              : "text-[var(--muted)] hover:text-[var(--foreground)] hover:bg-[var(--glass-bg)]"
           )}
         >
           {opt.label}

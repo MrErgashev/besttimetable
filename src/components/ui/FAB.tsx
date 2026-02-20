@@ -15,9 +15,11 @@ export function FAB({ onClick, icon, label, className }: FABProps) {
       onClick={onClick}
       className={cn(
         "fixed bottom-[calc(var(--tab-bar-height)+var(--safe-area-bottom)+16px)] md:bottom-6 right-4 md:right-6 z-30",
-        "w-14 h-14 rounded-full bg-[var(--color-accent)] text-white shadow-xl",
+        "w-14 h-14 rounded-full bg-[var(--color-accent)]/85 text-white backdrop-blur-lg",
+        "border border-white/25",
+        "shadow-[0_8px_32px_rgba(0,122,255,0.3),inset_0_1px_0_0_rgba(255,255,255,0.3)]",
         "flex items-center justify-center press-effect",
-        "hover:bg-[var(--color-accent-hover)] transition-colors",
+        "hover:bg-[var(--color-accent)] transition-all duration-300 [transition-timing-function:var(--spring-smooth)]",
         className
       )}
       aria-label={label || "Qo'shish"}

@@ -13,7 +13,7 @@ export function Spinner({ className = "", size = "md" }: { className?: string; s
     <div className={cn("flex items-center justify-center", className)}>
       <div
         className={cn(
-          "animate-spin rounded-full border-[var(--border-strong)] border-t-[var(--color-accent)]",
+          "animate-spin rounded-full border-[var(--glass-border)] border-t-[var(--color-accent)]",
           sizes[size]
         )}
       />

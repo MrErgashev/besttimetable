@@ -216,7 +216,7 @@ export function DataTable<T extends { id: string }>({
 
       {/* Bulk Edit Panel */}
       {showBulkEdit && bulkEditFields && (
-        <div className="px-4 py-3 bg-[var(--surface-secondary)] border-b border-[var(--border)] space-y-3">
+        <div className="px-4 py-3 bg-[var(--glass-bg)] backdrop-blur-[var(--glass-blur-light)] border-b border-[var(--glass-border-subtle)] space-y-3">
           <p className="text-sm text-[var(--muted)]">
             {selectedIds.size} ta elementga qo&apos;llash:
           </p>
@@ -233,7 +233,7 @@ export function DataTable<T extends { id: string }>({
                         [field.key]: e.target.value,
                       }))
                     }
-                    className="h-9 px-2 rounded-[8px] text-sm bg-[var(--surface)] border border-[var(--border)] text-[var(--foreground)]"
+                    className="h-9 px-2 rounded-[8px] text-sm bg-[var(--glass-bg)] backdrop-blur-[var(--glass-blur-light)] border border-[var(--glass-border-subtle)] text-[var(--foreground)]"
                   >
                     <option value="">— Tanlanmagan —</option>
                     {field.options.map((opt) => (
@@ -252,7 +252,7 @@ export function DataTable<T extends { id: string }>({
                         [field.key]: e.target.value,
                       }))
                     }
-                    className="h-9 px-2 rounded-[8px] text-sm bg-[var(--surface)] border border-[var(--border)] text-[var(--foreground)] w-[120px]"
+                    className="h-9 px-2 rounded-[8px] text-sm bg-[var(--glass-bg)] backdrop-blur-[var(--glass-blur-light)] border border-[var(--glass-border-subtle)] text-[var(--foreground)] w-[120px]"
                     placeholder={field.label}
                   />
                 )}
@@ -267,7 +267,7 @@ export function DataTable<T extends { id: string }>({
 
       {/* Search */}
       {searchKeys.length > 0 && (
-        <div className="p-4 border-b border-[var(--border)]">
+        <div className="p-4 border-b border-[var(--glass-border-subtle)]">
           <div className="relative max-w-sm">
             <svg
               className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--muted)]"
@@ -289,7 +289,7 @@ export function DataTable<T extends { id: string }>({
                 setSearch(e.target.value);
                 setPage(0);
               }}
-              className="w-full pl-9 pr-4 py-2.5 rounded-[10px] text-sm bg-[var(--surface-secondary)] border border-[var(--border)] text-[var(--foreground)] placeholder:text-[var(--muted)] focus:border-[var(--color-accent)] focus:ring-2 focus:ring-[var(--color-accent)]/20 focus:outline-none transition-all"
+              className="w-full pl-9 pr-4 py-2.5 rounded-[10px] text-sm bg-[var(--glass-bg)] backdrop-blur-[var(--glass-blur-light)] border border-[var(--glass-border-subtle)] shadow-[inset_0_1px_2px_var(--glass-inner-shadow)] text-[var(--foreground)] placeholder:text-[var(--muted)] focus:border-[var(--color-accent)] focus:ring-2 focus:ring-[var(--color-accent)]/20 focus:outline-none transition-all"
             />
           </div>
         </div>
@@ -299,14 +299,14 @@ export function DataTable<T extends { id: string }>({
       <div className="hidden md:block overflow-x-auto">
         <table className="w-full text-sm">
           <thead>
-            <tr className="border-b border-[var(--border)]">
+            <tr className="border-b border-[var(--glass-border-subtle)]">
               {selectable && (
-                <th className="px-3 py-3 w-10">
+                <th className="px-3 py-3 w-10 bg-[var(--glass-bg)]/50 backdrop-blur-sm">
                   <input
                     type="checkbox"
                     checked={allFilteredSelected && filtered.length > 0}
                     onChange={toggleSelectAll}
-                    className="w-4 h-4 rounded border-[var(--border)] text-[var(--color-accent)] focus:ring-[var(--color-accent)]"
+                    className="w-4 h-4 rounded border-[var(--glass-border-subtle)] text-[var(--color-accent)] focus:ring-[var(--color-accent)]"
                   />
                 </th>
               )}
@@ -314,7 +314,7 @@ export function DataTable<T extends { id: string }>({
                 <th
                   key={col.key}
                   className={cn(
-                    "px-4 py-3 text-left font-medium text-[var(--muted)]",
+                    "px-4 py-3 text-left font-medium text-[var(--muted)] bg-[var(--glass-bg)]/50 backdrop-blur-sm",
                     col.sortable && "cursor-pointer hover:text-[var(--foreground)] select-none"
                   )}
                   onClick={() => col.sortable && handleSort(col.key)}
@@ -351,8 +351,8 @@ export function DataTable<T extends { id: string }>({
                 <tr
                   key={item.id}
                   className={cn(
-                    "border-b border-[var(--border)] hover:bg-[var(--surface-secondary)] transition-colors",
-                    selectedIds.has(item.id) && "bg-[var(--color-accent)]/5"
+                    "border-b border-[var(--glass-border-subtle)] hover:bg-[var(--glass-bg)] transition-all duration-200",
+                    selectedIds.has(item.id) && "bg-[var(--color-accent)]/8 backdrop-blur-sm"
                   )}
                 >
                   {selectable && (
@@ -361,7 +361,7 @@ export function DataTable<T extends { id: string }>({
                         type="checkbox"
                         checked={selectedIds.has(item.id)}
                         onChange={() => toggleSelect(item.id)}
-                        className="w-4 h-4 rounded border-[var(--border)] text-[var(--color-accent)] focus:ring-[var(--color-accent)]"
+                        className="w-4 h-4 rounded border-[var(--glass-border-subtle)] text-[var(--color-accent)] focus:ring-[var(--color-accent)]"
                       />
                     </td>
                   )}
@@ -407,7 +407,7 @@ export function DataTable<T extends { id: string }>({
                                 </button>
                                 <button
                                   onClick={() => setDeleteId(null)}
-                                  className="px-2 py-1 rounded-[8px] text-xs text-[var(--muted)] hover:bg-[var(--surface-secondary)] transition-all"
+                                  className="px-2 py-1 rounded-[8px] text-xs text-[var(--muted)] hover:bg-[var(--glass-bg)] transition-all duration-200"
                                 >
                                   Yo&apos;q
                                 </button>
@@ -436,7 +436,7 @@ export function DataTable<T extends { id: string }>({
       </div>
 
       {/* Mobile Card View (visible only on mobile) */}
-      <div className="md:hidden divide-y divide-[var(--border)]">
+      <div className="md:hidden divide-y divide-[var(--glass-border-subtle)]">
         {paginated.length === 0 ? (
           <div className="px-4 py-12 text-center text-[var(--muted)]">
             {emptyLabel}
@@ -446,8 +446,8 @@ export function DataTable<T extends { id: string }>({
             <div
               key={item.id}
               className={cn(
-                "px-4 py-3 active:bg-[var(--surface-secondary)] transition-colors",
-                selectedIds.has(item.id) && "bg-[var(--color-accent)]/5"
+                "px-4 py-3 active:bg-[var(--glass-bg)] transition-all duration-200",
+                selectedIds.has(item.id) && "bg-[var(--color-accent)]/8 backdrop-blur-sm"
               )}
               onClick={() => onEdit && onEdit(item)}
             >
@@ -458,7 +458,7 @@ export function DataTable<T extends { id: string }>({
                       type="checkbox"
                       checked={selectedIds.has(item.id)}
                       onChange={() => toggleSelect(item.id)}
-                      className="w-4 h-4 rounded border-[var(--border)] text-[var(--color-accent)] focus:ring-[var(--color-accent)]"
+                      className="w-4 h-4 rounded border-[var(--glass-border-subtle)] text-[var(--color-accent)] focus:ring-[var(--color-accent)]"
                     />
                   </div>
                 )}
@@ -498,7 +498,7 @@ export function DataTable<T extends { id: string }>({
                         }
                       }}
                       className={cn(
-                        "p-2 rounded-[10px] transition-colors",
+                        "p-2 rounded-[10px] transition-all duration-200",
                         deleteId === item.id
                           ? "bg-[var(--color-danger)] text-white"
                           : "text-[var(--muted)]"
@@ -523,7 +523,7 @@ export function DataTable<T extends { id: string }>({
 
       {/* Pagination */}
       {totalPages > 1 && (
-        <div className="flex items-center justify-between px-4 py-3 border-t border-[var(--border)]">
+        <div className="flex items-center justify-between px-4 py-3 border-t border-[var(--glass-border-subtle)]">
           <p className="text-xs text-[var(--muted)]">
             {filtered.length} ta natija, {page + 1}/{totalPages} sahifa
           </p>

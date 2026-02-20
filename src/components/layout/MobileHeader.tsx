@@ -56,12 +56,12 @@ export function MobileHeader() {
   return (
     <header className="sticky top-0 z-30 md:hidden">
       <div
-        className="flex items-center justify-between px-4 bg-[var(--surface)]/80 backdrop-blur-xl border-b border-[var(--border)]"
+        className="flex items-center justify-between px-4 glass-primary border-b border-[var(--glass-border)] shadow-[0_1px_0_0_var(--glass-highlight)]"
         style={{ height: "var(--header-height)", paddingTop: "var(--safe-area-top)" }}
       >
         <h1 className="text-[17px] font-semibold text-[var(--foreground)]">{title}</h1>
         <div className="flex items-center gap-2">
-          <button className="relative p-2 rounded-full hover:bg-[var(--surface-secondary)] transition-colors">
+          <button className="relative p-2 rounded-full hover:bg-[var(--glass-bg)] hover:backdrop-blur-sm transition-all duration-300 [transition-timing-function:var(--spring-smooth)]">
             <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
               <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
               <path d="M13.73 21a2 2 0 0 1-3.46 0" />
@@ -74,14 +74,14 @@ export function MobileHeader() {
           <div className="relative" ref={menuRef}>
             <button
               onClick={() => setMenuOpen(!menuOpen)}
-              className="w-8 h-8 rounded-full bg-[var(--color-accent)] flex items-center justify-center text-white text-xs font-semibold"
+              className="w-8 h-8 rounded-full bg-[var(--color-accent)]/80 backdrop-blur-sm flex items-center justify-center text-white text-xs font-semibold border border-white/20"
             >
               {initials}
             </button>
 
             {menuOpen && (
-              <div className="absolute right-0 top-full mt-2 w-52 bg-[var(--surface)] rounded-[12px] border border-[var(--border)] shadow-xl py-1 z-50">
-                <div className="px-4 py-3 border-b border-[var(--border)]">
+              <div className="absolute right-0 top-full mt-2 w-52 rounded-[var(--radius-lg)] py-1 z-50 bg-[var(--glass-bg-ultra)] backdrop-blur-[40px] border border-[var(--glass-border)] shadow-[var(--shadow-xl),inset_0_1px_0_0_var(--glass-highlight)]">
+                <div className="px-4 py-3 border-b border-[var(--glass-border-subtle)]">
                   <p className="text-sm font-medium text-[var(--foreground)] truncate">{displayName}</p>
                   <p className="text-xs text-[var(--muted)]">{roleLabel}</p>
                 </div>
@@ -91,7 +91,7 @@ export function MobileHeader() {
                     await signOut();
                     router.push("/login");
                   }}
-                  className="flex items-center gap-2 w-full px-4 py-2.5 text-sm text-[var(--color-danger)] hover:bg-[var(--color-danger)]/10 transition-colors"
+                  className="flex items-center gap-2 w-full px-4 py-2.5 text-sm text-[var(--color-danger)] hover:bg-[var(--color-danger)]/10 transition-all duration-300 [transition-timing-function:var(--spring-smooth)]"
                 >
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                     <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />

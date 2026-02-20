@@ -16,17 +16,17 @@ export function Badge({
   return (
     <span
       className={cn(
-        "inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-medium",
+        "inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-medium backdrop-blur-sm shadow-[inset_0_0.5px_0_0_var(--glass-highlight)]",
         variant === "default" &&
-          "bg-[var(--surface-secondary)] text-[var(--muted)] border border-[var(--border)]",
+          "bg-[var(--glass-bg)] text-[var(--muted)] border border-[var(--glass-border-subtle)]",
         variant === "success" &&
-          "bg-[var(--color-success)]/10 text-[var(--color-success)]",
+          "bg-[var(--color-success)]/12 text-[var(--color-success)] border border-[var(--color-success)]/20",
         variant === "warning" &&
-          "bg-[var(--color-warning)]/10 text-[var(--color-warning)]",
+          "bg-[var(--color-warning)]/12 text-[var(--color-warning)] border border-[var(--color-warning)]/20",
         variant === "danger" &&
-          "bg-[var(--color-danger)]/10 text-[var(--color-danger)]",
+          "bg-[var(--color-danger)]/12 text-[var(--color-danger)] border border-[var(--color-danger)]/20",
         variant === "accent" &&
-          "bg-[var(--color-accent)]/10 text-[var(--color-accent)]",
+          "bg-[var(--color-accent)]/12 text-[var(--color-accent)] border border-[var(--color-accent)]/20",
         className
       )}
     >

@@ -2,6 +2,7 @@ import { Sidebar } from "@/components/layout/Sidebar";
 import { Topbar } from "@/components/layout/Topbar";
 import { BottomTabBar } from "@/components/layout/BottomTabBar";
 import { MobileHeader } from "@/components/layout/MobileHeader";
+import { RoleGuard } from "@/components/layout/RoleGuard";
 
 export default function DashboardLayout({
   children,
@@ -22,7 +23,7 @@ export default function DashboardLayout({
         }}
       >
         <div className="md:pt-0" style={{ paddingTop: 0 }}>
-          {children}
+          <RoleGuard>{children}</RoleGuard>
         </div>
       </main>
 

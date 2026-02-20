@@ -1,4 +1,4 @@
-import type { TimeSlot, DayKey, TrackKey, ConstraintSet } from "./types";
+import type { TimeSlot, DayKey, TrackKey, ConstraintSet, UserRole } from "./types";
 
 // ─── Days ────────────────────────────────────────────────────────────────────
 export const DAYS: { key: DayKey; label: string; short: string }[] = [
@@ -55,21 +55,24 @@ export const DEFAULT_CONSTRAINTS: ConstraintSet = {
 };
 
 // ─── Navigation Items ────────────────────────────────────────────────────────
-export const NAV_ITEMS = [
-  { href: "/", icon: "LayoutDashboard", label: "Bosh sahifa" },
-  { href: "/teachers", icon: "Users", label: "O'qituvchilar" },
-  { href: "/groups", icon: "GraduationCap", label: "Guruhlar" },
-  { href: "/subjects", icon: "BookOpen", label: "Fanlar" },
-  { href: "/rooms", icon: "Door", label: "Xonalar" },
-  { href: "/timetable", icon: "Calendar", label: "Dars jadvali" },
-  { href: "/generate", icon: "Sparkles", label: "Avtomatik tuzish" },
-  { href: "/import", icon: "Upload", label: "Import" },
-  { href: "/export", icon: "Download", label: "Eksport" },
-  { href: "/substitutions", icon: "ArrowLeftRight", label: "O'rinbosar" },
-  { href: "/users", icon: "UsersRound", label: "Foydalanuvchilar" },
-  { href: "/changelog", icon: "History", label: "O'zgarishlar" },
-  { href: "/settings", icon: "Settings", label: "Sozlamalar" },
-] as const;
+const allRoles: UserRole[] = ["super_admin", "admin", "teacher", "student"];
+const adminRoles: UserRole[] = ["super_admin", "admin"];
+
+export const NAV_ITEMS: { href: string; icon: string; label: string; roles: UserRole[] }[] = [
+  { href: "/", icon: "LayoutDashboard", label: "Bosh sahifa", roles: allRoles },
+  { href: "/teachers", icon: "Users", label: "O'qituvchilar", roles: adminRoles },
+  { href: "/groups", icon: "GraduationCap", label: "Guruhlar", roles: adminRoles },
+  { href: "/subjects", icon: "BookOpen", label: "Fanlar", roles: adminRoles },
+  { href: "/rooms", icon: "Door", label: "Xonalar", roles: adminRoles },
+  { href: "/timetable", icon: "Calendar", label: "Dars jadvali", roles: allRoles },
+  { href: "/generate", icon: "Sparkles", label: "Avtomatik tuzish", roles: adminRoles },
+  { href: "/import", icon: "Upload", label: "Import", roles: adminRoles },
+  { href: "/export", icon: "Download", label: "Eksport", roles: adminRoles },
+  { href: "/substitutions", icon: "ArrowLeftRight", label: "O'rinbosar", roles: adminRoles },
+  { href: "/users", icon: "UsersRound", label: "Foydalanuvchilar", roles: adminRoles },
+  { href: "/changelog", icon: "History", label: "O'zgarishlar", roles: adminRoles },
+  { href: "/settings", icon: "Settings", label: "Sozlamalar", roles: adminRoles },
+];
 
 // ─── Role Labels ─────────────────────────────────────────────────────────────
 export const ROLE_LABELS: Record<string, string> = {

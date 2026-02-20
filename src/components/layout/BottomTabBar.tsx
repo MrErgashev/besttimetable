@@ -3,12 +3,33 @@
 import { usePathname } from "next/navigation";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
-import { useState } from "react";
+import { useState, useMemo } from "react";
+import { useRoleAccess } from "@/hooks/useRoleAccess";
+import type { UserRole } from "@/lib/types";
 
-const TABS = [
+interface SubMenuItem {
+  label: string;
+  href: string;
+  roles: UserRole[];
+}
+
+interface TabItem {
+  label: string;
+  href: string;
+  roles: UserRole[];
+  isCenter?: boolean;
+  icon: (active: boolean) => React.ReactNode;
+  subMenu?: SubMenuItem[];
+}
+
+const allRoles: UserRole[] = ["super_admin", "admin", "teacher", "student"];
+const adminRoles: UserRole[] = ["super_admin", "admin"];
+
+const TABS: TabItem[] = [
   {
     label: "Bosh sahifa",
     href: "/",
+    roles: allRoles,
     icon: (active: boolean) => (
       <svg width="24" height="24" viewBox="0 0 24 24" fill={active ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
         <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
@@ -19,6 +40,7 @@ const TABS = [
   {
     label: "Jadval",
     href: "/timetable",
+    roles: allRoles,
     icon: (active: boolean) => (
       <svg width="24" height="24" viewBox="0 0 24 24" fill={active ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
         <rect x="3" y="4" width="18" height="18" rx="2" />
@@ -30,6 +52,7 @@ const TABS = [
     label: "Tuzish",
     href: "/generate",
     isCenter: true,
+    roles: adminRoles,
     icon: (_active: boolean) => (
       <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
         <path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z" />
@@ -39,6 +62,7 @@ const TABS = [
   {
     label: "Ma'lumotlar",
     href: "/teachers",
+    roles: adminRoles,
     icon: (active: boolean) => (
       <svg width="24" height="24" viewBox="0 0 24 24" fill={active ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
         <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
@@ -47,15 +71,16 @@ const TABS = [
       </svg>
     ),
     subMenu: [
-      { label: "O'qituvchilar", href: "/teachers" },
-      { label: "Guruhlar", href: "/groups" },
-      { label: "Fanlar", href: "/subjects" },
-      { label: "Xonalar", href: "/rooms" },
+      { label: "O'qituvchilar", href: "/teachers", roles: adminRoles },
+      { label: "Guruhlar", href: "/groups", roles: adminRoles },
+      { label: "Fanlar", href: "/subjects", roles: adminRoles },
+      { label: "Xonalar", href: "/rooms", roles: adminRoles },
     ],
   },
   {
     label: "Boshqaruv",
     href: "/settings",
+    roles: adminRoles,
     icon: (active: boolean) => (
       <svg width="24" height="24" viewBox="0 0 24 24" fill={active ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
         <path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z" />
@@ -63,10 +88,10 @@ const TABS = [
       </svg>
     ),
     subMenu: [
-      { label: "Sozlamalar", href: "/settings" },
-      { label: "Import", href: "/import" },
-      { label: "Eksport", href: "/export" },
-      { label: "O'zgarishlar", href: "/changelog" },
+      { label: "Sozlamalar", href: "/settings", roles: adminRoles },
+      { label: "Import", href: "/import", roles: adminRoles },
+      { label: "Eksport", href: "/export", roles: adminRoles },
+      { label: "O'zgarishlar", href: "/changelog", roles: adminRoles },
     ],
   },
 ];
@@ -74,11 +99,19 @@ const TABS = [
 export function BottomTabBar() {
   const pathname = usePathname();
   const [openSubMenu, setOpenSubMenu] = useState<number | null>(null);
+  const { role } = useRoleAccess();
+
+  const visibleTabs = useMemo(() => {
+    return TABS.filter((tab) => tab.roles.includes(role)).map((tab) => ({
+      ...tab,
+      subMenu: tab.subMenu?.filter((item) => item.roles.includes(role)),
+    }));
+  }, [role]);
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-40 md:hidden">
       {/* Sub-menu popup */}
-      {openSubMenu !== null && TABS[openSubMenu].subMenu && (
+      {openSubMenu !== null && visibleTabs[openSubMenu]?.subMenu && (
         <>
           <div
             className="fixed inset-0 z-[-1]"
@@ -86,7 +119,7 @@ export function BottomTabBar() {
           />
           <div className="absolute bottom-full left-0 right-0 pb-2 px-4">
             <div className="bg-[var(--surface)] rounded-[16px] border border-[var(--border)] shadow-xl p-2">
-              {TABS[openSubMenu].subMenu!.map((item) => (
+              {visibleTabs[openSubMenu].subMenu!.map((item) => (
                 <Link
                   key={item.href}
                   href={item.href}
@@ -114,8 +147,8 @@ export function BottomTabBar() {
           height: "calc(var(--tab-bar-height) + var(--safe-area-bottom))",
         }}
       >
-        {TABS.map((tab, idx) => {
-          const isActive = tab.subMenu
+        {visibleTabs.map((tab, idx) => {
+          const isActive = tab.subMenu?.length
             ? tab.subMenu.some((s) => pathname.startsWith(s.href))
             : pathname === tab.href || (tab.href !== "/" && pathname.startsWith(tab.href));
 
@@ -142,7 +175,7 @@ export function BottomTabBar() {
             <button
               key={idx}
               onClick={() => {
-                if (tab.subMenu) {
+                if (tab.subMenu?.length) {
                   setOpenSubMenu(openSubMenu === idx ? null : idx);
                 } else {
                   setOpenSubMenu(null);

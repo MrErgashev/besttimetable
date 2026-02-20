@@ -11,8 +11,13 @@ interface SubjectState {
   addSubject: (
     data: Omit<Subject, "id" | "created_at" | "updated_at">
   ) => Subject;
+  addSubjects: (
+    items: Omit<Subject, "id" | "created_at" | "updated_at">[]
+  ) => number;
   updateSubject: (id: ID, data: Partial<Subject>) => void;
+  bulkUpdateSubjects: (ids: ID[], data: Partial<Subject>) => void;
   deleteSubject: (id: ID) => void;
+  deleteSubjects: (ids: ID[]) => void;
   getSubjectById: (id: ID) => Subject | undefined;
 }
 

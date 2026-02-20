@@ -1,26 +1,170 @@
 "use client";
 
 import { useMemo } from "react";
+import Link from "next/link";
 import { useTeacherStore } from "@/stores/useTeacherStore";
 import { useGroupStore } from "@/stores/useGroupStore";
 import { useSubjectStore } from "@/stores/useSubjectStore";
 import { useRoomStore } from "@/stores/useRoomStore";
 import { useTimetableStore } from "@/stores/useTimetableStore";
 import { useHydration } from "@/hooks/useHydration";
+import { useRoleAccess } from "@/hooks/useRoleAccess";
 import { GlassCard } from "@/components/ui/GlassCard";
 import { Badge } from "@/components/ui/Badge";
 import { Spinner } from "@/components/ui/Spinner";
 import { DAYS, TIME_SLOTS } from "@/lib/constants";
 
-export default function DashboardPage() {
-  const hydrated = useHydration();
+// ─── Teacher Dashboard ──────────────────────────────────────────────────────
+function TeacherDashboard() {
+  const { profile } = useRoleAccess();
+  const { teachers } = useTeacherStore();
+  const { entries } = useTimetableStore();
+
+  const myTeacher = teachers.find((t) => t.user_id === profile?.id);
+  const myEntries = useMemo(() => {
+    if (!myTeacher) return [];
+    return entries.filter((e) => e.teacher_id === myTeacher.id);
+  }, [myTeacher, entries]);
+
+  return (
+    <div className="max-w-7xl mx-auto space-y-8">
+      <div>
+        <h1 className="text-[28px] font-bold tracking-tight md:text-[32px]">
+          Xush kelibsiz{profile?.full_name ? `, ${profile.full_name}` : ""}
+        </h1>
+        <p className="text-sm text-[var(--muted)] mt-1">
+          Sizning dars jadvalingiz
+        </p>
+      </div>
+
+      {/* Stats */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div className="animate-[stagger-fade_0.4s_ease_forwards] opacity-0" style={{ animationDelay: "0ms" }}>
+          <GlassCard hover>
+            <div className="flex items-start justify-between">
+              <div>
+                <p className="text-sm text-[var(--muted)]">Jami darslarim</p>
+                <p className="text-3xl font-bold mt-1 text-[var(--color-accent)]">
+                  {myEntries.length}
+                </p>
+              </div>
+              <div className="p-2.5 rounded-[12px] bg-blue-50 dark:bg-blue-900/20">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <rect x="3" y="4" width="18" height="18" rx="2" />
+                  <path d="M16 2v4M8 2v4M3 10h18" />
+                </svg>
+              </div>
+            </div>
+          </GlassCard>
+        </div>
+        <div className="animate-[stagger-fade_0.4s_ease_forwards] opacity-0" style={{ animationDelay: "80ms" }}>
+          <GlassCard hover>
+            <div className="flex items-start justify-between">
+              <div>
+                <p className="text-sm text-[var(--muted)]">Max haftalik soat</p>
+                <p className="text-3xl font-bold mt-1 text-[#5856D6]">
+                  {myTeacher?.max_weekly_hours ?? 0}
+                </p>
+              </div>
+              <div className="p-2.5 rounded-[12px] bg-purple-50 dark:bg-purple-900/20">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <circle cx="12" cy="12" r="10" />
+                  <polyline points="12 6 12 12 16 14" />
+                </svg>
+              </div>
+            </div>
+          </GlassCard>
+        </div>
+      </div>
+
+      {/* Tez harakatlar */}
+      <GlassCard>
+        <h2 className="text-lg font-semibold mb-4">Tez harakatlar</h2>
+        <div className="space-y-3">
+          <Link
+            href="/timetable"
+            className="flex items-center gap-3 p-3 rounded-[12px] hover:bg-[var(--surface-secondary)] transition-all group"
+          >
+            <div className="p-2 rounded-lg bg-blue-100 dark:bg-blue-900/30 text-[var(--color-accent)] group-hover:scale-110 transition-transform">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <rect x="3" y="4" width="18" height="18" rx="2" />
+                <path d="M16 2v4M8 2v4M3 10h18" />
+              </svg>
+            </div>
+            <div>
+              <p className="text-sm font-medium">Dars jadvalimni ko&apos;rish</p>
+              <p className="text-xs text-[var(--muted)]">Haftalik jadval</p>
+            </div>
+          </Link>
+          <Link
+            href="/export"
+            className="flex items-center gap-3 p-3 rounded-[12px] hover:bg-[var(--surface-secondary)] transition-all group"
+          >
+            <div className="p-2 rounded-lg bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400 group-hover:scale-110 transition-transform">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3" />
+              </svg>
+            </div>
+            <div>
+              <p className="text-sm font-medium">Jadvalimni yuklab olish</p>
+              <p className="text-xs text-[var(--muted)]">PDF yoki Excel</p>
+            </div>
+          </Link>
+        </div>
+      </GlassCard>
+    </div>
+  );
+}
+
+// ─── Student Dashboard ──────────────────────────────────────────────────────
+function StudentDashboard() {
+  const { profile } = useRoleAccess();
+
+  return (
+    <div className="max-w-7xl mx-auto space-y-8">
+      <div>
+        <h1 className="text-[28px] font-bold tracking-tight md:text-[32px]">
+          Xush kelibsiz{profile?.full_name ? `, ${profile.full_name}` : ""}
+        </h1>
+        <p className="text-sm text-[var(--muted)] mt-1">
+          Sizning guruh jadvalingiz
+        </p>
+      </div>
+
+      {/* Tez harakatlar */}
+      <GlassCard>
+        <h2 className="text-lg font-semibold mb-4">Tez harakatlar</h2>
+        <div className="space-y-3">
+          <Link
+            href="/timetable"
+            className="flex items-center gap-3 p-3 rounded-[12px] hover:bg-[var(--surface-secondary)] transition-all group"
+          >
+            <div className="p-2 rounded-lg bg-blue-100 dark:bg-blue-900/30 text-[var(--color-accent)] group-hover:scale-110 transition-transform">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <rect x="3" y="4" width="18" height="18" rx="2" />
+                <path d="M16 2v4M8 2v4M3 10h18" />
+              </svg>
+            </div>
+            <div>
+              <p className="text-sm font-medium">Dars jadvalini ko&apos;rish</p>
+              <p className="text-xs text-[var(--muted)]">Guruh bo&apos;yicha haftalik jadval</p>
+            </div>
+          </Link>
+        </div>
+      </GlassCard>
+    </div>
+  );
+}
+
+// ─── Admin Dashboard ────────────────────────────────────────────────────────
+function AdminDashboard() {
+  const { profile } = useRoleAccess();
   const { teachers } = useTeacherStore();
   const { groups } = useGroupStore();
   const { subjects } = useSubjectStore();
   const { rooms } = useRoomStore();
   const { entries } = useTimetableStore();
 
-  // Konflikt hisoblash
   const conflictCount = useMemo(() => {
     const bySlot = new Map<string, typeof entries>();
     for (const e of entries) {
@@ -38,7 +182,6 @@ export default function DashboardPage() {
     return count;
   }, [entries]);
 
-  // O'qituvchi yuklamasi
   const overloadedTeachers = useMemo(() => {
     return teachers.filter((t) => {
       const count = entries.filter((e) => e.teacher_id === t.id).length;
@@ -46,14 +189,11 @@ export default function DashboardPage() {
     });
   }, [teachers, entries]);
 
-  // Jadval to'ldirilishi (guruhlar bo'yicha o'rtacha)
   const fillPercent = useMemo(() => {
     if (groups.length === 0) return 0;
-    const totalPossible = groups.length * DAYS.length * 3; // har bir guruh uchun 3 slot o'rtacha
+    const totalPossible = groups.length * DAYS.length * 3;
     return Math.min(100, Math.round((entries.length / Math.max(totalPossible, 1)) * 100));
   }, [groups, entries]);
-
-  if (!hydrated) return <Spinner className="py-20" />;
 
   const stats = [
     {
@@ -110,9 +250,11 @@ export default function DashboardPage() {
   return (
     <div className="max-w-7xl mx-auto space-y-8">
       <div>
-        <h1 className="text-[28px] font-bold tracking-tight md:text-[32px]">Bosh sahifa</h1>
+        <h1 className="text-[28px] font-bold tracking-tight md:text-[32px]">
+          Bosh sahifa
+        </h1>
         <p className="text-sm text-[var(--muted)] mt-1">
-          Dars jadvali tizimiga xush kelibsiz
+          {profile?.full_name ? `${profile.full_name}, dars` : "Dars"} jadvali tizimiga xush kelibsiz
         </p>
       </div>
 
@@ -183,7 +325,7 @@ export default function DashboardPage() {
         </GlassCard>
       </div>
 
-      {/* Quick Actions + O'zgarishlar */}
+      {/* Quick Actions + Tizim holati */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <GlassCard>
           <h2 className="text-lg font-semibold mb-4">Tez harakatlar</h2>
@@ -193,44 +335,44 @@ export default function DashboardPage() {
                 href: "/timetable",
                 label: "Dars jadvalini ko'rish",
                 desc: "Guruh bo'yicha jadval",
-                color: "blue",
+                iconBg: "bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400",
                 icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="4" width="18" height="18" rx="2" /><path d="M16 2v4M8 2v4M3 10h18" /></svg>,
               },
               {
                 href: "/generate",
                 label: "Avtomatik jadval tuzish",
                 desc: "Cheklovlar asosida",
-                color: "purple",
+                iconBg: "bg-purple-100 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400",
                 icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z" /></svg>,
               },
               {
                 href: "/import",
                 label: "Import qilish",
                 desc: "Excel yoki Word fayldan",
-                color: "emerald",
+                iconBg: "bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400",
                 icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="17 8 12 3 7 8" /><line x1="12" y1="3" x2="12" y2="15" /></svg>,
               },
               {
                 href: "/export",
                 label: "Eksport qilish",
                 desc: "PDF yoki Excel",
-                color: "amber",
+                iconBg: "bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400",
                 icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3" /></svg>,
               },
             ].map((item) => (
-              <a
+              <Link
                 key={item.href}
                 href={item.href}
-                className="flex items-center gap-3 p-3 rounded-[12px] hover:bg-[var(--surface-hover)] transition-all group"
+                className="flex items-center gap-3 p-3 rounded-[12px] hover:bg-[var(--surface-secondary)] transition-all group"
               >
-                <div className={`p-2 rounded-lg bg-${item.color}-100 dark:bg-${item.color}-900/30 text-${item.color}-600 dark:text-${item.color}-400 group-hover:scale-110 transition-transform`}>
+                <div className={`p-2 rounded-lg group-hover:scale-110 transition-transform ${item.iconBg}`}>
                   {item.icon}
                 </div>
                 <div>
                   <p className="text-sm font-medium">{item.label}</p>
                   <p className="text-xs text-[var(--muted)]">{item.desc}</p>
                 </div>
-              </a>
+              </Link>
             ))}
           </div>
         </GlassCard>
@@ -259,4 +401,22 @@ export default function DashboardPage() {
       </div>
     </div>
   );
+}
+
+// ─── Main Dashboard Page ────────────────────────────────────────────────────
+export default function DashboardPage() {
+  const hydrated = useHydration();
+  const { role } = useRoleAccess();
+
+  if (!hydrated) return <Spinner className="py-20" />;
+
+  if (role === "super_admin" || role === "admin") {
+    return <AdminDashboard />;
+  }
+
+  if (role === "teacher") {
+    return <TeacherDashboard />;
+  }
+
+  return <StudentDashboard />;
 }

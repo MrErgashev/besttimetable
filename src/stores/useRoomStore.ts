@@ -8,8 +8,13 @@ import type { Room, ID } from "@/lib/types";
 interface RoomState {
   rooms: Room[];
   addRoom: (data: Omit<Room, "id" | "created_at" | "updated_at">) => Room;
+  addRooms: (
+    items: Omit<Room, "id" | "created_at" | "updated_at">[]
+  ) => number;
   updateRoom: (id: ID, data: Partial<Room>) => void;
+  bulkUpdateRooms: (ids: ID[], data: Partial<Room>) => void;
   deleteRoom: (id: ID) => void;
+  deleteRooms: (ids: ID[]) => void;
   getRoomById: (id: ID) => Room | undefined;
 }
 

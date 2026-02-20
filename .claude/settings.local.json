@@ -67,7 +67,8 @@
       "Bash(NODE_OPTIONS=\"--max-old-space-size=4096\" npx next build:*)",
       "Bash(npx tsc:*)",
       "Bash(NODE_OPTIONS=\"--max-old-space-size=8192\" npx next build:*)",
-      "Bash(node -e:*)"
+      "Bash(node -e:*)",
+      "Bash(NODE_OPTIONS=\"--max-old-space-size=8192\" npm run build:*)"
     ]
   }
 }

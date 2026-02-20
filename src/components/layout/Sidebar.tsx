@@ -1,10 +1,13 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { ThemeToggle } from "@/components/ui/ThemeToggle";
-import { NAV_ITEMS } from "@/lib/constants";
+import { ROLE_LABELS } from "@/lib/constants";
+import { useRoleAccess } from "@/hooks/useRoleAccess";
+import { useHydration } from "@/hooks/useHydration";
+import { useAuth } from "@/hooks/useAuth";
 
 const ICONS: Record<string, React.ReactNode> = {
   LayoutDashboard: (
@@ -99,6 +102,16 @@ const ICONS: Record<string, React.ReactNode> = {
 
 export function Sidebar() {
   const pathname = usePathname();
+  const router = useRouter();
+  const hydrated = useHydration();
+  const { filteredNavItems, profile, role } = useRoleAccess();
+  const { signOut } = useAuth();
+
+  const displayName = hydrated && profile ? (profile.full_name || profile.email) : "";
+  const roleLabel = hydrated ? (ROLE_LABELS[role] || role) : "";
+  const initials = hydrated && displayName
+    ? displayName.split(" ").map((w) => w[0]).join("").slice(0, 2).toUpperCase()
+    : "?";
 
   return (
     <aside className="fixed left-0 top-0 h-full w-[var(--sidebar-width)] flex-col bg-[var(--surface)] border-r border-[var(--border)] p-4 z-30 hidden lg:flex">
@@ -114,7 +127,7 @@ export function Sidebar() {
 
       {/* Navigation */}
       <nav className="flex-1 space-y-1 overflow-y-auto">
-        {NAV_ITEMS.map((item) => {
+        {filteredNavItems.map((item) => {
           const isActive =
             item.href === "/"
               ? pathname === "/"
@@ -144,17 +157,33 @@ export function Sidebar() {
       <div className="mt-auto pt-4 border-t border-[var(--border)]">
         <div className="flex items-center gap-3 px-2 mb-3">
           <div className="w-9 h-9 rounded-full bg-[var(--color-accent)] flex items-center justify-center text-white text-sm font-semibold">
-            A
+            {initials}
           </div>
           <div className="flex-1 min-w-0">
-            <p className="text-sm font-medium text-[var(--foreground)] truncate">Admin</p>
-            <p className="text-xs text-[var(--muted)] truncate">Super admin</p>
+            <p className="text-sm font-medium text-[var(--foreground)] truncate">
+              {displayName || "Foydalanuvchi"}
+            </p>
+            <p className="text-xs text-[var(--muted)] truncate">{roleLabel}</p>
           </div>
         </div>
-        <div className="flex items-center justify-between px-2">
+        <div className="flex items-center justify-between px-2 mb-2">
           <span className="text-xs text-[var(--muted)]">Tema</span>
           <ThemeToggle />
         </div>
+        <button
+          onClick={async () => {
+            await signOut();
+            router.push("/login");
+          }}
+          className="flex items-center gap-2 w-full px-3 py-2 rounded-[10px] text-sm font-medium text-[var(--color-danger)] hover:bg-[var(--color-danger)]/10 transition-colors"
+        >
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+            <polyline points="16 17 21 12 16 7" />
+            <line x1="21" y1="12" x2="9" y2="12" />
+          </svg>
+          Chiqish
+        </button>
       </div>
     </aside>
   );

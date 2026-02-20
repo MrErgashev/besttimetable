@@ -23,12 +23,12 @@ import type { AppUser, UserRole } from "@/lib/types";
 
 const ROLE_CONFIG: Record<
   UserRole,
-  { label: string; color: string; icon: React.ElementType }
+  { label: string; bgClass: string; textClass: string; icon: React.ElementType }
 > = {
-  super_admin: { label: "Super Admin", color: "red", icon: Shield },
-  admin: { label: "Admin", color: "blue", icon: UserCog },
-  teacher: { label: "O'qituvchi", color: "green", icon: BookOpen },
-  student: { label: "Talaba", color: "violet", icon: GraduationCap },
+  super_admin: { label: "Super Admin", bgClass: "bg-red-500/10", textClass: "text-red-500", icon: Shield },
+  admin: { label: "Admin", bgClass: "bg-blue-500/10", textClass: "text-blue-500", icon: UserCog },
+  teacher: { label: "O'qituvchi", bgClass: "bg-green-500/10", textClass: "text-green-500", icon: BookOpen },
+  student: { label: "Talaba", bgClass: "bg-violet-500/10", textClass: "text-violet-500", icon: GraduationCap },
 };
 
 export default function UsersPage() {
@@ -284,10 +284,10 @@ export default function UsersPage() {
                   className="flex items-center gap-4 p-4 hover:bg-[var(--surface-secondary)] transition-colors"
                 >
                   <div
-                    className={`w-10 h-10 rounded-xl bg-${config.color}-500/10 flex items-center justify-center shrink-0`}
+                    className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${config.bgClass}`}
                   >
                     <Icon
-                      className={`w-5 h-5 text-${config.color}-500`}
+                      className={`w-5 h-5 ${config.textClass}`}
                     />
                   </div>
                   <div className="min-w-0 flex-1">

@@ -8,8 +8,13 @@ import type { Group, ID } from "@/lib/types";
 interface GroupState {
   groups: Group[];
   addGroup: (data: Omit<Group, "id" | "created_at" | "updated_at">) => Group;
+  addGroups: (
+    items: Omit<Group, "id" | "created_at" | "updated_at">[]
+  ) => number;
   updateGroup: (id: ID, data: Partial<Group>) => void;
+  bulkUpdateGroups: (ids: ID[], data: Partial<Group>) => void;
   deleteGroup: (id: ID) => void;
+  deleteGroups: (ids: ID[]) => void;
   getGroupById: (id: ID) => Group | undefined;
 }
 

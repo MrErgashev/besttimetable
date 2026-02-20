@@ -126,7 +126,7 @@ export function Sidebar() {
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 space-y-1 overflow-y-auto">
+      <nav aria-label="Asosiy navigatsiya" className="flex-1 space-y-1 overflow-y-auto">
         {filteredNavItems.map((item) => {
           const isActive =
             item.href === "/"
@@ -137,6 +137,7 @@ export function Sidebar() {
             <Link
               key={item.href}
               href={item.href}
+              aria-current={isActive ? "page" : undefined}
               className={cn(
                 "flex items-center gap-3 px-3 py-2.5 rounded-[var(--radius-sm)] text-sm font-medium transition-all duration-300 [transition-timing-function:var(--spring-smooth)]",
                 isActive
@@ -144,7 +145,7 @@ export function Sidebar() {
                   : "text-[var(--muted)] hover:text-[var(--foreground)] hover:bg-[var(--glass-bg)]"
               )}
             >
-              <span className="flex-shrink-0">
+              <span className="flex-shrink-0" aria-hidden="true">
                 {ICONS[item.icon] || null}
               </span>
               {item.label}

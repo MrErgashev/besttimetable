@@ -1,7 +1,7 @@
 "use client";
 
 import { cn } from "@/lib/utils";
-import { useEffect, useRef, useState, useCallback } from "react";
+import { useEffect, useRef, useState, useCallback, useId } from "react";
 
 interface SheetModalProps {
   open: boolean;
@@ -14,8 +14,10 @@ interface SheetModalProps {
 export function SheetModal({ open, onClose, title, children, size = "md" }: SheetModalProps) {
   const [isClosing, setIsClosing] = useState(false);
   const sheetRef = useRef<HTMLDivElement>(null);
+  const previousFocusRef = useRef<HTMLElement | null>(null);
   const startY = useRef(0);
   const currentY = useRef(0);
+  const titleId = useId();
 
   const handleClose = useCallback(() => {
     setIsClosing(true);
@@ -25,16 +27,59 @@ export function SheetModal({ open, onClose, title, children, size = "md" }: Shee
     }, 300);
   }, [onClose]);
 
+  // Focus trap va keyboard events
   useEffect(() => {
     if (!open) return;
+
+    // Oldingi fokusni saqlash
+    previousFocusRef.current = document.activeElement as HTMLElement;
+
     const handler = (e: KeyboardEvent) => {
-      if (e.key === "Escape") handleClose();
+      if (e.key === "Escape") {
+        handleClose();
+        return;
+      }
+
+      // Focus trap — Tab tugmasi bilan faqat modal ichida harakatlanish
+      if (e.key === "Tab" && sheetRef.current) {
+        const focusableElements = sheetRef.current.querySelectorAll<HTMLElement>(
+          'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+        );
+        const firstFocusable = focusableElements[0];
+        const lastFocusable = focusableElements[focusableElements.length - 1];
+
+        if (e.shiftKey) {
+          if (document.activeElement === firstFocusable) {
+            e.preventDefault();
+            lastFocusable?.focus();
+          }
+        } else {
+          if (document.activeElement === lastFocusable) {
+            e.preventDefault();
+            firstFocusable?.focus();
+          }
+        }
+      }
     };
+
     document.addEventListener("keydown", handler);
     document.body.style.overflow = "hidden";
+
+    // Modal ochilganda birinchi elementga fokus berish
+    requestAnimationFrame(() => {
+      if (sheetRef.current) {
+        const firstFocusable = sheetRef.current.querySelector<HTMLElement>(
+          'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+        );
+        firstFocusable?.focus();
+      }
+    });
+
     return () => {
       document.removeEventListener("keydown", handler);
       document.body.style.overflow = "";
+      // Fokusni qaytarish
+      previousFocusRef.current?.focus();
     };
   }, [open, handleClose]);
 
@@ -67,6 +112,9 @@ export function SheetModal({ open, onClose, title, children, size = "md" }: Shee
         "fixed inset-0 z-50 flex items-end md:items-center md:justify-center",
         isClosing ? "animate-[fade-in_0.3s_ease_reverse_forwards]" : "animate-[fade-in_0.25s_ease]"
       )}
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby={title ? titleId : undefined}
       onClick={handleClose}
     >
       {/* Backdrop */}
@@ -102,7 +150,7 @@ export function SheetModal({ open, onClose, title, children, size = "md" }: Shee
         {/* Header */}
         {title && (
           <div className="flex items-center justify-between px-5 py-3 border-b border-[var(--glass-border-subtle)]">
-            <h2 className="text-[17px] font-semibold text-[var(--foreground)]">{title}</h2>
+            <h2 id={titleId} className="text-[17px] font-semibold text-[var(--foreground)]">{title}</h2>
             <button
               onClick={handleClose}
               className="p-1.5 rounded-full hover:bg-[var(--glass-bg)] hover:backdrop-blur-sm transition-all duration-300 [transition-timing-function:var(--spring-smooth)]"

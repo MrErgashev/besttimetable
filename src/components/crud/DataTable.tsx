@@ -277,6 +277,7 @@ export function DataTable<T extends { id: string }>({
               fill="none"
               stroke="currentColor"
               strokeWidth="2"
+              aria-hidden="true"
             >
               <circle cx="11" cy="11" r="8" />
               <path d="m21 21-4.3-4.3" />
@@ -284,6 +285,7 @@ export function DataTable<T extends { id: string }>({
             <input
               type="text"
               placeholder="Qidirish..."
+              aria-label="Jadvaldan qidirish"
               value={search}
               onChange={(e) => {
                 setSearch(e.target.value);
@@ -292,20 +294,24 @@ export function DataTable<T extends { id: string }>({
               className="w-full pl-9 pr-4 py-2.5 rounded-[10px] text-sm bg-[var(--glass-bg)] backdrop-blur-[var(--glass-blur-light)] border border-[var(--glass-border-subtle)] shadow-[inset_0_1px_2px_var(--glass-inner-shadow)] text-[var(--foreground)] placeholder:text-[var(--muted)] focus:border-[var(--color-accent)] focus:ring-2 focus:ring-[var(--color-accent)]/20 focus:outline-none transition-all"
             />
           </div>
+          <div aria-live="polite" className="sr-only">
+            {filtered.length} ta natija topildi
+          </div>
         </div>
       )}
 
       {/* Desktop Table (hidden on mobile) */}
       <div className="hidden md:block overflow-x-auto">
-        <table className="w-full text-sm">
+        <table className="w-full text-sm" role="table">
           <thead>
             <tr className="border-b border-[var(--glass-border-subtle)]">
               {selectable && (
-                <th className="px-3 py-3 w-10 bg-[var(--glass-bg)]/50 backdrop-blur-sm">
+                <th scope="col" className="px-3 py-3 w-10 bg-[var(--glass-bg)]/50 backdrop-blur-sm">
                   <input
                     type="checkbox"
                     checked={allFilteredSelected && filtered.length > 0}
                     onChange={toggleSelectAll}
+                    aria-label="Barcha qatorlarni tanlash"
                     className="w-4 h-4 rounded border-[var(--glass-border-subtle)] text-[var(--color-accent)] focus:ring-[var(--color-accent)]"
                   />
                 </th>
@@ -313,6 +319,16 @@ export function DataTable<T extends { id: string }>({
               {columns.map((col) => (
                 <th
                   key={col.key}
+                  scope="col"
+                  aria-sort={
+                    col.sortable && sortKey === col.key
+                      ? sortDir === "asc"
+                        ? "ascending"
+                        : "descending"
+                      : col.sortable
+                      ? "none"
+                      : undefined
+                  }
                   className={cn(
                     "px-4 py-3 text-left font-medium text-[var(--muted)] bg-[var(--glass-bg)]/50 backdrop-blur-sm",
                     col.sortable && "cursor-pointer hover:text-[var(--foreground)] select-none"
@@ -322,7 +338,7 @@ export function DataTable<T extends { id: string }>({
                   <span className="flex items-center gap-1">
                     {col.header}
                     {col.sortable && sortKey === col.key && (
-                      <span className="text-[var(--color-accent)]">
+                      <span className="text-[var(--color-accent)]" aria-hidden="true">
                         {sortDir === "asc" ? "↑" : "↓"}
                       </span>
                     )}
@@ -330,7 +346,7 @@ export function DataTable<T extends { id: string }>({
                 </th>
               ))}
               {(onEdit || onDelete) && (
-                <th className="px-4 py-3 text-right font-medium text-[var(--muted)]">
+                <th scope="col" className="px-4 py-3 text-right font-medium text-[var(--muted)]">
                   Amallar
                 </th>
               )}
@@ -361,6 +377,7 @@ export function DataTable<T extends { id: string }>({
                         type="checkbox"
                         checked={selectedIds.has(item.id)}
                         onChange={() => toggleSelect(item.id)}
+                        aria-label={`${primaryCol.render ? "" : String((item as Record<string, unknown>)[primaryCol.key] ?? "")} ni tanlash`}
                         className="w-4 h-4 rounded border-[var(--glass-border-subtle)] text-[var(--color-accent)] focus:ring-[var(--color-accent)]"
                       />
                     </td>
@@ -384,9 +401,9 @@ export function DataTable<T extends { id: string }>({
                           <button
                             onClick={() => onEdit(item)}
                             className="p-1.5 rounded-[8px] text-[var(--muted)] hover:text-[var(--color-accent)] hover:bg-[var(--color-accent)]/10 transition-all"
-                            title="Tahrirlash"
+                            aria-label="Tahrirlash"
                           >
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
                               <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z" />
                               <path d="m15 5 4 4" />
                             </svg>
@@ -416,9 +433,9 @@ export function DataTable<T extends { id: string }>({
                               <button
                                 onClick={() => setDeleteId(item.id)}
                                 className="p-1.5 rounded-[8px] text-[var(--muted)] hover:text-[var(--color-danger)] hover:bg-[var(--color-danger)]/10 transition-all"
-                                title="O'chirish"
+                                aria-label="O'chirish"
                               >
-                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
                                   <path d="M3 6h18M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" />
                                 </svg>
                               </button>
@@ -523,7 +540,10 @@ export function DataTable<T extends { id: string }>({
 
       {/* Pagination */}
       {totalPages > 1 && (
-        <div className="flex items-center justify-between px-4 py-3 border-t border-[var(--glass-border-subtle)]">
+        <nav
+          aria-label="Sahifalar navigatsiyasi"
+          className="flex items-center justify-between px-4 py-3 border-t border-[var(--glass-border-subtle)]"
+        >
           <p className="text-xs text-[var(--muted)]">
             {filtered.length} ta natija, {page + 1}/{totalPages} sahifa
           </p>
@@ -533,6 +553,7 @@ export function DataTable<T extends { id: string }>({
               size="sm"
               disabled={page === 0}
               onClick={() => setPage(page - 1)}
+              aria-label="Oldingi sahifa"
             >
               Oldingi
             </Button>
@@ -541,11 +562,12 @@ export function DataTable<T extends { id: string }>({
               size="sm"
               disabled={page >= totalPages - 1}
               onClick={() => setPage(page + 1)}
+              aria-label="Keyingi sahifa"
             >
               Keyingi
             </Button>
           </div>
-        </div>
+        </nav>
       )}
     </div>
   );

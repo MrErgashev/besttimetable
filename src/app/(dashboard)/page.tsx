@@ -83,7 +83,7 @@ function TeacherDashboard() {
         <div className="space-y-3">
           <Link
             href="/timetable"
-            className="flex items-center gap-3 p-3 rounded-[12px] hover:bg-[var(--surface-secondary)] transition-all group"
+            className="flex items-center gap-3 p-3 rounded-[12px] hover:bg-[var(--glass-bg)] hover:backdrop-blur-sm transition-all group"
           >
             <div className="p-2 rounded-lg bg-blue-100 dark:bg-blue-900/30 text-[var(--color-accent)] group-hover:scale-110 transition-transform">
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -98,7 +98,7 @@ function TeacherDashboard() {
           </Link>
           <Link
             href="/export"
-            className="flex items-center gap-3 p-3 rounded-[12px] hover:bg-[var(--surface-secondary)] transition-all group"
+            className="flex items-center gap-3 p-3 rounded-[12px] hover:bg-[var(--glass-bg)] hover:backdrop-blur-sm transition-all group"
           >
             <div className="p-2 rounded-lg bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400 group-hover:scale-110 transition-transform">
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -137,7 +137,7 @@ function StudentDashboard() {
         <div className="space-y-3">
           <Link
             href="/timetable"
-            className="flex items-center gap-3 p-3 rounded-[12px] hover:bg-[var(--surface-secondary)] transition-all group"
+            className="flex items-center gap-3 p-3 rounded-[12px] hover:bg-[var(--glass-bg)] hover:backdrop-blur-sm transition-all group"
           >
             <div className="p-2 rounded-lg bg-blue-100 dark:bg-blue-900/30 text-[var(--color-accent)] group-hover:scale-110 transition-transform">
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -363,7 +363,7 @@ function AdminDashboard() {
               <Link
                 key={item.href}
                 href={item.href}
-                className="flex items-center gap-3 p-3 rounded-[12px] hover:bg-[var(--surface-secondary)] transition-all group"
+                className="flex items-center gap-3 p-3 rounded-[12px] hover:bg-[var(--glass-bg)] hover:backdrop-blur-sm transition-all group"
               >
                 <div className={`p-2 rounded-lg group-hover:scale-110 transition-transform ${item.iconBg}`}>
                   {item.icon}

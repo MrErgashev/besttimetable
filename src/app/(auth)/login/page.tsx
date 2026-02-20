@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { ThemeToggle } from "@/components/ui/ThemeToggle";
 import { Shield, UserCog, GraduationCap, BookOpen } from "lucide-react";
+import { MeshBackground } from "@/components/ui/MeshBackground";
 
 const TEST_ACCOUNTS = [
   {
@@ -93,12 +94,13 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="bg-[var(--background)] min-h-screen flex items-center justify-center p-4">
-      <div className="fixed top-4 right-4">
+    <div className="bg-[var(--background)] min-h-screen flex items-center justify-center p-4 relative">
+      <MeshBackground />
+      <div className="fixed top-4 right-4 z-20">
         <ThemeToggle />
       </div>
 
-      <div className="w-full max-w-lg">
+      <div className="w-full max-w-lg relative z-10">
         <div className="text-center mb-8">
           <h1 className="text-3xl font-bold text-[var(--color-accent)]">
             BestTimetable

@@ -47,14 +47,6 @@ export function RoomUtilizationChart({
     return { chartData, utilPercent, totalUsed, totalRooms };
   }, [rooms, entries]);
 
-  if (rooms.length === 0) {
-    return (
-      <div className="flex items-center justify-center h-[200px] text-sm text-[var(--muted)]">
-        Ma&apos;lumot yo&apos;q
-      </div>
-    );
-  }
-
   // SVG donut calculations
   const radius = 52;
   const circumference = 2 * Math.PI * radius;
@@ -81,6 +73,14 @@ export function RoomUtilizationChart({
         return seg;
       });
   }, [chartData, circumference]);
+
+  if (rooms.length === 0) {
+    return (
+      <div className="flex items-center justify-center h-[200px] text-sm text-[var(--muted)]">
+        Ma&apos;lumot yo&apos;q
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col items-center">

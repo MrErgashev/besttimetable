@@ -22,33 +22,6 @@ export function useAuth() {
 
   const supabase = createClient();
 
-  // Sessiya tinglash
-  useEffect(() => {
-    // Boshlang'ich sessiya
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session?.user) {
-        setState((s) => ({ ...s, user: session.user, loading: false }));
-        fetchProfile(session.user.id);
-      } else {
-        setState((s) => ({ ...s, loading: false }));
-      }
-    });
-
-    // Auth o'zgarishlarini tinglash
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
-      if (session?.user) {
-        setState((s) => ({ ...s, user: session.user, loading: false }));
-        fetchProfile(session.user.id);
-      } else {
-        setState({ user: null, profile: null, loading: false, error: null });
-      }
-    });
-
-    return () => subscription.unsubscribe();
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
-
   async function fetchProfile(userId: string) {
     try {
       const { data, error } = await supabase
@@ -81,6 +54,33 @@ export function useAuth() {
       // Supabase ulanmagan bo'lsa xatolik bo'lmasligi uchun
     }
   }
+
+  // Sessiya tinglash
+  useEffect(() => {
+    // Boshlang'ich sessiya
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session?.user) {
+        setState((s) => ({ ...s, user: session.user, loading: false }));
+        fetchProfile(session.user.id);
+      } else {
+        setState((s) => ({ ...s, loading: false }));
+      }
+    });
+
+    // Auth o'zgarishlarini tinglash
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (session?.user) {
+        setState((s) => ({ ...s, user: session.user, loading: false }));
+        fetchProfile(session.user.id);
+      } else {
+        setState({ user: null, profile: null, loading: false, error: null });
+      }
+    });
+
+    return () => subscription.unsubscribe();
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Login
   const signIn = useCallback(

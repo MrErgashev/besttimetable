@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useCallback } from "react";
+import { useEffect, useRef } from "react";
 
 type InputMode = "mouse" | "gyroscope" | "auto";
 
@@ -24,43 +24,43 @@ export function useSpecularLight() {
   const autoAngleRef = useRef<number>(0);
   const permissionAskedRef = useRef(false);
 
-  const animate = useCallback(() => {
-    const now = Date.now();
-    const lerpFactor = 0.04;
-
-    // 5 soniya input bo'lmasa, auto rejimga o'tish
-    if (now - lastInputRef.current > 5000 && modeRef.current !== "auto") {
-      modeRef.current = "auto";
-    }
-
-    // Auto rejim: sekin aylana harakati
-    if (modeRef.current === "auto") {
-      autoAngleRef.current += 0.003;
-      targetRef.current.x = 50 + Math.cos(autoAngleRef.current) * 30;
-      targetRef.current.y = 35 + Math.sin(autoAngleRef.current * 0.7) * 20;
-    }
-
-    // Lerp — silliq interpolatsiya
-    currentRef.current.x +=
-      (targetRef.current.x - currentRef.current.x) * lerpFactor;
-    currentRef.current.y +=
-      (targetRef.current.y - currentRef.current.y) * lerpFactor;
-
-    // CSS custom property'larni yangilash
-    const root = document.documentElement;
-    root.style.setProperty(
-      "--specular-x",
-      `${currentRef.current.x.toFixed(1)}%`
-    );
-    root.style.setProperty(
-      "--specular-y",
-      `${currentRef.current.y.toFixed(1)}%`
-    );
-
-    rafRef.current = requestAnimationFrame(animate);
-  }, []);
-
   useEffect(() => {
+    function animate() {
+      const now = Date.now();
+      const lerpFactor = 0.04;
+
+      // 5 soniya input bo'lmasa, auto rejimga o'tish
+      if (now - lastInputRef.current > 5000 && modeRef.current !== "auto") {
+        modeRef.current = "auto";
+      }
+
+      // Auto rejim: sekin aylana harakati
+      if (modeRef.current === "auto") {
+        autoAngleRef.current += 0.003;
+        targetRef.current.x = 50 + Math.cos(autoAngleRef.current) * 30;
+        targetRef.current.y = 35 + Math.sin(autoAngleRef.current * 0.7) * 20;
+      }
+
+      // Lerp — silliq interpolatsiya
+      currentRef.current.x +=
+        (targetRef.current.x - currentRef.current.x) * lerpFactor;
+      currentRef.current.y +=
+        (targetRef.current.y - currentRef.current.y) * lerpFactor;
+
+      // CSS custom property'larni yangilash
+      const root = document.documentElement;
+      root.style.setProperty(
+        "--specular-x",
+        `${currentRef.current.x.toFixed(1)}%`
+      );
+      root.style.setProperty(
+        "--specular-y",
+        `${currentRef.current.y.toFixed(1)}%`
+      );
+
+      rafRef.current = requestAnimationFrame(animate);
+    }
+
     // Desktop: mousemove
     const handleMouseMove = (e: MouseEvent) => {
       targetRef.current.x = (e.clientX / window.innerWidth) * 100;
@@ -145,5 +145,5 @@ export function useSpecularLight() {
       root.style.removeProperty("--specular-x");
       root.style.removeProperty("--specular-y");
     };
-  }, [animate]);
+  }, []);
 }

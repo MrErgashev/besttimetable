@@ -33,7 +33,7 @@ export default function GeneratePage() {
   const { subjects } = useSubjectStore();
   const { rooms } = useRoomStore();
   const { loads, addLoad, removeLoad } = useSubjectLoadStore();
-  const { entries: existingEntries, bulkLoad, clearAll } = useTimetableStore();
+  const { entries: existingEntries, bulkLoad } = useTimetableStore();
 
   const [status, setStatus] = useState<GenerationStatus>("idle");
   const [progress, setProgress] = useState({ placed: 0, total: 0 });

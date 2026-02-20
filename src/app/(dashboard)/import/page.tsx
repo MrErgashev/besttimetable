@@ -12,7 +12,7 @@ import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
 import { Select } from "@/components/ui/Select";
 import { Spinner } from "@/components/ui/Spinner";
-import { GlassModal } from "@/components/ui/GlassModal";
+
 import { parseExcelFile } from "@/lib/import/excel-parser";
 import { parseWordFile } from "@/lib/import/word-parser";
 import { mapParsedRows, type MappingResult } from "@/lib/import/mapper";

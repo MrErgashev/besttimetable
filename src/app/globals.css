@@ -74,6 +74,17 @@
   --spring-bounce: cubic-bezier(0.34, 1.56, 0.64, 1);
   --spring-smooth: cubic-bezier(0.22, 1, 0.36, 1);
   --spring-snappy: cubic-bezier(0.2, 0.8, 0.2, 1);
+
+  /* iOS 26 Liquid Glass timing functions */
+  --spring-gentle: cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  --spring-material: cubic-bezier(0.4, 0, 0, 1);
+  --spring-elastic: cubic-bezier(0.68, -0.55, 0.265, 1.55);
+
+  /* Duration token'lar */
+  --duration-fast: 200ms;
+  --duration-normal: 350ms;
+  --duration-slow: 500ms;
+  --duration-sheet: 450ms;
 }
 
 /* ── Dark Mode ──────────────────────────────── */
@@ -156,17 +167,23 @@ body {
   top: 0;
   left: 0;
   right: 0;
-  height: 50%;
+  bottom: 0;
   background: var(--specular-gradient);
   pointer-events: none;
-  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+  border-radius: var(--radius-lg);
   z-index: 1;
+  opacity: 0.8;
+  transition: opacity 0.5s ease;
 }
 .apple-card:hover {
   box-shadow:
     var(--shadow-lg),
     inset 0 1px 0 0 var(--glass-highlight),
     inset 0 -1px 2px 0 var(--glass-inner-shadow);
+  background: var(--surface-hover);
+}
+.apple-card:hover::before {
+  opacity: 1;
 }
 .apple-card > * {
   position: relative;
@@ -203,23 +220,34 @@ body {
   top: 0;
   left: 0;
   right: 0;
-  height: 50%;
+  bottom: 0;
   background: var(--specular-gradient);
   pointer-events: none;
   border-radius: inherit;
   z-index: 1;
+  opacity: 0.8;
+  transition: opacity 0.5s ease;
 }
 .glass-specular > * {
   position: relative;
   z-index: 2;
 }
 
-/* ── Press Effect (spring physics) ────────────  */
+/* ── Press Effect (iOS Liquid Glass spring physics) ── */
 .press-effect {
-  transition: transform 0.3s var(--spring-bounce);
+  transition:
+    transform var(--duration-fast) var(--spring-bounce),
+    box-shadow var(--duration-fast) var(--spring-smooth);
 }
 .press-effect:active {
-  transform: scale(0.95);
+  transform: scale(0.96);
+  box-shadow: var(--shadow-sm) !important;
+}
+/* Bo'shatish — spring elastic qaytish */
+.press-effect:not(:active) {
+  transition:
+    transform var(--duration-normal) var(--spring-elastic),
+    box-shadow var(--duration-normal) var(--spring-smooth);
 }
 
 /* ── Safe Area ──────────────────────────────── */
@@ -233,34 +261,63 @@ body {
   z-index: 0;
   pointer-events: none;
   overflow: hidden;
-  -webkit-filter: blur(80px);
-  filter: blur(80px);
+  -webkit-filter: blur(70px);
+  filter: blur(70px);
+  will-change: filter;
+  -webkit-transform: translate3d(0, 0, 0);
+  transform: translate3d(0, 0, 0);
+  --orb-offset-x: 0px;
+  --orb-offset-y: 0px;
+}
+.mesh-container::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(
+    ellipse at 50% 50%,
+    transparent 0%,
+    var(--background) 70%
+  );
+  pointer-events: none;
 }
 .mesh-orb {
   position: absolute;
   border-radius: 50%;
   will-change: transform;
-  transition: transform 0.3s var(--spring-smooth);
+  transform: translate3d(
+    calc(var(--orb-offset-x) * var(--pf, 0.5)),
+    calc(var(--orb-offset-y) * var(--pf, 0.5)),
+    0
+  );
+}
+/* Nafas olish animatsiyasi */
+.mesh-orb-breathe {
+  animation-timing-function: ease-in-out;
 }
 .mesh-orb-1 {
   background: var(--mesh-orb-1);
-  animation: orbFloat1 20s ease-in-out infinite alternate;
+  animation: orbFloat1 20s ease-in-out infinite alternate,
+             orbBreathe 16s ease-in-out infinite;
 }
 .mesh-orb-2 {
   background: var(--mesh-orb-2);
-  animation: orbFloat2 24s ease-in-out infinite alternate;
+  animation: orbFloat2 24s ease-in-out infinite alternate,
+             orbBreathe 19s ease-in-out infinite;
 }
 .mesh-orb-3 {
   background: var(--mesh-orb-3);
-  animation: orbFloat3 18s ease-in-out infinite alternate;
+  animation: orbFloat3 18s ease-in-out infinite alternate,
+             orbBreathe 14s ease-in-out infinite;
 }
 .mesh-orb-4 {
   background: var(--mesh-orb-4);
-  animation: orbFloat4 22s ease-in-out infinite alternate;
+  animation: orbFloat4 22s ease-in-out infinite alternate,
+             orbBreathe 18s ease-in-out infinite;
 }
 .mesh-orb-5 {
   background: var(--mesh-orb-5);
-  animation: orbFloat5 26s ease-in-out infinite alternate;
+  animation: orbFloat5 26s ease-in-out infinite alternate,
+             orbBreathe 21s ease-in-out infinite;
 }
 
 /* ── Animations ─────────────────────────────── */
@@ -337,6 +394,24 @@ body {
   50%  { transform: translate(50px, 50px) scale(1.06); }
   100% { transform: translate(-30px, -40px) scale(0.94); }
 }
+@keyframes orbBreathe {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.6; }
+}
+
+/* ── GPU Compositing Helpers ─────────────────── */
+.gpu-accelerated {
+  -webkit-transform: translate3d(0, 0, 0);
+  transform: translate3d(0, 0, 0);
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+}
+.will-change-transform {
+  will-change: transform;
+}
+.will-change-opacity {
+  will-change: opacity;
+}
 
 /* ── Skeleton (glass shimmer) ─────────────────  */
 .skeleton {
@@ -378,6 +453,9 @@ body {
   }
   .mesh-orb {
     animation: none !important;
+  }
+  .mesh-container {
+    filter: blur(80px);
   }
 }
 

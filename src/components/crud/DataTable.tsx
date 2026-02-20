@@ -464,11 +464,11 @@ export function DataTable<T extends { id: string }>({
                 )}
                 <div className="flex-1 min-w-0">
                   {/* Primary label */}
-                  <p className="text-[15px] font-medium text-[var(--foreground)] truncate">
+                  <div className="text-[15px] font-medium text-[var(--foreground)] truncate">
                     {primaryCol.render
                       ? primaryCol.render(item)
                       : String((item as Record<string, unknown>)[primaryCol.key] ?? "")}
-                  </p>
+                  </div>
                   {/* Secondary info */}
                   <div className="flex items-center gap-2 mt-0.5 flex-wrap">
                     {columns

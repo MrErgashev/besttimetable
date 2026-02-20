@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useMemo } from "react";
+import { useState, useCallback, useMemo, Fragment } from "react";
 import {
   DndContext,
   DragOverlay,
@@ -217,9 +217,9 @@ export function TimetableGrid({ groupId }: TimetableGridProps) {
               <tbody>
                 {Array.from(trackGroups.entries()).map(
                   ([track, slots], trackIdx) => (
-                    <>
+                    <Fragment key={track}>
                       {/* Track separator */}
-                      <tr key={`sep-${track}`}>
+                      <tr>
                         <td
                           colSpan={6}
                           className={cn(
@@ -285,7 +285,7 @@ export function TimetableGrid({ groupId }: TimetableGridProps) {
                           })}
                         </tr>
                       ))}
-                    </>
+                    </Fragment>
                   )
                 )}
               </tbody>

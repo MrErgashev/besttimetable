@@ -118,17 +118,17 @@ export function BottomTabBar() {
             onClick={() => setOpenSubMenu(null)}
           />
           <div className="absolute bottom-full left-0 right-0 pb-2 px-4">
-            <div className="bg-[var(--surface)] rounded-[16px] border border-[var(--border)] shadow-xl p-2">
+            <div className="bg-[var(--glass-bg-ultra)] backdrop-blur-[40px] rounded-[var(--radius-lg)] border border-[var(--glass-border)] shadow-[var(--shadow-xl),inset_0_1px_0_0_var(--glass-highlight)] p-2">
               {visibleTabs[openSubMenu].subMenu!.map((item) => (
                 <Link
                   key={item.href}
                   href={item.href}
                   onClick={() => setOpenSubMenu(null)}
                   className={cn(
-                    "flex items-center px-4 py-3 rounded-[12px] text-[15px] font-medium transition-colors",
+                    "flex items-center px-4 py-3 rounded-[var(--radius)] text-[15px] font-medium transition-all duration-300 [transition-timing-function:var(--spring-smooth)]",
                     pathname === item.href
-                      ? "bg-[var(--color-accent)]/10 text-[var(--color-accent)]"
-                      : "text-[var(--foreground)] hover:bg-[var(--surface-secondary)]"
+                      ? "bg-[var(--color-accent)]/12 text-[var(--color-accent)] backdrop-blur-sm"
+                      : "text-[var(--foreground)] hover:bg-[var(--glass-bg)]"
                   )}
                 >
                   {item.label}
@@ -141,7 +141,7 @@ export function BottomTabBar() {
 
       {/* Tab bar */}
       <div
-        className="flex items-end justify-around bg-[var(--surface)]/80 backdrop-blur-xl border-t border-[var(--border)]"
+        className="flex items-end justify-around glass-primary border-t border-[var(--glass-border)] shadow-[0_-1px_0_0_var(--glass-highlight),var(--shadow-lg)]"
         style={{
           paddingBottom: "calc(var(--safe-area-bottom) + 8px)",
           height: "calc(var(--tab-bar-height) + var(--safe-area-bottom))",
@@ -157,8 +157,11 @@ export function BottomTabBar() {
               <Link key={idx} href={tab.href} className="flex flex-col items-center -mt-3">
                 <div
                   className={cn(
-                    "w-14 h-14 rounded-full flex items-center justify-center shadow-lg transition-transform press-effect",
-                    "bg-[var(--color-accent)] text-white",
+                    "w-14 h-14 rounded-full flex items-center justify-center press-effect",
+                    "bg-[var(--color-accent)]/85 backdrop-blur-lg text-white",
+                    "border border-white/25",
+                    "shadow-[0_4px_20px_rgba(0,122,255,0.25),inset_0_1px_0_0_rgba(255,255,255,0.3)]",
+                    "transition-all duration-300 [transition-timing-function:var(--spring-bounce)]",
                     isActive && "scale-110"
                   )}
                 >
@@ -186,8 +189,8 @@ export function BottomTabBar() {
             >
               <div
                 className={cn(
-                  "transition-all duration-200",
-                  isActive ? "text-[var(--color-accent)] scale-110" : "text-[var(--muted)]"
+                  "transition-all duration-300 [transition-timing-function:var(--spring-bounce)]",
+                  isActive ? "text-[var(--color-accent)] scale-110 drop-shadow-[0_0_4px_rgba(0,122,255,0.3)]" : "text-[var(--muted)]"
                 )}
               >
                 {tab.icon(isActive)}

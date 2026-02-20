@@ -114,7 +114,7 @@ export function Sidebar() {
     : "?";
 
   return (
-    <aside className="fixed left-0 top-0 h-full w-[var(--sidebar-width)] flex-col bg-[var(--surface)] border-r border-[var(--border)] p-4 z-30 hidden lg:flex">
+    <aside className="fixed left-0 top-0 h-full w-[var(--sidebar-width)] flex-col glass-primary border-r border-[var(--glass-border)] shadow-[var(--shadow-lg)] p-4 z-30 hidden lg:flex">
       {/* Logo */}
       <div className="mb-8 px-2">
         <h1 className="text-xl font-bold text-[var(--color-accent)]">
@@ -138,10 +138,10 @@ export function Sidebar() {
               key={item.href}
               href={item.href}
               className={cn(
-                "flex items-center gap-3 px-3 py-2.5 rounded-[10px] text-sm font-medium transition-all duration-200",
+                "flex items-center gap-3 px-3 py-2.5 rounded-[var(--radius-sm)] text-sm font-medium transition-all duration-300 [transition-timing-function:var(--spring-smooth)]",
                 isActive
-                  ? "bg-[var(--color-accent)]/10 text-[var(--color-accent)]"
-                  : "text-[var(--muted)] hover:text-[var(--foreground)] hover:bg-[var(--surface-secondary)]"
+                  ? "bg-[var(--color-accent)]/12 text-[var(--color-accent)] backdrop-blur-sm border border-[var(--color-accent)]/15 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.1)]"
+                  : "text-[var(--muted)] hover:text-[var(--foreground)] hover:bg-[var(--glass-bg)]"
               )}
             >
               <span className="flex-shrink-0">
@@ -154,9 +154,9 @@ export function Sidebar() {
       </nav>
 
       {/* User section at bottom */}
-      <div className="mt-auto pt-4 border-t border-[var(--border)]">
+      <div className="mt-auto pt-4 border-t border-[var(--glass-border-subtle)]">
         <div className="flex items-center gap-3 px-2 mb-3">
-          <div className="w-9 h-9 rounded-full bg-[var(--color-accent)] flex items-center justify-center text-white text-sm font-semibold">
+          <div className="w-9 h-9 rounded-full bg-[var(--color-accent)]/80 backdrop-blur-sm flex items-center justify-center text-white text-sm font-semibold border border-white/20">
             {initials}
           </div>
           <div className="flex-1 min-w-0">
@@ -175,7 +175,7 @@ export function Sidebar() {
             await signOut();
             router.push("/login");
           }}
-          className="flex items-center gap-2 w-full px-3 py-2 rounded-[10px] text-sm font-medium text-[var(--color-danger)] hover:bg-[var(--color-danger)]/10 transition-colors"
+          className="flex items-center gap-2 w-full px-3 py-2 rounded-[var(--radius-sm)] text-sm font-medium text-[var(--color-danger)] hover:bg-[var(--color-danger)]/10 transition-all duration-300 [transition-timing-function:var(--spring-smooth)]"
         >
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />

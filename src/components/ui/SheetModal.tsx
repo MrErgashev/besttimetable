@@ -22,7 +22,7 @@ export function SheetModal({ open, onClose, title, children, size = "md" }: Shee
     setTimeout(() => {
       setIsClosing(false);
       onClose();
-    }, 250);
+    }, 300);
   }, [onClose]);
 
   useEffect(() => {
@@ -65,12 +65,12 @@ export function SheetModal({ open, onClose, title, children, size = "md" }: Shee
     <div
       className={cn(
         "fixed inset-0 z-50 flex items-end md:items-center md:justify-center",
-        isClosing ? "animate-[fade-in_0.25s_ease_reverse_forwards]" : "animate-[fade-in_0.2s_ease]"
+        isClosing ? "animate-[fade-in_0.3s_ease_reverse_forwards]" : "animate-[fade-in_0.25s_ease]"
       )}
       onClick={handleClose}
     >
       {/* Backdrop */}
-      <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" />
+      <div className="absolute inset-0 bg-black/30 backdrop-blur-md" />
 
       {/* Sheet (Mobile) / Modal (Desktop) */}
       <div
@@ -80,29 +80,32 @@ export function SheetModal({ open, onClose, title, children, size = "md" }: Shee
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
         className={cn(
-          "relative z-10 w-full bg-[var(--surface)] overflow-hidden",
+          "relative z-10 w-full overflow-hidden",
+          "bg-[var(--glass-bg-ultra)] backdrop-blur-[40px]",
+          "shadow-[var(--shadow-xl),inset_0_1px_0_0_var(--glass-highlight)]",
           // Mobile: bottom sheet
-          "rounded-t-[20px] max-h-[90vh]",
+          "rounded-t-[var(--radius-xl)] max-h-[90vh]",
+          "border-t border-[var(--glass-border)]",
           // Desktop: centered modal
-          "md:rounded-[16px] md:mx-4",
+          "md:rounded-[var(--radius-lg)] md:mx-4 md:border md:border-[var(--glass-border)]",
           sizes[size],
           isClosing
-            ? "animate-[spring-up_0.25s_ease_reverse_forwards]"
-            : "animate-[spring-up_0.35s_cubic-bezier(0.32,0.72,0,1)]"
+            ? "animate-[spring-up_0.3s_ease_reverse_forwards]"
+            : "animate-[spring-up_0.4s_cubic-bezier(0.22,1,0.36,1)]"
         )}
       >
         {/* Handle bar (mobile only) */}
         <div className="flex justify-center pt-3 pb-1 md:hidden">
-          <div className="w-10 h-[5px] rounded-full bg-[var(--muted-light)]/40" />
+          <div className="w-10 h-[5px] rounded-full bg-[var(--foreground)]/15" />
         </div>
 
         {/* Header */}
         {title && (
-          <div className="flex items-center justify-between px-5 py-3 border-b border-[var(--border)]">
+          <div className="flex items-center justify-between px-5 py-3 border-b border-[var(--glass-border-subtle)]">
             <h2 className="text-[17px] font-semibold text-[var(--foreground)]">{title}</h2>
             <button
               onClick={handleClose}
-              className="p-1.5 rounded-full hover:bg-[var(--surface-secondary)] transition-colors"
+              className="p-1.5 rounded-full hover:bg-[var(--glass-bg)] hover:backdrop-blur-sm transition-all duration-300 [transition-timing-function:var(--spring-smooth)]"
               aria-label="Yopish"
             >
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">

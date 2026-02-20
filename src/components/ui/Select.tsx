@@ -28,10 +28,11 @@ const Select = forwardRef<HTMLSelectElement, SelectProps>(
           ref={ref}
           id={selectId}
           className={cn(
-            "h-12 md:h-11 w-full rounded-[10px] border bg-[var(--surface)] px-4 text-[15px] text-[var(--foreground)] appearance-none transition-all duration-200",
-            "focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)]/20 focus:border-[var(--color-accent)]",
+            "h-12 md:h-11 w-full rounded-[var(--radius)] border bg-[var(--glass-bg)] backdrop-blur-[var(--glass-blur-light)] px-4 text-[15px] text-[var(--foreground)] appearance-none transition-all duration-300 [transition-timing-function:var(--spring-smooth)]",
+            "focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)]/25 focus:border-[var(--color-accent)]/50",
             "bg-[url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2220%22%20height%3D%2220%22%20viewBox%3D%220%200%2020%2020%22%3E%3Cpath%20fill%3D%22%2386868B%22%20d%3D%22M5%207l5%205%205-5z%22%2F%3E%3C%2Fsvg%3E')] bg-no-repeat bg-[right_12px_center]",
-            error ? "border-[var(--color-danger)]" : "border-[var(--border)]",
+            "shadow-[inset_0_1px_2px_var(--glass-inner-shadow)]",
+            error ? "border-[var(--color-danger)]/50" : "border-[var(--glass-border-subtle)]",
             className
           )}
           {...props}

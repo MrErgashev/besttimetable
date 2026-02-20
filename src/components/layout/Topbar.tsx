@@ -33,7 +33,7 @@ export function Topbar() {
   }, [menuOpen]);
 
   return (
-    <header className="hidden md:flex fixed top-0 left-0 lg:left-[var(--sidebar-width)] right-0 z-20 items-center justify-between px-6 bg-[var(--surface)]/80 backdrop-blur-xl border-b border-[var(--border)]" style={{ height: "var(--header-height)" }}>
+    <header className="hidden md:flex fixed top-0 left-0 lg:left-[var(--sidebar-width)] right-0 z-20 items-center justify-between px-6 glass-primary border-b border-[var(--glass-border)] shadow-[0_1px_0_0_var(--glass-highlight)]" style={{ height: "var(--header-height)" }}>
       {/* Search */}
       <div className="flex items-center gap-2 flex-1 max-w-md">
         <div className="relative w-full">
@@ -52,9 +52,9 @@ export function Topbar() {
           <input
             type="text"
             placeholder="Qidirish..."
-            className="w-full pl-9 pr-16 py-2 rounded-[10px] text-sm bg-[var(--surface-secondary)] border border-[var(--border)] text-[var(--foreground)] placeholder:text-[var(--muted)] focus:border-[var(--color-accent)] focus:ring-2 focus:ring-[var(--color-accent)]/20 focus:outline-none transition-all"
+            className="w-full pl-9 pr-16 py-2 rounded-[var(--radius)] text-sm bg-[var(--glass-bg)] backdrop-blur-[var(--glass-blur-light)] border border-[var(--glass-border-subtle)] text-[var(--foreground)] placeholder:text-[var(--muted)] focus:border-[var(--color-accent)]/50 focus:ring-2 focus:ring-[var(--color-accent)]/20 focus:outline-none transition-all duration-300 [transition-timing-function:var(--spring-smooth)] shadow-[inset_0_1px_2px_var(--glass-inner-shadow)]"
           />
-          <kbd className="absolute right-3 top-1/2 -translate-y-1/2 hidden sm:inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-md bg-[var(--surface)] border border-[var(--border)] text-[10px] text-[var(--muted)] font-medium">
+          <kbd className="absolute right-3 top-1/2 -translate-y-1/2 hidden sm:inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-md bg-[var(--glass-bg)] backdrop-blur-sm border border-[var(--glass-border-subtle)] text-[10px] text-[var(--muted)] font-medium">
             ⌘K
           </kbd>
         </div>
@@ -64,7 +64,7 @@ export function Topbar() {
       <div className="flex items-center gap-2">
         {/* Notification bell */}
         <button
-          className="relative p-2 rounded-[10px] text-[var(--muted)] hover:text-[var(--foreground)] hover:bg-[var(--surface-secondary)] transition-colors"
+          className="relative p-2 rounded-[var(--radius-sm)] text-[var(--muted)] hover:text-[var(--foreground)] hover:bg-[var(--glass-bg)] hover:backdrop-blur-sm transition-all duration-300 [transition-timing-function:var(--spring-smooth)]"
           aria-label="Bildirishnomalar"
         >
           <svg
@@ -87,9 +87,9 @@ export function Topbar() {
         <div className="relative" ref={menuRef}>
           <button
             onClick={() => setMenuOpen(!menuOpen)}
-            className="flex items-center gap-2 px-3 py-1.5 rounded-[10px] hover:bg-[var(--surface-secondary)] transition-colors"
+            className="flex items-center gap-2 px-3 py-1.5 rounded-[var(--radius-sm)] hover:bg-[var(--glass-bg)] hover:backdrop-blur-sm transition-all duration-300 [transition-timing-function:var(--spring-smooth)]"
           >
-            <div className="w-8 h-8 rounded-full bg-[var(--color-accent)] flex items-center justify-center text-white text-sm font-semibold">
+            <div className="w-8 h-8 rounded-full bg-[var(--color-accent)]/80 backdrop-blur-sm flex items-center justify-center text-white text-sm font-semibold border border-white/20">
               {initials}
             </div>
             <span className="hidden sm:block text-sm font-medium text-[var(--foreground)]">
@@ -101,8 +101,8 @@ export function Topbar() {
           </button>
 
           {menuOpen && (
-            <div className="absolute right-0 top-full mt-2 w-56 bg-[var(--surface)] rounded-[12px] border border-[var(--border)] shadow-xl py-1 z-50">
-              <div className="px-4 py-3 border-b border-[var(--border)]">
+            <div className="absolute right-0 top-full mt-2 w-56 rounded-[var(--radius-lg)] py-1 z-50 bg-[var(--glass-bg-ultra)] backdrop-blur-[40px] border border-[var(--glass-border)] shadow-[var(--shadow-xl),inset_0_1px_0_0_var(--glass-highlight)]">
+              <div className="px-4 py-3 border-b border-[var(--glass-border-subtle)]">
                 <p className="text-sm font-medium text-[var(--foreground)] truncate">{displayName}</p>
                 <p className="text-xs text-[var(--muted)]">{roleLabel}</p>
               </div>
@@ -112,7 +112,7 @@ export function Topbar() {
                   await signOut();
                   router.push("/login");
                 }}
-                className="flex items-center gap-2 w-full px-4 py-2.5 text-sm text-[var(--color-danger)] hover:bg-[var(--color-danger)]/10 transition-colors"
+                className="flex items-center gap-2 w-full px-4 py-2.5 text-sm text-[var(--color-danger)] hover:bg-[var(--color-danger)]/10 transition-all duration-300 [transition-timing-function:var(--spring-smooth)]"
               >
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />

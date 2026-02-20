@@ -93,14 +93,14 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="bg-ambient min-h-screen flex items-center justify-center p-4">
+    <div className="bg-[var(--background)] min-h-screen flex items-center justify-center p-4">
       <div className="fixed top-4 right-4">
         <ThemeToggle />
       </div>
 
       <div className="w-full max-w-lg">
         <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold bg-gradient-to-r from-indigo-500 to-violet-500 bg-clip-text text-transparent">
+          <h1 className="text-3xl font-bold text-[var(--color-accent)]">
             BestTimetable
           </h1>
           <p className="text-sm text-[var(--muted)] mt-2">
@@ -110,7 +110,7 @@ export default function LoginPage() {
 
         <div className="grid gap-6 md:grid-cols-2">
           {/* Login form */}
-          <div className="glass-strong rounded-2xl p-6">
+          <div className="apple-card rounded-[20px] p-6">
             <h2 className="text-xl font-semibold mb-6">Tizimga kirish</h2>
 
             <form onSubmit={handleSubmit} className="space-y-4">
@@ -153,7 +153,7 @@ export default function LoginPage() {
           </div>
 
           {/* Test accounts */}
-          <div className="glass-strong rounded-2xl p-6">
+          <div className="apple-card rounded-[20px] p-6">
             <h2 className="text-sm font-semibold mb-4 text-[var(--muted)]">
               Test hisoblar
             </h2>
@@ -164,8 +164,8 @@ export default function LoginPage() {
                   key={acc.email}
                   type="button"
                   onClick={() => fillCredentials(acc.email, acc.password)}
-                  className="w-full flex items-center gap-3 p-3 rounded-xl
-                    glass hover:bg-[var(--surface-hover)] transition-all text-left group"
+                  className="w-full flex items-center gap-3 p-3 rounded-[12px]
+                    bg-[var(--surface-secondary)] hover:bg-[var(--surface-hover)] transition-all text-left group"
                 >
                   <div
                     className={`w-9 h-9 rounded-lg ${acc.bg} flex items-center justify-center shrink-0`}
@@ -180,7 +180,7 @@ export default function LoginPage() {
                       {acc.desc}
                     </div>
                   </div>
-                  <div className="text-xs text-accent opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
+                  <div className="text-xs text-[var(--color-accent)] opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
                     Kirish
                   </div>
                 </button>

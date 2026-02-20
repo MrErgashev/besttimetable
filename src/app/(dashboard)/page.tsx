@@ -143,9 +143,9 @@ export default function DashboardPage() {
           <div className="text-center">
             <div className="text-3xl font-bold text-[var(--color-accent)]">{entries.length}</div>
             <div className="text-xs text-[var(--muted)] mt-1">Jami darslar</div>
-            <div className="mt-2 h-1.5 bg-[var(--surface)] rounded-full overflow-hidden">
+            <div className="mt-2 h-1.5 bg-[var(--surface-secondary)] rounded-full overflow-hidden">
               <div
-                className="h-full bg-gradient-to-r from-[var(--color-accent)] to-[#5856D6] rounded-full"
+                className="h-full bg-[var(--color-accent)] rounded-full"
                 style={{ width: `${fillPercent}%` }}
               />
             </div>
@@ -238,19 +238,19 @@ export default function DashboardPage() {
         <GlassCard>
           <h2 className="text-lg font-semibold mb-4">Tizim holati</h2>
           <div className="space-y-3">
-            <div className="flex items-center justify-between p-3 rounded-[12px] bg-[var(--surface)]">
+            <div className="flex items-center justify-between p-3 rounded-[12px] bg-[var(--surface-secondary)]">
               <span className="text-sm">Qo&apos;lda qo&apos;yilgan darslar</span>
               <Badge>{entries.filter((e) => e.is_manual).length}</Badge>
             </div>
-            <div className="flex items-center justify-between p-3 rounded-[12px] bg-[var(--surface)]">
+            <div className="flex items-center justify-between p-3 rounded-[12px] bg-[var(--surface-secondary)]">
               <span className="text-sm">Avtomatik tuzilgan</span>
               <Badge>{entries.filter((e) => !e.is_manual).length}</Badge>
             </div>
-            <div className="flex items-center justify-between p-3 rounded-[12px] bg-[var(--surface)]">
+            <div className="flex items-center justify-between p-3 rounded-[12px] bg-[var(--surface-secondary)]">
               <span className="text-sm">Jami vaqt slotlari</span>
               <Badge>{TIME_SLOTS.length}</Badge>
             </div>
-            <div className="flex items-center justify-between p-3 rounded-[12px] bg-[var(--surface)]">
+            <div className="flex items-center justify-between p-3 rounded-[12px] bg-[var(--surface-secondary)]">
               <span className="text-sm">Ish kunlari</span>
               <Badge>{DAYS.length}</Badge>
             </div>

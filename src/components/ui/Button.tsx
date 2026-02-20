@@ -1,45 +1,45 @@
 "use client";
 
 import { cn } from "@/lib/utils";
+import { ButtonHTMLAttributes, forwardRef } from "react";
 
-interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
+interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: "primary" | "secondary" | "danger" | "ghost";
   size?: "sm" | "md" | "lg";
+  fullWidth?: boolean;
 }
 
-export function Button({
-  children,
-  variant = "primary",
-  size = "md",
-  className,
-  disabled,
-  ...props
-}: ButtonProps) {
-  return (
-    <button
-      className={cn(
-        "inline-flex items-center justify-center gap-2 rounded-xl font-medium transition-all",
-        "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent",
-        "disabled:opacity-50 disabled:cursor-not-allowed",
-        // Variants
-        variant === "primary" &&
-          "bg-accent text-white hover:bg-accent-hover shadow-lg shadow-accent/25",
-        variant === "secondary" &&
-          "glass hover:bg-[var(--surface-hover)] text-[var(--foreground)]",
-        variant === "danger" &&
-          "bg-danger text-white hover:bg-red-600 shadow-lg shadow-danger/25",
-        variant === "ghost" &&
-          "text-[var(--muted)] hover:text-[var(--foreground)] hover:bg-[var(--surface)]",
-        // Sizes
-        size === "sm" && "px-3 py-1.5 text-sm",
-        size === "md" && "px-4 py-2.5 text-sm",
-        size === "lg" && "px-6 py-3 text-base",
-        className
-      )}
-      disabled={disabled}
-      {...props}
-    >
-      {children}
-    </button>
-  );
-}
+const Button = forwardRef<HTMLButtonElement, ButtonProps>(
+  ({ className, variant = "primary", size = "md", fullWidth, children, disabled, ...props }, ref) => {
+    const base =
+      "inline-flex items-center justify-center gap-2 font-semibold transition-all duration-200 press-effect focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)]/30 disabled:opacity-50 disabled:pointer-events-none";
+    const variants = {
+      primary:
+        "bg-[var(--color-accent)] text-white hover:bg-[var(--color-accent-hover)] shadow-sm",
+      secondary:
+        "bg-[var(--surface-secondary)] text-[var(--foreground)] border border-[var(--border)] hover:bg-[var(--surface-hover)]",
+      danger: "bg-[var(--color-danger)] text-white hover:opacity-90",
+      ghost: "text-[var(--color-accent)] hover:bg-[var(--color-accent)]/10",
+    };
+    const sizes = {
+      sm: "h-9 px-3 text-sm rounded-[10px]",
+      md: "h-11 px-5 text-sm rounded-[12px] md:h-10",
+      lg: "h-12 px-6 text-base rounded-[14px]",
+    };
+    return (
+      <button
+        ref={ref}
+        className={cn(base, variants[variant], sizes[size], fullWidth && "w-full", className)}
+        disabled={disabled}
+        {...props}
+      >
+        {children}
+      </button>
+    );
+  }
+);
+Button.displayName = "Button";
+
+export { Button };
+export type { ButtonProps };
+export default Button;

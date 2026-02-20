@@ -264,7 +264,7 @@ export default function GeneratePage() {
                           <td className="px-1">
                             <button
                               onClick={() => removeLoad(load.id)}
-                              className="p-1 text-[var(--muted)] hover:text-[var(--danger)] transition-colors"
+                              className="p-1 text-[var(--muted)] hover:text-[var(--color-danger)] transition-colors"
                             >
                               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                                 <path d="M18 6L6 18M6 6l12 12" />
@@ -330,7 +330,7 @@ export default function GeneratePage() {
                       max_consecutive_lessons: parseInt(e.target.value),
                     })
                   }
-                  className="glass-subtle rounded px-2 py-1 text-sm"
+                  className="bg-[var(--surface-secondary)] rounded-[8px] px-2 py-1 text-sm border border-[var(--border)]"
                 >
                   <option value="2">2</option>
                   <option value="3">3</option>
@@ -376,7 +376,7 @@ export default function GeneratePage() {
                 </div>
                 <div className="h-2 bg-[var(--surface)] rounded-full overflow-hidden">
                   <div
-                    className="h-full bg-gradient-to-r from-indigo-500 to-violet-500 rounded-full transition-all duration-300"
+                    className="h-full bg-[var(--color-accent)] rounded-full transition-all duration-300"
                     style={{
                       width: `${progress.total ? (progress.placed / progress.total) * 100 : 0}%`,
                     }}
@@ -524,7 +524,7 @@ export default function GeneratePage() {
               step="1.5"
               value={loadWeeklyHours}
               onChange={(e) => setLoadWeeklyHours(e.target.value)}
-              className="w-full glass-subtle rounded-xl px-3 py-2 text-sm"
+              className="w-full bg-[var(--surface-secondary)] rounded-[10px] px-3 py-2.5 text-sm border border-[var(--border)]"
             />
           </div>
           <Select

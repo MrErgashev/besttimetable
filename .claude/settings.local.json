@@ -63,7 +63,10 @@
       "Bash(unzip:*)",
       "Bash(/c/Users/hp/AppData/Local/Microsoft/WindowsApps/ngrok.exe version)",
       "Bash(/c/Users/hp/AppData/Local/Microsoft/WindowsApps/ngrok.exe config add-authtoken 39wLAPB1eU9QBicOTzdc18eNYjt_59diUgYDCya7qZ3fDHgaW)",
-      "Bash(npx next dev:*)"
+      "Bash(npx next dev:*)",
+      "Bash(NODE_OPTIONS=\"--max-old-space-size=4096\" npx next build:*)",
+      "Bash(npx tsc:*)",
+      "Bash(NODE_OPTIONS=\"--max-old-space-size=8192\" npx next build:*)"
     ]
   }
 }

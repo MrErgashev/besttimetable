@@ -101,10 +101,10 @@ export function Sidebar() {
   const pathname = usePathname();
 
   return (
-    <aside className="glass fixed left-0 top-0 h-full w-64 flex-col p-4 z-30 hidden lg:flex">
+    <aside className="fixed left-0 top-0 h-full w-[var(--sidebar-width)] flex-col bg-[var(--surface)] border-r border-[var(--border)] p-4 z-30 hidden lg:flex">
       {/* Logo */}
       <div className="mb-8 px-2">
-        <h1 className="text-xl font-bold bg-gradient-to-r from-indigo-500 to-violet-500 bg-clip-text text-transparent">
+        <h1 className="text-xl font-bold text-[var(--color-accent)]">
           BestTimetable
         </h1>
         <p className="text-xs text-[var(--muted)] mt-0.5">
@@ -125,10 +125,10 @@ export function Sidebar() {
               key={item.href}
               href={item.href}
               className={cn(
-                "flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all",
+                "flex items-center gap-3 px-3 py-2.5 rounded-[10px] text-sm font-medium transition-all duration-200",
                 isActive
-                  ? "bg-accent/15 text-accent dark:text-accent-light border border-accent/20"
-                  : "text-[var(--muted)] hover:text-[var(--foreground)] hover:bg-[var(--surface)]"
+                  ? "bg-[var(--color-accent)]/10 text-[var(--color-accent)]"
+                  : "text-[var(--muted)] hover:text-[var(--foreground)] hover:bg-[var(--surface-secondary)]"
               )}
             >
               <span className="flex-shrink-0">
@@ -140,8 +140,17 @@ export function Sidebar() {
         })}
       </nav>
 
-      {/* Theme toggle at bottom */}
+      {/* User section at bottom */}
       <div className="mt-auto pt-4 border-t border-[var(--border)]">
+        <div className="flex items-center gap-3 px-2 mb-3">
+          <div className="w-9 h-9 rounded-full bg-[var(--color-accent)] flex items-center justify-center text-white text-sm font-semibold">
+            A
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-medium text-[var(--foreground)] truncate">Admin</p>
+            <p className="text-xs text-[var(--muted)] truncate">Super admin</p>
+          </div>
+        </div>
         <div className="flex items-center justify-between px-2">
           <span className="text-xs text-[var(--muted)]">Tema</span>
           <ThemeToggle />

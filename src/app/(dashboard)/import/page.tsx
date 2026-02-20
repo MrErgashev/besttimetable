@@ -143,7 +143,7 @@ export default function ImportPage() {
             <div
               className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full ${
                 step === s
-                  ? "bg-indigo-500/10 text-indigo-500 font-semibold"
+                  ? "bg-[var(--color-accent)]/10 text-[var(--color-accent)] font-semibold"
                   : "text-[var(--muted)]"
               }`}
             >
@@ -175,7 +175,7 @@ export default function ImportPage() {
       {step === "upload" && (
         <GlassCard>
           <div
-            className="border-2 border-dashed border-[var(--border)] rounded-xl p-12 text-center cursor-pointer hover:border-indigo-400 transition-colors"
+            className="border-2 border-dashed border-[var(--border)] rounded-[16px] p-12 text-center cursor-pointer hover:border-[var(--color-accent)] transition-colors"
             onClick={() => fileInputRef.current?.click()}
           >
             <input

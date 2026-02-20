@@ -103,7 +103,7 @@ export default function SubstitutionsPage() {
                     return (
                       <div
                         key={entry.id}
-                        className="flex items-center justify-between py-2 px-3 rounded-lg glass-subtle"
+                        className="flex items-center justify-between py-2 px-3 rounded-[10px] bg-[var(--surface-secondary)]"
                       >
                         <div className="flex items-center gap-3">
                           <span

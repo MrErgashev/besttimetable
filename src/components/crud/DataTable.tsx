@@ -9,6 +9,10 @@ export interface Column<T> {
   header: string;
   render?: (item: T) => React.ReactNode;
   sortable?: boolean;
+  /** Hide this column in mobile card view */
+  hideOnMobile?: boolean;
+  /** Use as the primary (bold) label on mobile card */
+  primary?: boolean;
 }
 
 interface DataTableProps<T extends { id: string }> {
@@ -74,6 +78,8 @@ export function DataTable<T extends { id: string }>({
     }
   }
 
+  const primaryCol = columns.find((c) => c.primary) || columns[0];
+
   return (
     <div>
       {/* Search */}
@@ -81,7 +87,7 @@ export function DataTable<T extends { id: string }>({
         <div className="p-4 border-b border-[var(--border)]">
           <div className="relative max-w-sm">
             <svg
-              className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--muted-light)]"
+              className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--muted)]"
               width="16"
               height="16"
               viewBox="0 0 24 24"
@@ -100,14 +106,14 @@ export function DataTable<T extends { id: string }>({
                 setSearch(e.target.value);
                 setPage(0);
               }}
-              className="w-full pl-9 pr-4 py-2 rounded-xl text-sm bg-[var(--surface-solid)] border border-[var(--border)] text-[var(--foreground)] placeholder:text-[var(--muted-light)] focus:border-accent focus:ring-2 focus:ring-accent/20 focus:outline-none transition-all"
+              className="w-full pl-9 pr-4 py-2.5 rounded-[10px] text-sm bg-[var(--surface-secondary)] border border-[var(--border)] text-[var(--foreground)] placeholder:text-[var(--muted)] focus:border-[var(--color-accent)] focus:ring-2 focus:ring-[var(--color-accent)]/20 focus:outline-none transition-all"
             />
           </div>
         </div>
       )}
 
-      {/* Table */}
-      <div className="overflow-x-auto">
+      {/* Desktop Table (hidden on mobile) */}
+      <div className="hidden md:block overflow-x-auto">
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-[var(--border)]">
@@ -123,7 +129,7 @@ export function DataTable<T extends { id: string }>({
                   <span className="flex items-center gap-1">
                     {col.header}
                     {col.sortable && sortKey === col.key && (
-                      <span className="text-accent">
+                      <span className="text-[var(--color-accent)]">
                         {sortDir === "asc" ? "↑" : "↓"}
                       </span>
                     )}
@@ -151,7 +157,7 @@ export function DataTable<T extends { id: string }>({
               paginated.map((item) => (
                 <tr
                   key={item.id}
-                  className="border-b border-[var(--border)] hover:bg-[var(--surface)] transition-colors"
+                  className="border-b border-[var(--border)] hover:bg-[var(--surface-secondary)] transition-colors"
                 >
                   {columns.map((col) => (
                     <td
@@ -171,17 +177,10 @@ export function DataTable<T extends { id: string }>({
                         {onEdit && (
                           <button
                             onClick={() => onEdit(item)}
-                            className="p-1.5 rounded-lg text-[var(--muted)] hover:text-accent hover:bg-accent/10 transition-all"
+                            className="p-1.5 rounded-[8px] text-[var(--muted)] hover:text-[var(--color-accent)] hover:bg-[var(--color-accent)]/10 transition-all"
                             title="Tahrirlash"
                           >
-                            <svg
-                              width="16"
-                              height="16"
-                              viewBox="0 0 24 24"
-                              fill="none"
-                              stroke="currentColor"
-                              strokeWidth="2"
-                            >
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                               <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z" />
                               <path d="m15 5 4 4" />
                             </svg>
@@ -196,13 +195,13 @@ export function DataTable<T extends { id: string }>({
                                     onDelete(item);
                                     setDeleteId(null);
                                   }}
-                                  className="px-2 py-1 rounded-lg text-xs bg-danger text-white hover:bg-red-600 transition-all"
+                                  className="px-2 py-1 rounded-[8px] text-xs bg-[var(--color-danger)] text-white hover:opacity-90 transition-all"
                                 >
                                   Ha
                                 </button>
                                 <button
                                   onClick={() => setDeleteId(null)}
-                                  className="px-2 py-1 rounded-lg text-xs text-[var(--muted)] hover:bg-[var(--surface)] transition-all"
+                                  className="px-2 py-1 rounded-[8px] text-xs text-[var(--muted)] hover:bg-[var(--surface-secondary)] transition-all"
                                 >
                                   Yo&apos;q
                                 </button>
@@ -210,17 +209,10 @@ export function DataTable<T extends { id: string }>({
                             ) : (
                               <button
                                 onClick={() => setDeleteId(item.id)}
-                                className="p-1.5 rounded-lg text-[var(--muted)] hover:text-danger hover:bg-danger/10 transition-all"
+                                className="p-1.5 rounded-[8px] text-[var(--muted)] hover:text-[var(--color-danger)] hover:bg-[var(--color-danger)]/10 transition-all"
                                 title="O'chirish"
                               >
-                                <svg
-                                  width="16"
-                                  height="16"
-                                  viewBox="0 0 24 24"
-                                  fill="none"
-                                  stroke="currentColor"
-                                  strokeWidth="2"
-                                >
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                                   <path d="M3 6h18M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" />
                                 </svg>
                               </button>
@@ -235,6 +227,79 @@ export function DataTable<T extends { id: string }>({
             )}
           </tbody>
         </table>
+      </div>
+
+      {/* Mobile Card View (visible only on mobile) */}
+      <div className="md:hidden divide-y divide-[var(--border)]">
+        {paginated.length === 0 ? (
+          <div className="px-4 py-12 text-center text-[var(--muted)]">
+            {emptyLabel}
+          </div>
+        ) : (
+          paginated.map((item) => (
+            <div
+              key={item.id}
+              className="px-4 py-3 active:bg-[var(--surface-secondary)] transition-colors"
+              onClick={() => onEdit && onEdit(item)}
+            >
+              <div className="flex items-center justify-between">
+                <div className="flex-1 min-w-0">
+                  {/* Primary label */}
+                  <p className="text-[15px] font-medium text-[var(--foreground)] truncate">
+                    {primaryCol.render
+                      ? primaryCol.render(item)
+                      : String((item as Record<string, unknown>)[primaryCol.key] ?? "")}
+                  </p>
+                  {/* Secondary info */}
+                  <div className="flex items-center gap-2 mt-0.5 flex-wrap">
+                    {columns
+                      .filter((c) => c.key !== primaryCol.key && !c.hideOnMobile)
+                      .slice(0, 3)
+                      .map((col) => (
+                        <span key={col.key} className="text-[13px] text-[var(--muted)]">
+                          {col.render
+                            ? col.render(item)
+                            : String((item as Record<string, unknown>)[col.key] ?? "")}
+                        </span>
+                      ))}
+                  </div>
+                </div>
+
+                {/* Chevron or actions */}
+                <div className="flex items-center gap-1 ml-2">
+                  {onDelete && (
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        if (deleteId === item.id) {
+                          onDelete(item);
+                          setDeleteId(null);
+                        } else {
+                          setDeleteId(item.id);
+                        }
+                      }}
+                      className={cn(
+                        "p-2 rounded-[10px] transition-colors",
+                        deleteId === item.id
+                          ? "bg-[var(--color-danger)] text-white"
+                          : "text-[var(--muted)]"
+                      )}
+                    >
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <path d="M3 6h18M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" />
+                      </svg>
+                    </button>
+                  )}
+                  {onEdit && (
+                    <svg className="text-[var(--muted)]" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <path d="m9 18 6-6-6-6" />
+                    </svg>
+                  )}
+                </div>
+              </div>
+            </div>
+          ))
+        )}
       </div>
 
       {/* Pagination */}

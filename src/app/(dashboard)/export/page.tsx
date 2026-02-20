@@ -124,7 +124,7 @@ export default function ExportPage() {
                       value="pdf"
                       checked={format === "pdf"}
                       onChange={() => setFormat("pdf")}
-                      className="accent-indigo-500"
+                      className="accent-[#007AFF]"
                     />
                     <span className="flex items-center gap-1">
                       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -141,7 +141,7 @@ export default function ExportPage() {
                       value="excel"
                       checked={format === "excel"}
                       onChange={() => setFormat("excel")}
-                      className="accent-indigo-500"
+                      className="accent-[#007AFF]"
                     />
                     <span className="flex items-center gap-1">
                       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">

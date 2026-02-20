@@ -240,7 +240,7 @@ export default function UsersPage() {
               placeholder="Ism yoki email bo'yicha qidirish..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="w-full pl-10 pr-4 py-2.5 text-sm rounded-xl bg-[var(--surface-solid)] border border-[var(--border)] text-[var(--foreground)] focus:border-accent focus:ring-2 focus:ring-accent/20 focus:outline-none"
+              className="w-full pl-10 pr-4 py-2.5 text-sm rounded-[10px] bg-[var(--surface-secondary)] border border-[var(--border)] text-[var(--foreground)] focus:border-[var(--color-accent)] focus:ring-2 focus:ring-[var(--color-accent)]/20 focus:outline-none"
             />
           </div>
           <Select
@@ -281,7 +281,7 @@ export default function UsersPage() {
               return (
                 <div
                   key={user.id}
-                  className="flex items-center gap-4 p-4 hover:bg-[var(--surface)] transition-colors"
+                  className="flex items-center gap-4 p-4 hover:bg-[var(--surface-secondary)] transition-colors"
                 >
                   <div
                     className={`w-10 h-10 rounded-xl bg-${config.color}-500/10 flex items-center justify-center shrink-0`}

@@ -30,6 +30,7 @@ export function TimetableGrid({ groupId }: TimetableGridProps) {
     day: DayKey;
     slot: TimeSlot;
   } | null>(null);
+  const [mobileDay, setMobileDay] = useState<DayKey>(DAYS[0].key);
 
   // Conflict detection
   const conflictIds = useMemo(() => {
@@ -113,19 +114,99 @@ export function TimetableGrid({ groupId }: TimetableGridProps) {
         onDragStart={handleDragStart}
         onDragEnd={handleDragEnd}
       >
-        <div className="glass rounded-2xl overflow-hidden">
+        {/* Mobile Day Tabs */}
+        <div className="md:hidden mb-4 flex gap-1 overflow-x-auto pb-1 -mx-1 px-1">
+          {DAYS.map((day) => (
+            <button
+              key={day.key}
+              onClick={() => setMobileDay(day.key)}
+              className={cn(
+                "flex-shrink-0 px-4 py-2 rounded-full text-[13px] font-medium transition-all",
+                mobileDay === day.key
+                  ? "bg-[var(--color-accent)] text-white"
+                  : "bg-[var(--surface-secondary)] text-[var(--muted)]"
+              )}
+            >
+              {day.short}
+            </button>
+          ))}
+        </div>
+
+        {/* Mobile Card View */}
+        <div className="md:hidden space-y-2">
+          {Array.from(trackGroups.entries()).map(([track, slots]) => (
+            <div key={track}>
+              <div
+                className={cn(
+                  "text-[11px] font-bold uppercase tracking-wider px-1 py-1.5",
+                  track === "kunduzgi" && "text-[var(--color-accent)]",
+                  track === "sirtqi" && "text-[var(--color-warning)]",
+                  track === "kechki" && "text-purple-500"
+                )}
+              >
+                {TRACK_LABELS[track]}
+              </div>
+              <div className="space-y-1.5">
+                {slots.map((slot) => {
+                  const entry = getCell(mobileDay, slot.id, groupId);
+                  const hasConflict = entry ? conflictIds.has(entry.id) : false;
+
+                  return (
+                    <div
+                      key={slot.id}
+                      className="flex items-stretch gap-3"
+                    >
+                      {/* Time label */}
+                      <div className="w-14 flex-shrink-0 pt-2">
+                        <div className="text-[13px] font-semibold text-[var(--foreground)]">
+                          {slot.label}
+                        </div>
+                        <div className="text-[11px] text-[var(--muted)]">
+                          {slot.start}
+                        </div>
+                      </div>
+
+                      {/* Card or empty */}
+                      <div className="flex-1 min-h-[56px]">
+                        {entry ? (
+                          <div className="group h-full">
+                            <LessonCard
+                              entry={entry}
+                              hasConflict={hasConflict}
+                              onRemove={() => removeEntry(entry.id)}
+                            />
+                          </div>
+                        ) : (
+                          <button
+                            onClick={() => setAssignModal({ day: mobileDay, slot })}
+                            className="w-full h-full min-h-[56px] rounded-[10px] border-2 border-dashed border-[var(--border)] flex items-center justify-center text-[var(--muted)] text-xs active:bg-[var(--surface-secondary)] transition-colors"
+                          >
+                            + Qo&apos;shish
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* Desktop Table View */}
+        <div className="hidden md:block apple-card rounded-[16px] overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full border-collapse min-w-[700px]">
               {/* Header */}
               <thead>
                 <tr>
-                  <th className="w-28 px-3 py-3 text-left text-xs font-semibold text-[var(--muted)] bg-[var(--surface)]">
+                  <th className="w-28 px-3 py-3 text-left text-xs font-semibold text-[var(--muted)] bg-[var(--surface-secondary)]">
                     Vaqt
                   </th>
                   {DAYS.map((day) => (
                     <th
                       key={day.key}
-                      className="px-3 py-3 text-center text-xs font-semibold text-[var(--muted)] bg-[var(--surface)]"
+                      className="px-3 py-3 text-center text-xs font-semibold text-[var(--muted)] bg-[var(--surface-secondary)]"
                     >
                       <span className="hidden sm:inline">{day.label}</span>
                       <span className="sm:hidden">{day.short}</span>
@@ -143,13 +224,13 @@ export function TimetableGrid({ groupId }: TimetableGridProps) {
                           colSpan={6}
                           className={cn(
                             "px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider",
-                            trackIdx > 0 && "border-t-2 border-[var(--border-strong)]",
+                            trackIdx > 0 && "border-t-2 border-[var(--border)]",
                             track === "kunduzgi" &&
-                              "text-indigo-500 bg-indigo-50/50 dark:bg-indigo-950/20",
+                              "text-[var(--color-accent)] bg-[var(--color-accent)]/5",
                             track === "sirtqi" &&
-                              "text-amber-500 bg-amber-50/50 dark:bg-amber-950/20",
+                              "text-[var(--color-warning)] bg-[var(--color-warning)]/5",
                             track === "kechki" &&
-                              "text-violet-500 bg-violet-50/50 dark:bg-violet-950/20"
+                              "text-purple-500 bg-purple-500/5"
                           )}
                         >
                           {TRACK_LABELS[track]}
@@ -260,9 +341,9 @@ function DroppableCell({
       className={cn(
         "relative h-[72px] min-w-[120px] p-1 transition-colors align-top",
         "border-l border-[var(--border)]",
-        isOver && "bg-indigo-100/50 dark:bg-indigo-900/20",
+        isOver && "bg-[var(--color-accent)]/10",
         !entry &&
-          "cursor-pointer hover:bg-[var(--surface)] group/cell"
+          "cursor-pointer hover:bg-[var(--surface-secondary)] group/cell"
       )}
       onClick={() => !entry && onClickEmpty()}
     >
@@ -276,7 +357,7 @@ function DroppableCell({
         </div>
       ) : (
         <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover/cell:opacity-100 transition-opacity">
-          <span className="text-[10px] text-[var(--muted-light)] bg-[var(--surface)] rounded-md px-2 py-1">
+          <span className="text-[10px] text-[var(--muted)] bg-[var(--surface-secondary)] rounded-[8px] px-2 py-1">
             + Qo&apos;shish
           </span>
         </div>

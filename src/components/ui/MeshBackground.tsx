@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useCallback } from "react";
+import { useEffect, useRef } from "react";
 
 interface Orb {
   className: string;
@@ -24,31 +24,31 @@ export function MeshBackground() {
   const currentRef = useRef({ x: 0.5, y: 0.5 });
   const rafRef = useRef<number>(0);
 
-  const updateParallax = useCallback(() => {
-    // Silliq lerp interpolatsiya
-    currentRef.current.x +=
-      (mouseRef.current.x - currentRef.current.x) * 0.03;
-    currentRef.current.y +=
-      (mouseRef.current.y - currentRef.current.y) * 0.03;
+  useEffect(() => {
+    function updateParallax() {
+      // Silliq lerp interpolatsiya
+      currentRef.current.x +=
+        (mouseRef.current.x - currentRef.current.x) * 0.03;
+      currentRef.current.y +=
+        (mouseRef.current.y - currentRef.current.y) * 0.03;
 
-    if (containerRef.current) {
-      // 0-1 dan -20..+20 piksel oraliqqa
-      const offsetX = (currentRef.current.x - 0.5) * 40;
-      const offsetY = (currentRef.current.y - 0.5) * 40;
-      containerRef.current.style.setProperty(
-        "--orb-offset-x",
-        `${offsetX}px`
-      );
-      containerRef.current.style.setProperty(
-        "--orb-offset-y",
-        `${offsetY}px`
-      );
+      if (containerRef.current) {
+        // 0-1 dan -20..+20 piksel oraliqqa
+        const offsetX = (currentRef.current.x - 0.5) * 40;
+        const offsetY = (currentRef.current.y - 0.5) * 40;
+        containerRef.current.style.setProperty(
+          "--orb-offset-x",
+          `${offsetX}px`
+        );
+        containerRef.current.style.setProperty(
+          "--orb-offset-y",
+          `${offsetY}px`
+        );
+      }
+
+      rafRef.current = requestAnimationFrame(updateParallax);
     }
 
-    rafRef.current = requestAnimationFrame(updateParallax);
-  }, []);
-
-  useEffect(() => {
     const handleMouseMove = (e: MouseEvent) => {
       mouseRef.current.x = e.clientX / window.innerWidth;
       mouseRef.current.y = e.clientY / window.innerHeight;
@@ -69,7 +69,7 @@ export function MeshBackground() {
       window.removeEventListener("touchmove", handleTouchMove);
       cancelAnimationFrame(rafRef.current);
     };
-  }, [updateParallax]);
+  }, []);
 
   return (
     <div

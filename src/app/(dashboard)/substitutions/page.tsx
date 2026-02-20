@@ -19,7 +19,7 @@ import type { ScheduleEntry } from "@/lib/types";
 export default function SubstitutionsPage() {
   const hydrated = useHydration();
   const { teachers } = useTeacherStore();
-  const { entries, moveEntry } = useTimetableStore();
+  const { entries } = useTimetableStore();
   const { getSubjectById } = useSubjectStore();
   const { getRoomById } = useRoomStore();
   const { groups } = useGroupStore();

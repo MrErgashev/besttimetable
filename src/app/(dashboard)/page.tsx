@@ -12,7 +12,7 @@ import { useRoleAccess } from "@/hooks/useRoleAccess";
 import { GlassCard } from "@/components/ui/GlassCard";
 import { Spinner } from "@/components/ui/Spinner";
 import { AlertsPanel } from "@/components/dashboard/AlertsPanel";
-import { ScheduleHeatmap } from "@/components/dashboard/ScheduleHeatmap";
+
 import { QuickStats } from "@/components/dashboard/QuickStats";
 import { TeacherWorkloadChart } from "@/components/dashboard/TeacherWorkloadChart";
 import { RoomUtilizationChart } from "@/components/dashboard/RoomUtilizationChart";

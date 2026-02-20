@@ -71,6 +71,7 @@ export const NAV_ITEMS: { href: string; icon: string; label: string; roles: User
   { href: "/substitutions", icon: "ArrowLeftRight", label: "O'rinbosar", roles: adminRoles },
   { href: "/users", icon: "UsersRound", label: "Foydalanuvchilar", roles: adminRoles },
   { href: "/changelog", icon: "History", label: "O'zgarishlar", roles: adminRoles },
+  { href: "/demo-data", icon: "Database", label: "Demo data", roles: ["super_admin"] as UserRole[] },
   { href: "/settings", icon: "Settings", label: "Sozlamalar", roles: adminRoles },
 ];
 

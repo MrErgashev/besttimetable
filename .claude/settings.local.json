@@ -56,7 +56,14 @@
       "Bash(python3:*)",
       "Bash(python -c:*)",
       "Bash(python -u -c:*)",
-      "Bash(python:*)"
+      "Bash(python:*)",
+      "Bash(ngrok:*)",
+      "Bash(npm uninstall:*)",
+      "Bash(winget install:*)",
+      "Bash(unzip:*)",
+      "Bash(/c/Users/hp/AppData/Local/Microsoft/WindowsApps/ngrok.exe version)",
+      "Bash(/c/Users/hp/AppData/Local/Microsoft/WindowsApps/ngrok.exe config add-authtoken 39wLAPB1eU9QBicOTzdc18eNYjt_59diUgYDCya7qZ3fDHgaW)",
+      "Bash(npx next dev:*)"
     ]
   }
 }

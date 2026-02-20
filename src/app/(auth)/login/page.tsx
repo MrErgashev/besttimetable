@@ -119,7 +119,7 @@ export default function LoginPage() {
         <div className="text-center mb-6">
           <div className="flex justify-center mb-4">
             <Image
-              src="/images/oriental-logo.svg"
+              src="/images/oriental-logo.png"
               alt="Oriental Universiteti"
               width={80}
               height={80}

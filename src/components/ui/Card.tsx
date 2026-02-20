@@ -18,7 +18,7 @@ const Card = forwardRef<HTMLDivElement, CardProps>(
         className={cn(
           "apple-card",
           paddings[padding],
-          hover && "hover:-translate-y-1 cursor-pointer",
+          hover && "hover:-translate-y-1 hover:shadow-[var(--shadow-lg)] cursor-pointer",
           pressable && "press-effect cursor-pointer",
           className
         )}

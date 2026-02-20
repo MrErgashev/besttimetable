@@ -101,7 +101,7 @@ function TeacherDashboard() {
         <div className="space-y-3">
           <Link
             href="/timetable"
-            className="flex items-center gap-3 p-3 rounded-[12px] hover:bg-[var(--surface-secondary)] transition-all group"
+            className="flex items-center gap-3 p-3 rounded-[12px] hover:bg-[var(--glass-bg)] hover:backdrop-blur-sm transition-all group"
           >
             <div className="p-2 rounded-lg bg-blue-100 dark:bg-blue-900/30 text-[var(--color-accent)] group-hover:scale-110 transition-transform">
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -116,7 +116,7 @@ function TeacherDashboard() {
           </Link>
           <Link
             href="/export"
-            className="flex items-center gap-3 p-3 rounded-[12px] hover:bg-[var(--surface-secondary)] transition-all group"
+            className="flex items-center gap-3 p-3 rounded-[12px] hover:bg-[var(--glass-bg)] hover:backdrop-blur-sm transition-all group"
           >
             <div className="p-2 rounded-lg bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400 group-hover:scale-110 transition-transform">
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -155,7 +155,7 @@ function StudentDashboard() {
         <div className="space-y-3">
           <Link
             href="/timetable"
-            className="flex items-center gap-3 p-3 rounded-[12px] hover:bg-[var(--surface-secondary)] transition-all group"
+            className="flex items-center gap-3 p-3 rounded-[12px] hover:bg-[var(--glass-bg)] hover:backdrop-blur-sm transition-all group"
           >
             <div className="p-2 rounded-lg bg-blue-100 dark:bg-blue-900/30 text-[var(--color-accent)] group-hover:scale-110 transition-transform">
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -387,10 +387,53 @@ function AdminDashboard() {
         style={{ animationDelay: "480ms" }}
       >
         <GlassCard>
-          <h2 className="text-sm font-semibold mb-3">
-            Haftalik dars zichligi
-          </h2>
-          <ScheduleHeatmap entries={entries} />
+          <h2 className="text-lg font-semibold mb-4">Tez harakatlar</h2>
+          <div className="space-y-3">
+            {[
+              {
+                href: "/timetable",
+                label: "Dars jadvalini ko'rish",
+                desc: "Guruh bo'yicha jadval",
+                iconBg: "bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400",
+                icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="4" width="18" height="18" rx="2" /><path d="M16 2v4M8 2v4M3 10h18" /></svg>,
+              },
+              {
+                href: "/generate",
+                label: "Avtomatik jadval tuzish",
+                desc: "Cheklovlar asosida",
+                iconBg: "bg-purple-100 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400",
+                icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z" /></svg>,
+              },
+              {
+                href: "/import",
+                label: "Import qilish",
+                desc: "Excel yoki Word fayldan",
+                iconBg: "bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400",
+                icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="17 8 12 3 7 8" /><line x1="12" y1="3" x2="12" y2="15" /></svg>,
+              },
+              {
+                href: "/export",
+                label: "Eksport qilish",
+                desc: "PDF yoki Excel",
+                iconBg: "bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400",
+                icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3" /></svg>,
+              },
+            ].map((item) => (
+              <Link
+                key={item.href}
+                href={item.href}
+                className="flex items-center gap-3 p-3 rounded-[12px] hover:bg-[var(--glass-bg)] hover:backdrop-blur-sm transition-all group"
+              >
+                <div className={`p-2 rounded-lg group-hover:scale-110 transition-transform ${item.iconBg}`}>
+                  {item.icon}
+                </div>
+                <div>
+                  <p className="text-sm font-medium">{item.label}</p>
+                  <p className="text-xs text-[var(--muted)]">{item.desc}</p>
+                </div>
+              </Link>
+            ))}
+          </div>
         </GlassCard>
       </div>
 

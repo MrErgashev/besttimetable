@@ -3,6 +3,7 @@ import { Topbar } from "@/components/layout/Topbar";
 import { BottomTabBar } from "@/components/layout/BottomTabBar";
 import { MobileHeader } from "@/components/layout/MobileHeader";
 import { RoleGuard } from "@/components/layout/RoleGuard";
+import { MeshBackground } from "@/components/ui/MeshBackground";
 
 export default function DashboardLayout({
   children,
@@ -11,12 +12,13 @@ export default function DashboardLayout({
 }) {
   return (
     <div className="min-h-screen bg-[var(--background)]">
+      <MeshBackground />
       <Sidebar />
       <Topbar />
       <MobileHeader />
 
       <main
-        className="lg:ml-[var(--sidebar-width)] px-4 sm:px-6 pb-8"
+        className="relative z-10 lg:ml-[var(--sidebar-width)] px-4 sm:px-6 pb-8"
         style={{
           paddingTop: "calc(var(--header-height) + 16px)",
           paddingBottom: "calc(var(--tab-bar-height) + var(--safe-area-bottom) + 24px)",

@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 280" fill="none">
+  <!-- Oriental Universiteti Logo -->
+  <g>
+    <!-- Left leaf/petal - upper -->
+    <path d="M120 18 C120 18 88 52 78 82 C68 112 80 130 96 118 C112 106 120 70 120 70" fill="#3BB876"/>
+    <!-- Right leaf/petal - upper -->
+    <path d="M120 18 C120 18 152 52 162 82 C172 112 160 130 144 118 C128 106 120 70 120 70" fill="#3BB876"/>
+    <!-- Left leaf/petal - lower -->
+    <path d="M120 58 C120 58 72 100 56 138 C42 170 58 188 80 170 C98 155 120 118 120 118" fill="#3BB876"/>
+    <!-- Right leaf/petal - lower -->
+    <path d="M120 58 C120 58 168 100 184 138 C198 170 182 188 160 170 C142 155 120 118 120 118" fill="#3BB876"/>
+    <!-- Bottom U curve -->
+    <path d="M56 148 C56 148 56 210 120 210 C184 210 184 148 184 148 C184 148 178 196 120 196 C62 196 56 148 56 148" fill="#3BB876"/>
+  </g>
+  <!-- ORIENTAL text -->
+  <text x="120" y="242" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-weight="800" font-size="30" letter-spacing="3" fill="#1D1D1F">ORIENTAL</text>
+  <!-- UNIVERSITETI text -->
+  <text x="120" y="268" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-weight="600" font-size="20" letter-spacing="4" fill="#1D1D1F">UNIVERSITETI</text>
+</svg>

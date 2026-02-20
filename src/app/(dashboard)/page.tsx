@@ -99,20 +99,6 @@ function TeacherDashboard() {
               <p className="text-xs text-[var(--muted)]">Haftalik jadval</p>
             </div>
           </Link>
-          <Link
-            href="/export"
-            className="flex items-center gap-3 p-3 rounded-[12px] hover:bg-[var(--glass-bg)] hover:backdrop-blur-sm transition-all group"
-          >
-            <div className="p-2 rounded-lg bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400 group-hover:scale-110 transition-transform">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3" />
-              </svg>
-            </div>
-            <div>
-              <p className="text-sm font-medium">Jadvalimni yuklab olish</p>
-              <p className="text-xs text-[var(--muted)]">PDF yoki Excel</p>
-            </div>
-          </Link>
         </div>
       </GlassCard>
     </div>

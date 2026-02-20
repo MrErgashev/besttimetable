@@ -21,9 +21,10 @@ import type { ScheduleEntry, DayKey, TimeSlot, TrackKey } from "@/lib/types";
 // ─── Main Grid ───────────────────────────────────────────────────────────────
 interface TimetableGridProps {
   groupId: string;
+  readOnly?: boolean;
 }
 
-export function TimetableGrid({ groupId }: TimetableGridProps) {
+export function TimetableGrid({ groupId, readOnly = false }: TimetableGridProps) {
   const { getCell, moveEntry, removeEntry, entries } = useTimetableStore();
   const [activeEntry, setActiveEntry] = useState<ScheduleEntry | null>(null);
   const [assignModal, setAssignModal] = useState<{
@@ -74,14 +75,16 @@ export function TimetableGrid({ groupId }: TimetableGridProps) {
 
   const handleDragStart = useCallback(
     (event: DragStartEvent) => {
+      if (readOnly) return;
       const entry = entries.find((e) => e.id === event.active.id);
       if (entry) setActiveEntry(entry);
     },
-    [entries]
+    [entries, readOnly]
   );
 
   const handleDragEnd = useCallback(
     (event: DragEndEvent) => {
+      if (readOnly) return;
       setActiveEntry(null);
       const { active, over } = event;
       if (!over || active.id === over.id) return;
@@ -94,7 +97,7 @@ export function TimetableGrid({ groupId }: TimetableGridProps) {
         moveEntry(active.id as string, day as DayKey, slotId);
       }
     },
-    [moveEntry]
+    [moveEntry, readOnly]
   );
 
   // Group slots by track
@@ -173,9 +176,11 @@ export function TimetableGrid({ groupId }: TimetableGridProps) {
                             <LessonCard
                               entry={entry}
                               hasConflict={hasConflict}
-                              onRemove={() => removeEntry(entry.id)}
+                              onRemove={readOnly ? undefined : () => removeEntry(entry.id)}
                             />
                           </div>
+                        ) : readOnly ? (
+                          <div className="w-full h-full min-h-[56px]" />
                         ) : (
                           <button
                             onClick={() => setAssignModal({ day: mobileDay, slot })}
@@ -272,11 +277,12 @@ export function TimetableGrid({ groupId }: TimetableGridProps) {
                                 entry={entry}
                                 groupId={groupId}
                                 hasConflict={hasConflict}
+                                readOnly={readOnly}
                                 onClickEmpty={() =>
                                   setAssignModal({ day: day.key, slot })
                                 }
                                 onRemove={
-                                  entry
+                                  !readOnly && entry
                                     ? () => removeEntry(entry.id)
                                     : undefined
                                 }
@@ -300,7 +306,7 @@ export function TimetableGrid({ groupId }: TimetableGridProps) {
       </DndContext>
 
       {/* Assign modal */}
-      {assignModal && (
+      {!readOnly && assignModal && (
         <CellAssignModal
           open={!!assignModal}
           onClose={() => setAssignModal(null)}
@@ -320,6 +326,7 @@ interface DroppableCellProps {
   entry?: ScheduleEntry;
   groupId: string;
   hasConflict: boolean;
+  readOnly?: boolean;
   onClickEmpty: () => void;
   onRemove?: () => void;
 }
@@ -329,6 +336,7 @@ const DroppableCell = memo(function DroppableCell({
   slot,
   entry,
   hasConflict,
+  readOnly = false,
   onClickEmpty,
   onRemove,
 }: DroppableCellProps) {
@@ -337,15 +345,15 @@ const DroppableCell = memo(function DroppableCell({
 
   return (
     <td
-      ref={setNodeRef}
+      ref={readOnly ? undefined : setNodeRef}
       className={cn(
         "relative h-[72px] min-w-[120px] p-1 transition-all duration-200 align-top",
         "border-l border-[var(--glass-border-subtle)]",
-        isOver && "bg-[var(--color-accent)]/12 backdrop-blur-sm",
-        !entry &&
+        !readOnly && isOver && "bg-[var(--color-accent)]/12 backdrop-blur-sm",
+        !readOnly && !entry &&
           "cursor-pointer hover:bg-[var(--glass-bg)] group/cell"
       )}
-      onClick={() => !entry && onClickEmpty()}
+      onClick={() => !readOnly && !entry && onClickEmpty()}
     >
       {entry ? (
         <div className="group h-full">
@@ -355,13 +363,13 @@ const DroppableCell = memo(function DroppableCell({
             onRemove={onRemove}
           />
         </div>
-      ) : (
+      ) : !readOnly ? (
         <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover/cell:opacity-100 transition-opacity">
           <span className="text-[10px] text-[var(--muted)] bg-[var(--glass-bg)] backdrop-blur-sm rounded-[var(--radius-sm)] px-2 py-1">
             + Qo&apos;shish
           </span>
         </div>
-      )}
+      ) : null}
     </td>
   );
 });

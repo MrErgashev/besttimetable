@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useGroupStore } from "@/stores/useGroupStore";
 import { useHydration } from "@/hooks/useHydration";
+import { useRoleAccess } from "@/hooks/useRoleAccess";
 import { GlassCard } from "@/components/ui/GlassCard";
 import { Select } from "@/components/ui/Select";
 import { Spinner } from "@/components/ui/Spinner";
@@ -11,7 +12,9 @@ import { TimetableGrid } from "@/components/timetable/TimetableGrid";
 export default function TimetablePage() {
   const hydrated = useHydration();
   const { groups } = useGroupStore();
+  const { role } = useRoleAccess();
   const [selectedGroupId, setSelectedGroupId] = useState<string>("");
+  const isReadOnly = role === "teacher" || role === "student";
 
   if (!hydrated) return <Spinner className="py-20" />;
 
@@ -42,7 +45,7 @@ export default function TimetablePage() {
           </div>
         </GlassCard>
       ) : (
-        <TimetableGrid groupId={activeGroupId} />
+        <TimetableGrid groupId={activeGroupId} readOnly={isReadOnly} />
       )}
     </div>
   );

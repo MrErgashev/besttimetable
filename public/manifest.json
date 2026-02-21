@@ -1,12 +1,14 @@
 {
-  "name": "BestTimetable",
+  "name": "BestTimetable — Dars jadvali tizimi",
   "short_name": "Timetable",
-  "description": "Dars jadvali boshqaruv tizimi",
+  "description": "O'quv muassasalari uchun zamonaviy dars jadvali boshqaruv tizimi",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#F5F5F7",
   "theme_color": "#007AFF",
   "orientation": "portrait-primary",
+  "lang": "uz",
+  "categories": ["education", "productivity"],
   "icons": [
     {
       "src": "/icons/icon-192.png",

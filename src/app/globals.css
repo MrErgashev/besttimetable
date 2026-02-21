@@ -171,6 +171,15 @@ body {
   @supports (min-height: 100dvh) {
     min-height: 100dvh;
   }
+
+  /* Android: pull-to-refresh'ni ichki scroll bo'lganda o'chirish */
+  overscroll-behavior-y: contain;
+
+  /* Android Chrome: ko'k tap highlight'ni o'chirish */
+  -webkit-tap-highlight-color: transparent;
+
+  /* Android/iOS: touch vaqtida tezroq response (300ms delay yo'q) */
+  touch-action: manipulation;
 }
 
 /* ── Liquid Glass Card ──────────────────────── */

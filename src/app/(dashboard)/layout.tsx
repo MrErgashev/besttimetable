@@ -33,14 +33,17 @@ export default function DashboardLayout({
       <main
         className={[
           "relative z-10 lg:ml-[var(--sidebar-width)] px-4 sm:px-6",
-          // Mobile: flex-1 + ichki scroll (overscroll-contain = bounce yo'q)
+          // Mobile: flex-1 + ichki scroll
+          // overscroll-contain = Android pull-to-refresh'ni bloklaydi
+          // -webkit-overflow-scrolling = iOS'da silliq scroll
           "max-md:flex-1 max-md:overflow-y-auto max-md:overscroll-contain",
+          "max-md:[--webkit-overflow-scrolling:touch]",
           // Desktop: oddiy padding
           "md:pb-8",
         ].join(" ")}
         style={{
           paddingTop: "calc(var(--header-height) + 16px)",
-          // Desktop uchun: tab bar height padding (mobile'da kerak emas — tab bar flex ichida)
+          WebkitOverflowScrolling: "touch", // iOS momentum scroll
         }}
       >
         {/* Mobile uchun pastki padding — content tab bar ostiga tushmasligi uchun */}

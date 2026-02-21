@@ -244,7 +244,7 @@ export function BottomTabBar() {
   }, [role]);
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-40 md:hidden">
+    <nav className="relative z-40 md:hidden shrink-0">
       {/* Sub-menu popup */}
       {openSubMenu !== null && visibleTabs[openSubMenu]?.subMenu && (
         <>

@@ -15,20 +15,39 @@ export default function DashboardLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className="min-h-screen bg-[var(--background)]">
+    <div
+      className={[
+        "bg-[var(--background)]",
+        // Desktop: oddiy body scroll
+        "md:min-h-screen",
+        // Mobile: inner-scroll pattern — dvh flex container
+        // Browser toolbar tab bar'ni yashira olmaydi
+        "max-md:h-[100dvh] max-md:flex max-md:flex-col max-md:overflow-hidden",
+      ].join(" ")}
+    >
       <MeshBackground />
       <Sidebar />
       <Topbar />
       <MobileHeader />
 
       <main
-        className="relative z-10 lg:ml-[var(--sidebar-width)] px-4 sm:px-6 pb-8"
+        className={[
+          "relative z-10 lg:ml-[var(--sidebar-width)] px-4 sm:px-6",
+          // Mobile: flex-1 + ichki scroll
+          // overscroll-contain = Android pull-to-refresh'ni bloklaydi
+          // -webkit-overflow-scrolling = iOS'da silliq scroll
+          "max-md:flex-1 max-md:overflow-y-auto max-md:overscroll-contain",
+          "max-md:[--webkit-overflow-scrolling:touch]",
+          // Desktop: oddiy padding
+          "md:pb-8",
+        ].join(" ")}
         style={{
           paddingTop: "calc(var(--header-height) + 16px)",
-          paddingBottom: "calc(var(--tab-bar-height) + var(--safe-area-bottom) + 24px)",
+          WebkitOverflowScrolling: "touch", // iOS momentum scroll
         }}
       >
-        <div className="md:pt-0" style={{ paddingTop: 0 }}>
+        {/* Mobile uchun pastki padding — content tab bar ostiga tushmasligi uchun */}
+        <div className="max-md:pb-4 md:pt-0">
           <SupabaseDataProvider>
             <RoleGuard>{children}</RoleGuard>
           </SupabaseDataProvider>

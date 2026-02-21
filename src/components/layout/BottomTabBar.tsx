@@ -88,6 +88,9 @@ const TABS: TabItem[] = [
       </svg>
     ),
     subMenu: [
+      { label: "Foydalanuvchilar", href: "/users", roles: adminRoles },
+      { label: "O'rinbosar", href: "/substitutions", roles: adminRoles },
+      { label: "Demo data", href: "/demo-data", roles: ["super_admin"] as UserRole[] },
       { label: "Sozlamalar", href: "/settings", roles: adminRoles },
       { label: "Import", href: "/import", roles: adminRoles },
       { label: "Eksport", href: "/export", roles: adminRoles },

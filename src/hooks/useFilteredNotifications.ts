@@ -84,8 +84,12 @@ export function useFilteredNotifications() {
       });
     }
 
-    // Agar teacher/student lekin bog'lanish topilmasa — hamma narsani ko'rsat
-    // (demo rejimda yoki profil to'liq bo'lmaganda)
+    // Agar teacher/student lekin bog'lanish topilmasa — bo'sh ro'yxat
+    // (profil teacher/student entity ga bog'lanmagan)
+    if (role === "teacher" || role === "student") {
+      return [];
+    }
+
     return logs;
   }, [logs, role, myTeacherId, myGroupIds]);
 

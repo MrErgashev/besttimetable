@@ -4,18 +4,19 @@ Ta'lim muassasalari uchun dars jadvalini yaratish, boshqarish va optimallashtiri
 
 ## Tech Stack
 
-- **Framework:** Next.js 16 (App Router) + React 19 + TypeScript 5
-- **Styling:** Tailwind CSS 4 (PostCSS plugin orqali)
-- **Database:** Supabase (PostgreSQL + Auth + RLS)
+- **Framework:** Next.js 16.1.6 (App Router) + React 19.2.3 + TypeScript 5.9.3
+- **Styling:** Tailwind CSS 4 (PostCSS plugin orqali, `@tailwindcss/postcss`)
+- **Database:** Supabase (PostgreSQL + Auth + RLS) — `@supabase/supabase-js` ^2.97.0, `@supabase/ssr` ^0.8.0
 - **State:** Zustand 5 (persist middleware bilan localStorage ga saqlaydi)
-- **Drag & Drop:** @dnd-kit (core + sortable + utilities)
+- **Drag & Drop:** @dnd-kit (core ^6.3.1 + sortable ^10.0.0 + utilities ^3.2.2)
 - **Validation:** Zod 4
-- **Export:** xlsx (Excel), jspdf + jspdf-autotable (PDF)
-- **Import:** xlsx (Excel), mammoth (Word .docx)
-- **Icons:** lucide-react
-- **Theme:** next-themes (dark/light)
-- **Dates:** date-fns
-- **IDs:** nanoid
+- **Export:** xlsx ^0.18.5 (Excel), jspdf ^4.2.0 + jspdf-autotable ^5.0.7 (PDF)
+- **Import:** xlsx (Excel), mammoth ^1.11.0 (Word .docx)
+- **Icons:** lucide-react ^0.575.0
+- **Theme:** next-themes ^0.4.6 (dark/light)
+- **Dates:** date-fns ^4.1.0
+- **IDs:** nanoid ^5.1.6
+- **Class names:** clsx ^2.1.1
 
 ## Buyruqlar
 
@@ -23,7 +24,7 @@ Ta'lim muassasalari uchun dars jadvalini yaratish, boshqarish va optimallashtiri
 npm run dev      # Development server
 npm run build    # Production build (xotira yetmasa: NODE_OPTIONS="--max-old-space-size=8192" npm run build)
 npm run start    # Production server
-npm run lint     # ESLint
+npm run lint     # ESLint (flat config, ESLint 9+)
 ```
 
 ## Loyiha Tuzilishi
@@ -37,6 +38,7 @@ src/
       register/page.tsx # Ro'yxatdan o'tish sahifasi
     (dashboard)/        # Asosiy sahifalar (layout bilan)
       layout.tsx        # Dashboard layout (Sidebar, Topbar, BottomTabBar)
+      error.tsx         # Dashboard error boundary
       page.tsx          # Bosh sahifa (Dashboard — statistika, grafiklar)
       timetable/        # Jadval ko'rishlar
         page.tsx        # Guruh bo'yicha jadval
@@ -54,9 +56,15 @@ src/
       notifications/page.tsx # Bildirishnomalar
       changelog/page.tsx    # O'zgarishlar tarixi
       settings/page.tsx     # Sozlamalar
-    layout.tsx          # Root layout
-    globals.css         # Global CSS (Liquid Glass dizayn tizimi)
-    providers.tsx       # ThemeProvider va boshqalar
+      demo-data/page.tsx    # Demo ma'lumotlar boshqaruvi (faqat super_admin)
+    layout.tsx          # Root layout (lang="uz", PWA metadata)
+    error.tsx           # Global error boundary
+    not-found.tsx       # 404 sahifa
+    globals.css         # Global CSS (Liquid Glass dizayn tizimi, @theme inline)
+    providers.tsx       # ThemeProvider + SpecularLightProvider
+    fonts/              # Lokal shriftlar
+      GeistVF.woff      # Geist variable font
+      GeistMonoVF.woff  # Geist Mono variable font
   components/
     layout/             # Sidebar, Topbar, BottomTabBar, MobileHeader, RoleGuard
     timetable/          # TimetableGrid, CellAssignModal, LessonCard
@@ -64,17 +72,20 @@ src/
     import/             # MasterDataImportWizard, PasteBulkEntry
     crud/               # DataTable (umumiy CRUD jadval, mobil karta + desktop jadval)
     ui/                 # Card, SheetModal, Button, Input, Select, Badge, FAB, SegmentControl, Skeleton, Spinner, ThemeToggle, MeshBackground, GlassCard (re-export), GlassModal (re-export)
-  stores/               # Zustand store'lar (barchasi persist bilan)
-  hooks/                # useAuth, useHydration, useMediaQuery, useRealtimeSchedule, useRoleAccess, useSpecularLight
+  stores/               # Zustand store'lar (barchasi persist bilan, localStorage key: besttimetable-{entity})
+  hooks/                # useAuth, useHydration, useMediaQuery, useRealtimeSchedule, useRoleAccess, useSpecularLight, useFilteredNotifications
   lib/
     types.ts            # Barcha TypeScript tiplar
     constants.ts        # DAYS, TIME_SLOTS, TRACK_LABELS, ROOM_TYPE_LABELS, SUBJECT_COLORS, NAV_ITEMS, ROLE_LABELS, DEFAULT_CONSTRAINTS
-    utils.ts            # cn(), formatDate(), truncate()
+    utils.ts            # cn(), formatDate(), formatShortDate(), getCurrentWeekRange(), truncate(), getColorByIndex()
+    demo-data.ts        # Demo ma'lumotlar generatori
     supabase/           # client.ts, server.ts, middleware.ts, database.types.ts
     generator/          # Jadval generatsiya algoritmlari
     export/             # excel.ts, pdf.ts
     import/             # excel-parser.ts, word-parser.ts, mapper.ts, column-mapping.ts, master-data-parser.ts, master-data-validator.ts, paste-parser.ts, template-generator.ts
   middleware.ts         # Auth middleware (demo rejimda o'tkazib yuboradi)
+scripts/
+  create-test-users.mjs # Supabase test foydalanuvchilarni yaratish skripti
 supabase/
   migrations/           # SQL migratsiyalar
     001_initial_schema.sql
@@ -82,7 +93,21 @@ supabase/
     003_triggers_and_functions.sql
     004_test_users.sql
   seed.sql              # Namuna ma'lumotlar
+public/
+  manifest.json         # PWA manifest
+  icons/                # icon-192.png, icon-512.png
+  images/               # oriental-logo.png, oriental-logo.svg
 ```
+
+## Konfiguratsiya Fayllari
+
+| Fayl | Vazifa |
+|------|--------|
+| `next.config.ts` | Next.js config (compress, security headers: X-Frame-Options DENY, X-Content-Type-Options nosniff, Referrer-Policy) |
+| `tsconfig.json` | TypeScript strict mode, `@/*` → `./src/*` path alias, ES2017 target, react-jsx |
+| `postcss.config.mjs` | Tailwind CSS 4 via `@tailwindcss/postcss` plugin |
+| `eslint.config.mjs` | ESLint 9 flat config — `eslint-config-next/core-web-vitals` + `eslint-config-next/typescript` |
+| `package.json` | Node.js loyiha konfiguratsiyasi (v0.1.0) |
 
 ## Path Alias
 
@@ -107,6 +132,7 @@ import { DAYS, TIME_SLOTS } from "@/lib/constants";
 | `rooms` | Xonalar (tur, sig'im, bino) |
 | `subject_loads` | Fan yuklama — qaysi fan, qaysi guruhga, qaysi o'qituvchi, haftalik soat |
 | `teacher_availability` | O'qituvchi mavjudligi (kun + slot) |
+| `teacher_subjects` | O'qituvchi-fan ko'pga-ko'p bog'lanishi |
 | `time_slots` | Vaqt oraliqari (8 ta slot, 3 ta track bo'yicha) |
 | `academic_periods` | Semestrlar (faqat bitta aktiv) |
 | `departments` | Bo'limlar |
@@ -119,6 +145,26 @@ import { DAYS, TIME_SLOTS } from "@/lib/constants";
 - O'qituvchi bir vaqtda ikki joyda bo'la olmaydi (unique index)
 - Xona bir vaqtda ikki guruhga berilmaydi (unique index)
 - Faqat bitta akademik davr aktiv bo'ladi
+
+**RLS (Row Level Security):**
+- Barcha 15 ta jadvalda RLS yoqilgan
+- `get_user_role()`, `get_user_department()`, `is_admin()` yordamchi funksiyalar
+- Rol asosida select/insert/update/delete huquqlari
+
+## TypeScript Tiplar (`src/lib/types.ts`)
+
+```typescript
+type ID = string;
+type TrackKey = "kunduzgi" | "sirtqi" | "kechki";
+type DayKey = "dushanba" | "seshanba" | "chorshanba" | "payshanba" | "juma";
+type RoomType = "oddiy" | "laboratoriya" | "kompyuter_xona" | "majlis_xonasi";
+type UserRole = "super_admin" | "admin" | "teacher" | "student";
+type GenerationStatus = "idle" | "running" | "complete" | "failed" | "partial";
+```
+
+Asosiy interfeyslar: `TimeSlot`, `Department`, `AcademicPeriod`, `Teacher`, `TeacherAvailability`, `Group`, `Subject`, `SubjectLoad`, `Room`, `ScheduleEntry`, `ScheduleChangelog`, `Notification`, `Substitution`, `AppUser`, `ConstraintSet`, `GenerationResult`, `ConflictReport`.
+
+**Muhim:** `ScheduleEntry.group_ids` — `string[]` massivi (bitta dars bir nechta guruhga tegishli bo'lishi mumkin).
 
 ## Track Tizimi (Ta'lim shakllari)
 
@@ -142,34 +188,40 @@ Dushanba — Juma, 5 kunlik hafta.
 
 ## Zustand Store'lar
 
-Barcha store'lar `zustand/middleware` dan `persist` ishlatadi — ma'lumotlar localStorage da saqlanadi.
+Barcha store'lar `zustand/middleware` dan `persist` ishlatadi — ma'lumotlar localStorage da saqlanadi. localStorage key formati: `besttimetable-{entity}`.
 
-| Store | Fayl | Vazifa |
-|-------|------|--------|
-| `useTimetableStore` | `stores/useTimetableStore.ts` | Jadval yozuvlari CRUD |
-| `useTeacherStore` | `stores/useTeacherStore.ts` | O'qituvchilar |
-| `useGroupStore` | `stores/useGroupStore.ts` | Guruhlar |
-| `useSubjectStore` | `stores/useSubjectStore.ts` | Fanlar |
-| `useRoomStore` | `stores/useRoomStore.ts` | Xonalar |
-| `useSubjectLoadStore` | `stores/useSubjectLoadStore.ts` | Fan yuklamalari |
-| `useChangelogStore` | `stores/useChangelogStore.ts` | O'zgarishlar tarixi |
+| Store | Fayl | State | Asosiy metodlar |
+|-------|------|-------|-----------------|
+| `useTimetableStore` | `stores/useTimetableStore.ts` | `entries: ScheduleEntry[]` | `placeEntry()`, `moveEntry()`, `removeEntry()`, `clearAll()`, `bulkLoad()`, `getCell()`, `getEntriesForGroup()`, `getEntriesForTeacher()`, `getEntriesForRoom()` |
+| `useTeacherStore` | `stores/useTeacherStore.ts` | `teachers: Teacher[]` | `addTeacher()`, `addTeachers()`, `updateTeacher()`, `bulkUpdateTeachers()`, `deleteTeacher()`, `deleteTeachers()`, `getTeacherById()` |
+| `useGroupStore` | `stores/useGroupStore.ts` | `groups: Group[]` | `addGroup()`, `addGroups()`, `updateGroup()`, `bulkUpdateGroups()`, `deleteGroup()`, `deleteGroups()`, `getGroupById()` |
+| `useSubjectStore` | `stores/useSubjectStore.ts` | `subjects: Subject[]` | `addSubject()`, `addSubjects()`, `updateSubject()`, `bulkUpdateSubjects()`, `deleteSubject()`, `deleteSubjects()`, `getSubjectById()` |
+| `useRoomStore` | `stores/useRoomStore.ts` | `rooms: Room[]` | `addRoom()`, `addRooms()`, `updateRoom()`, `bulkUpdateRooms()`, `deleteRoom()`, `deleteRooms()`, `getRoomById()` |
+| `useSubjectLoadStore` | `stores/useSubjectLoadStore.ts` | `loads: SubjectLoad[]` | `addLoad()`, `updateLoad()`, `removeLoad()`, `getLoadsForGroup()`, `getLoadsForTeacher()`, `clearAll()` |
+| `useChangelogStore` | `stores/useChangelogStore.ts` | `logs: ScheduleChangelog[]` | `addLog()`, `getLogs()`, `getLogsByEntry()`, `clearAll()` |
 
 ## Autentifikatsiya va Rollar
 
 - Supabase Auth (email/password)
 - 4 ta rol: `super_admin`, `admin`, `teacher`, `student`
 - Middleware: Supabase URL sozlanmagan bo'lsa demo rejimda ishlaydi (auth tekshirmaydi)
-- `useAuth()` hook orqali foydalanuvchi konteksti
-- `useRoleAccess()` hook — rol asosida navigatsiya filtrlash (demo rejimda super_admin)
+- `useAuth()` hook orqali foydalanuvchi konteksti:
+  - `user`, `profile`, `loading`, `error`
+  - `signIn()`, `signUp()`, `signOut()` metodlar
+  - `isAdmin`, `isSuperAdmin`, `isTeacher`, `isStudent` boolean helper'lar
+- `useRoleAccess()` hook — rol asosida navigatsiya filtrlash (demo rejimda super_admin):
+  - `role`, `profile`, `loading`
+  - `filteredNavItems` — foydalanuvchi roli uchun ko'rinadigan navigatsiya elementlari
+  - `canAccess(href)` — berilgan sahifaga kirish mumkinligini tekshiradi
 - `RoleGuard` komponent — sahifaga kirishni rol bo'yicha cheklaydi
-- `NAV_ITEMS` da har bir sahifa uchun `roles` massivi belgilangan
+- `NAV_ITEMS` da har bir sahifa uchun `roles` massivi belgilangan (14 ta navigatsiya elementi)
 - `ROLE_LABELS` — rollarning o'zbekcha nomlari
 
 ## Jadval Generatsiya
 
 `src/lib/generator/` papkasida:
 
-- `greedy.ts` — Greedy algoritm (tez, yetarli natija)
+- `greedy.ts` — Greedy algoritm (tez, yetarli natija). Asosiy funksiya: `generateGreedyWithEntries()`
 - `backtrack.ts` — Backtracking algoritm (optimallash/ta'mirlash)
 - `constraints.ts` — Cheklovlar tekshiruvi (o'qituvchi, xona, guruh ziddiyatlari)
 - `index.ts` — Umumiy interfeys
@@ -198,6 +250,15 @@ Import komponentlari (`src/components/import/`):
 | `MasterDataImportWizard` | Bosqichma-bosqich import wizard (upload → mapping → validate → result) |
 | `PasteBulkEntry` | Matn qo'yish orqali ko'plab yozuvlarni import qilish |
 
+## Eksport Tizimi
+
+`src/lib/export/` papkasida:
+
+| Fayl | Vazifa |
+|------|--------|
+| `excel.ts` | Excel eksport (guruh/o'qituvchi/xona/barchasi bo'yicha) |
+| `pdf.ts` | PDF eksport (guruh/o'qituvchi/xona bo'yicha) |
+
 ## Dashboard Komponentlari
 
 `src/components/dashboard/` papkasida — bosh sahifadagi statistika va grafiklar:
@@ -210,6 +271,17 @@ Import komponentlari (`src/components/import/`):
 | `RoomUtilizationChart` | Xonalar bandlik grafigi |
 | `ScheduleHeatmap` | Jadval issiqlik xaritasi (kun × slot) |
 
+## Utility Funksiyalar (`src/lib/utils.ts`)
+
+| Funksiya | Vazifa |
+|----------|--------|
+| `cn(...inputs)` | Tailwind class name birlashtirish (clsx asosida) |
+| `formatDate(date)` | Sanani o'zbek locale formatida ko'rsatish |
+| `formatShortDate(date)` | Sanani DD.MM.YYYY formatida ko'rsatish |
+| `getCurrentWeekRange()` | Joriy haftaning Dushanba-Juma oralig'ini qaytarish |
+| `truncate(str, maxLength)` | Matnni kerakli uzunlikda kesish (ellipsis bilan) |
+| `getColorByIndex(index, palette)` | Palitradagi rang indeksi bo'yicha olish |
+
 ## Dizayn Tizimi (iOS 26 Liquid Glass)
 
 Mobile-first PWA dizayn. **Liquid Glass** yondashuvi — shaffof, blur effektli yuzalar, specular highlight, mesh gradient fon.
@@ -218,7 +290,7 @@ Mobile-first PWA dizayn. **Liquid Glass** yondashuvi — shaffof, blur effektli 
 
 - **Glass morphism:** `backdrop-filter: blur()` orqali shaffof kartalar
 - **Specular highlight:** Mouse/gyroscope/auto-drift orqali dinamik yorug'lik effekti
-- **Mesh gradient:** 5 ta harakatlanuvchi orb bilan fon gradient
+- **Mesh gradient:** 5 ta harakatlanuvchi orb bilan fon gradient (parallax effekt)
 - **Spring physics:** iOS-style elastik animatsiyalar
 - **OLED qora:** Dark mode da `#000000` fon
 - **Aksent rang:** `#007AFF` (Apple Blue)
@@ -308,6 +380,14 @@ Ranglar va glass token'lar CSS custom properties orqali boshqariladi (`@theme in
 | `GlassCard` | `ui/GlassCard.tsx` | → `Card` ga re-export (backwards compat) |
 | `GlassModal` | `ui/GlassModal.tsx` | → `SheetModal` ga re-export (backwards compat) |
 
+### Timetable Komponentlari
+
+| Komponent | Fayl | Vazifa |
+|-----------|------|--------|
+| `TimetableGrid` | `timetable/TimetableGrid.tsx` | Drag-drop jadval to'ri (kun × slot) |
+| `CellAssignModal` | `timetable/CellAssignModal.tsx` | Katakchaga dars biriktirish modali |
+| `LessonCard` | `timetable/LessonCard.tsx` | Alohida dars kartasi (drag qilinadigan) |
+
 ### Layout Komponentlar
 
 | Komponent | Fayl | Ko'rinish |
@@ -362,17 +442,40 @@ Ranglar va glass token'lar CSS custom properties orqali boshqariladi (`@theme in
 - `public/icons/icon-192.png`, `icon-512.png` — Ilova ikonkalari
 - Viewport: `viewport-fit=cover`, `user-scalable=no`
 - Safe area: `env(safe-area-inset-*)` CSS o'zgaruvchilari
+- Apple Web App: capable, default status bar style
 
 ### Hooks
 
-| Hook | Fayl | Vazifa |
-|------|------|--------|
-| `useAuth` | `hooks/useAuth.ts` | Foydalanuvchi autentifikatsiya konteksti |
-| `useHydration` | `hooks/useHydration.ts` | Zustand hydration holati |
-| `useMediaQuery` | `hooks/useMediaQuery.ts` | Responsive breakpoint tekshiruvi |
-| `useRealtimeSchedule` | `hooks/useRealtimeSchedule.ts` | Supabase realtime obuna |
-| `useRoleAccess` | `hooks/useRoleAccess.ts` | Rol asosida NAV_ITEMS filtrlash, `canAccess()` funksiyasi |
-| `useSpecularLight` | `hooks/useSpecularLight.ts` | Mouse/gyroscope/auto-drift orqali `--specular-x/y` boshqarish |
+| Hook | Fayl | Qaytarish turi |
+|------|------|----------------|
+| `useAuth` | `hooks/useAuth.ts` | `{ user, profile, loading, error, signIn(), signUp(), signOut(), isAdmin, isSuperAdmin, isTeacher, isStudent }` |
+| `useHydration` | `hooks/useHydration.ts` | `boolean` — Zustand hydration holati (`useSyncExternalStore` pattern) |
+| `useMediaQuery` | `hooks/useMediaQuery.ts` | `boolean` — Responsive breakpoint tekshiruvi (`useSyncExternalStore` pattern) |
+| `useRealtimeSchedule` | `hooks/useRealtimeSchedule.ts` | `void` — Supabase realtime obuna (side-effect, schedule o'zgarishlarida store'larni yangilaydi) |
+| `useRoleAccess` | `hooks/useRoleAccess.ts` | `{ role, profile, loading, filteredNavItems, canAccess(href) }` |
+| `useSpecularLight` | `hooks/useSpecularLight.ts` | `void` — Mouse/gyroscope/auto-drift orqali `--specular-x/y` CSS o'zgaruvchilarini boshqarish |
+| `useFilteredNotifications` | `hooks/useFilteredNotifications.ts` | `{ logs, readIds, unreadCount, markAsRead(id), markAllAsRead(ids), role }` — Rol asosida bildirishnomalarni filtrlash |
+
+## Providers (`src/app/providers.tsx`)
+
+```typescript
+<ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+  <SpecularLightProvider>
+    {children}
+  </SpecularLightProvider>
+</ThemeProvider>
+```
+
+- **ThemeProvider** — `class` atributi orqali dark mode (next-themes)
+- **SpecularLightProvider** — `useSpecularLight()` hook ni faollashtiradi
+
+## Middleware (`src/middleware.ts`)
+
+- `NEXT_PUBLIC_SUPABASE_URL` sozlanmagan bo'lsa → **demo rejim** (auth tekshirmaydi)
+- Aks holda → `updateSession()` orqali session yangilash va yo'naltirish:
+  - Autentifikatsiya qilinmagan → `/login` ga yo'naltirish
+  - Autentifikatsiya qilingan + `/login` yoki `/register` → `/` ga yo'naltirish
+- Matcher: Barcha yo'llar (static asset'lardan tashqari)
 
 ## Muhit O'zgaruvchilari (.env.local)
 
@@ -381,6 +484,20 @@ NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
 TELEGRAM_BOT_TOKEN=optional
 ```
+
+Agar `NEXT_PUBLIC_SUPABASE_URL` sozlanmagan bo'lsa, ilova **demo rejimda** ishlaydi — barcha auth tekshiruvlari o'tkazib yuboriladi va rol `super_admin` sifatida belgilanadi.
+
+## Xatolarni Boshqarish
+
+- `src/app/error.tsx` — Global error boundary (barcha sahifalar uchun)
+- `src/app/(dashboard)/error.tsx` — Dashboard guruhiga xos error boundary
+- `src/app/not-found.tsx` — 404 sahifa
+
+## Demo Ma'lumotlar
+
+- `src/lib/demo-data.ts` — Demo ma'lumotlar generatori
+- `src/app/(dashboard)/demo-data/page.tsx` — Demo ma'lumotlar boshqaruv sahifasi (faqat `super_admin` roli uchun)
+- `scripts/create-test-users.mjs` — Supabase da test foydalanuvchilarni yaratish skripti
 
 ## Kod Yozish Qoidalari
 
@@ -395,12 +512,18 @@ TELEGRAM_BOT_TOKEN=optional
 - Xona turlari: `oddiy`, `laboratoriya`, `kompyuter_xona`, `majlis_xonasi`
 - Ranglar faqat CSS o'zgaruvchilari orqali: `var(--color-accent)`, `var(--surface)`, `var(--glass-bg)` va h.k. (hardcoded ranglar ishlatilmasin)
 - Tailwind CSS 4: `@theme inline` blokida o'zgaruvchilar, `tailwind.config.ts` fayli YO'Q
-- Hydration xatoliklarini oldini olish: `useSyncExternalStore` pattern (ThemeToggle'da namuna)
+- Hydration xatoliklarini oldini olish: `useSyncExternalStore` pattern (`useHydration` va `useMediaQuery` da ishlatiladi)
 - GlassCard/GlassModal import'lari hali ishlaydi (Card/SheetModal ga re-export)
 - Mobil komponentlar: `md:hidden` / `hidden md:flex` / `hidden lg:flex` pattern
 - Glass dizayn: `apple-card` klassi, `glass-*` utility klasslar, `press-effect` bosilish effekti
 - Accessibility: `prefers-reduced-motion` va `prefers-reduced-transparency` media query'lar qo'llab-quvvatlanadi
+- ESLint: flat config format (ESLint 9+), `eslint-config-next/core-web-vitals` + `typescript`
+- Barcha komponentlar `"use client"` direktivasi bilan (client-side rendering)
 - **O'zgartirmaslik kerak:** stores, types, constants, utils, generator, import/export logic, supabase, middleware, tsconfig, postcss
+
+## CI/CD
+
+Hozircha CI/CD konfiguratsiyasi yo'q. Loyiha Vercel'da deploy qilishga tayyor (Next.js 16 avtomatik tanib olinadi).
 
 ## Testlar
 

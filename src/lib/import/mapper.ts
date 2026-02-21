@@ -128,7 +128,7 @@ function matchSlot(text: string): string | null {
     if (slot) return slot.id;
   }
 
-  // Pora raqami (1-pora, 2-pora, ...)
+  // Juftlik raqami (1-juftlik, 2-juftlik, ...)
   const poraMatch = cleaned.match(/(\d+)/);
   if (poraMatch) {
     const num = parseInt(poraMatch[1]);

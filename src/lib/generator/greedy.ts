@@ -93,7 +93,7 @@ interface LessonTask {
 function expandLoadsToLessons(loads: SubjectLoad[]): LessonTask[] {
   const lessons: LessonTask[] = [];
   for (const load of loads) {
-    // 1.5 soat per pora, weekly_hours ni poralarga aylantirish
+    // 1.5 soat per juftlik, weekly_hours ni juftliklarga aylantirish
     const lessonsPerWeek = Math.ceil(load.weekly_hours / 1.5);
     for (let i = 0; i < lessonsPerWeek; i++) {
       lessons.push({ load, lessonIndex: i });

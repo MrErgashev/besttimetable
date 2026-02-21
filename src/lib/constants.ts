@@ -11,14 +11,14 @@ export const DAYS: { key: DayKey; label: string; short: string }[] = [
 
 // ─── Time Slots ──────────────────────────────────────────────────────────────
 export const TIME_SLOTS: TimeSlot[] = [
-  { id: "k1", label: "1-pora", start: "08:30", end: "10:00", track: "kunduzgi" },
-  { id: "k2", label: "2-pora", start: "10:00", end: "11:30", track: "kunduzgi" },
-  { id: "k3", label: "3-pora", start: "12:00", end: "13:30", track: "kunduzgi" },
-  { id: "s1", label: "4-pora", start: "13:30", end: "15:00", track: "sirtqi" },
-  { id: "s2", label: "5-pora", start: "15:00", end: "16:30", track: "sirtqi" },
-  { id: "s3", label: "6-pora", start: "16:30", end: "18:00", track: "sirtqi" },
-  { id: "e1", label: "7-pora", start: "18:00", end: "19:30", track: "kechki" },
-  { id: "e2", label: "8-pora", start: "19:30", end: "21:00", track: "kechki" },
+  { id: "k1", label: "1-juftlik", start: "08:30", end: "10:00", track: "kunduzgi" },
+  { id: "k2", label: "2-juftlik", start: "10:00", end: "11:30", track: "kunduzgi" },
+  { id: "k3", label: "3-juftlik", start: "12:00", end: "13:30", track: "kunduzgi" },
+  { id: "s1", label: "4-juftlik", start: "13:30", end: "15:00", track: "sirtqi" },
+  { id: "s2", label: "5-juftlik", start: "15:00", end: "16:30", track: "sirtqi" },
+  { id: "s3", label: "6-juftlik", start: "16:30", end: "18:00", track: "sirtqi" },
+  { id: "e1", label: "7-juftlik", start: "18:00", end: "19:30", track: "kechki" },
+  { id: "e2", label: "8-juftlik", start: "19:30", end: "21:00", track: "kechki" },
 ];
 
 // ─── Track Labels ────────────────────────────────────────────────────────────

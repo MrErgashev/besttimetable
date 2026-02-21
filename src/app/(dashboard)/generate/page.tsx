@@ -330,7 +330,7 @@ export default function GeneratePage() {
                   }
                   className="rounded"
                 />
-                Oxirgi poradan qochish
+                Oxirgi juftlikdan qochish
               </label>
               <div className="flex items-center gap-2 text-sm">
                 <span>Maks. ketma-ket dars:</span>

@@ -39,7 +39,7 @@ export interface ExcelParseResult {
 // ─── Column header matching ─────────────────────────────────────────────────
 
 const DAY_PATTERNS = /^(kun|day|hafta)/i;
-const TIME_PATTERNS = /^(vaqt|time|soat|pora)/i;
+const TIME_PATTERNS = /^(vaqt|time|soat|pora|juftlik)/i;
 const GROUP_PATTERNS = /^(guruh|group|sinf)/i;
 const SUBJECT_PATTERNS = /^(fan|subject|dars|predmet)/i;
 const TEACHER_PATTERNS = /^(o.?qituvchi|teacher|ustoz|prepod)/i;

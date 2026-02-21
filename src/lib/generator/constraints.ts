@@ -197,7 +197,7 @@ export function calculatePenalty(
     const group = ctx.groups.find((g) => g.id === load.group_id);
     if (group && group.course === 1) {
       const slotIndex = TIME_SLOTS.findIndex((s) => s.id === slotId);
-      if (slotIndex > 2) penalty += 2; // 3-poradan keyin penalty
+      if (slotIndex > 2) penalty += 2; // 3-juftlikdan keyin penalty
     }
   }
 

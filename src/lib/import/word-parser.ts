@@ -97,7 +97,7 @@ function normalizeDay(text: string): string | null {
 
 const COLUMN_PATTERNS: [RegExp, keyof ParsedRow][] = [
   [/^(kun|day|hafta)/i, "day"],
-  [/^(vaqt|time|soat|pora)/i, "time"],
+  [/^(vaqt|time|soat|pora|juftlik)/i, "time"],
   [/^(guruh|group|sinf)/i, "group"],
   [/^(fan|subject|dars|predmet)/i, "subject"],
   [/^(o.?qituvchi|teacher|ustoz|prepod)/i, "teacher"],

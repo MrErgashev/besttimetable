@@ -59,13 +59,16 @@ export function useSupabaseData() {
             changelogSync.fetchAll(),
           ]);
 
-        useTeacherStore.getState().bulkLoad(teachers);
-        useGroupStore.getState().bulkLoad(groups);
-        useSubjectStore.getState().bulkLoad(subjects);
-        useRoomStore.getState().bulkLoad(rooms);
-        useSubjectLoadStore.getState().bulkLoad(loads);
-        useTimetableStore.getState().bulkLoad(entries);
-        useChangelogStore.getState().bulkLoad(logs);
+        // Supabase dan kelgan ma'lumotlar bo'sh bo'lsa, lokal store'ni
+        // ustiga yozmaslik (demo data saqlanib qolishi uchun).
+        // Faqat Supabase da haqiqiy data bo'lganda bulkLoad chaqiriladi.
+        if (teachers.length > 0) useTeacherStore.getState().bulkLoad(teachers);
+        if (groups.length > 0) useGroupStore.getState().bulkLoad(groups);
+        if (subjects.length > 0) useSubjectStore.getState().bulkLoad(subjects);
+        if (rooms.length > 0) useRoomStore.getState().bulkLoad(rooms);
+        if (loads.length > 0) useSubjectLoadStore.getState().bulkLoad(loads);
+        if (entries.length > 0) useTimetableStore.getState().bulkLoad(entries);
+        if (logs.length > 0) useChangelogStore.getState().bulkLoad(logs);
 
         setError(null);
       } catch (err) {

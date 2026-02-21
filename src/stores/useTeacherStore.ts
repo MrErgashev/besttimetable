@@ -2,8 +2,9 @@
 
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
-import { nanoid } from "nanoid";
 import type { Teacher, ID } from "@/lib/types";
+import { isSupabaseConfigured } from "@/lib/supabase/helpers";
+import { teacherSync } from "@/lib/supabase/sync";
 
 interface TeacherState {
   teachers: Teacher[];
@@ -18,6 +19,7 @@ interface TeacherState {
   deleteTeacher: (id: ID) => void;
   deleteTeachers: (ids: ID[]) => void;
   getTeacherById: (id: ID) => Teacher | undefined;
+  bulkLoad: (teachers: Teacher[]) => void;
 }
 
 export const useTeacherStore = create<TeacherState>()(
@@ -28,34 +30,44 @@ export const useTeacherStore = create<TeacherState>()(
       addTeacher: (data) => {
         const teacher: Teacher = {
           ...data,
-          id: nanoid(),
+          id: crypto.randomUUID(),
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
         };
         set((s) => ({ teachers: [...s.teachers, teacher] }));
+        if (isSupabaseConfigured()) {
+          teacherSync.insert(teacher).catch(console.error);
+        }
         return teacher;
       },
 
       addTeachers: (items) => {
         const now = new Date().toISOString();
-        const newTeachers = items.map((data) => ({
+        const newTeachers: Teacher[] = items.map((data) => ({
           ...data,
-          id: nanoid(),
+          id: crypto.randomUUID(),
           created_at: now,
           updated_at: now,
         }));
         set((s) => ({ teachers: [...s.teachers, ...newTeachers] }));
+        if (isSupabaseConfigured()) {
+          teacherSync.bulkInsert(newTeachers).catch(console.error);
+        }
         return newTeachers.length;
       },
 
-      updateTeacher: (id, data) =>
+      updateTeacher: (id, data) => {
         set((s) => ({
           teachers: s.teachers.map((t) =>
             t.id === id
               ? { ...t, ...data, updated_at: new Date().toISOString() }
               : t
           ),
-        })),
+        }));
+        if (isSupabaseConfigured()) {
+          teacherSync.update(id, data).catch(console.error);
+        }
+      },
 
       bulkUpdateTeachers: (ids, data) => {
         const idSet = new Set(ids);
@@ -66,20 +78,39 @@ export const useTeacherStore = create<TeacherState>()(
               : t
           ),
         }));
+        if (isSupabaseConfigured()) {
+          ids.forEach((id) => teacherSync.update(id, data).catch(console.error));
+        }
       },
 
-      deleteTeacher: (id) =>
-        set((s) => ({ teachers: s.teachers.filter((t) => t.id !== id) })),
+      deleteTeacher: (id) => {
+        set((s) => ({ teachers: s.teachers.filter((t) => t.id !== id) }));
+        if (isSupabaseConfigured()) {
+          teacherSync.remove(id).catch(console.error);
+        }
+      },
 
       deleteTeachers: (ids) => {
         const idSet = new Set(ids);
         set((s) => ({
           teachers: s.teachers.filter((t) => !idSet.has(t.id)),
         }));
+        if (isSupabaseConfigured()) {
+          teacherSync.removeMany(ids).catch(console.error);
+        }
       },
 
       getTeacherById: (id) => get().teachers.find((t) => t.id === id),
+
+      bulkLoad: (teachers) => set({ teachers }),
     }),
-    { name: "besttimetable-teachers", version: 1 }
+    {
+      name: "besttimetable-teachers",
+      version: 2,
+      migrate: (_persisted, version) => {
+        if (version < 2) return { teachers: [] };
+        return _persisted as Record<string, unknown>;
+      },
+    }
   )
 );

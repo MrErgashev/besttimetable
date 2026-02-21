@@ -3,6 +3,9 @@ import { Providers } from "./providers";
 import "./globals.css";
 
 export const metadata: Metadata = {
+  metadataBase: new URL(
+    process.env.NEXT_PUBLIC_SITE_URL || "https://besttimetable.vercel.app"
+  ),
   title: "BestTimetable — Dars jadvali tizimi",
   description:
     "O'quv muassasalari uchun zamonaviy dars jadvali boshqaruv tizimi",

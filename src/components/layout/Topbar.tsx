@@ -1,12 +1,12 @@
 "use client";
 
-import { useState, useRef, useEffect, useMemo } from "react";
+import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useRoleAccess } from "@/hooks/useRoleAccess";
 import { useHydration } from "@/hooks/useHydration";
 import { useAuth } from "@/hooks/useAuth";
-import { useChangelogStore } from "@/stores/useChangelogStore";
+import { useFilteredNotifications } from "@/hooks/useFilteredNotifications";
 import { ROLE_LABELS } from "@/lib/constants";
 
 export function Topbar() {
@@ -23,18 +23,8 @@ export function Topbar() {
     ? displayName.split(" ").map((w) => w[0]).join("").slice(0, 2).toUpperCase()
     : "?";
 
-  // O'qilmagan bildirishnomalar soni
-  const { logs } = useChangelogStore();
-  const unreadCount = useMemo(() => {
-    if (typeof window === "undefined") return 0;
-    try {
-      const saved = localStorage.getItem("besttimetable-read-notifications");
-      const readIds = saved ? new Set(JSON.parse(saved) as string[]) : new Set<string>();
-      return logs.filter((l) => !readIds.has(l.id)).length;
-    } catch {
-      return logs.length;
-    }
-  }, [logs]);
+  // O'qilmagan bildirishnomalar soni (role-based filtrlangan)
+  const { unreadCount } = useFilteredNotifications();
 
   // Tashqariga bosganda menuni yopish
   useEffect(() => {

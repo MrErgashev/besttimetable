@@ -45,6 +45,7 @@ export function MasterDataImportWizard({
   const [columnMap, setColumnMap] = useState<Record<number, string>>({});
   const [fileName, setFileName] = useState("");
   const [isDragging, setIsDragging] = useState(false);
+  const [fileError, setFileError] = useState("");
   const [importedCount, setImportedCount] = useState(0);
   const [validationResult, setValidationResult] = useState<ReturnType<
     typeof validateMasterData
@@ -55,32 +56,43 @@ export function MasterDataImportWizard({
   const handleFile = useCallback(
     (file: File) => {
       setFileName(file.name);
+      setFileError("");
       const reader = new FileReader();
       reader.onload = (e) => {
-        const buffer = e.target?.result as ArrayBuffer;
-        const isCSV =
-          file.name.endsWith(".csv") || file.name.endsWith(".txt");
+        try {
+          const buffer = e.target?.result as ArrayBuffer;
+          const isCSV =
+            file.name.endsWith(".csv") || file.name.endsWith(".txt");
 
-        let parsedSheets: GenericParsedSheet[];
-        if (isCSV) {
-          parsedSheets = [parseCSVBuffer(buffer)];
-        } else {
-          parsedSheets = parseGenericExcel(buffer);
+          let parsedSheets: GenericParsedSheet[];
+          if (isCSV) {
+            parsedSheets = [parseCSVBuffer(buffer)];
+          } else {
+            parsedSheets = parseGenericExcel(buffer);
+          }
+
+          if (parsedSheets.length === 0 || parsedSheets[0].totalRows === 0) {
+            setFileError("Fayl bo'sh yoki ma'lumot topilmadi");
+            return;
+          }
+
+          setSheets(parsedSheets);
+          setSelectedSheetIdx(0);
+          const activeSheet = parsedSheets[0];
+          setSheet(activeSheet);
+
+          // Auto-map columns
+          const autoMap = autoMapColumns(activeSheet.headers, config.fields);
+          setColumnMap(autoMap);
+          setStep("mapping");
+        } catch (err) {
+          console.error("File parse error:", err);
+          setFileError(
+            err instanceof Error
+              ? `Faylni o'qishda xatolik: ${err.message}`
+              : "Faylni o'qishda xatolik yuz berdi"
+          );
         }
-
-        if (parsedSheets.length === 0 || parsedSheets[0].totalRows === 0) {
-          return; // empty file
-        }
-
-        setSheets(parsedSheets);
-        setSelectedSheetIdx(0);
-        const activeSheet = parsedSheets[0];
-        setSheet(activeSheet);
-
-        // Auto-map columns
-        const autoMap = autoMapColumns(activeSheet.headers, config.fields);
-        setColumnMap(autoMap);
-        setStep("mapping");
       };
       reader.readAsArrayBuffer(file);
     },
@@ -271,6 +283,12 @@ export function MasterDataImportWizard({
               className="hidden"
             />
           </div>
+
+          {fileError && (
+            <div className="text-sm text-[var(--color-danger)] bg-[var(--color-danger)]/10 px-3 py-2 rounded-[10px]">
+              {fileError}
+            </div>
+          )}
 
           <div className="flex items-center justify-between">
             <Button

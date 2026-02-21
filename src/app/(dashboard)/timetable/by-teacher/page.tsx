@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, Fragment } from "react";
 import { useTeacherStore } from "@/stores/useTeacherStore";
 import { useTimetableStore } from "@/stores/useTimetableStore";
 import { useSubjectStore } from "@/stores/useSubjectStore";
@@ -142,8 +142,8 @@ export default function ByTeacherPage() {
                 </thead>
                 <tbody>
                   {Array.from(trackGroups.entries()).map(([track, slots], trackIdx) => (
-                    <>
-                      <tr key={`sep-${track}`}>
+                    <Fragment key={track}>
+                      <tr>
                         <td
                           colSpan={6}
                           className={cn(
@@ -207,7 +207,7 @@ export default function ByTeacherPage() {
                           })}
                         </tr>
                       ))}
-                    </>
+                    </Fragment>
                   ))}
                 </tbody>
               </table>

@@ -113,6 +113,50 @@ export function exportTeacherExcel(
   );
 }
 
+// ─── Xona bo'yicha Excel ────────────────────────────────────────────────────
+
+export function exportRoomExcel(
+  roomId: string,
+  ctx: ExportContext
+): void {
+  const room = ctx.rooms.find((r) => r.id === roomId);
+  if (!room) return;
+
+  const roomEntries = ctx.entries.filter((e) => e.room_id === roomId);
+
+  const header = ["Vaqt", ...DAYS.map((d) => d.label)];
+  const rows = TIME_SLOTS.map((slot) => {
+    const row = [`${slot.label} (${slot.start}-${slot.end})`];
+    for (const day of DAYS) {
+      const entry = roomEntries.find(
+        (e) => e.day === day.key && e.slot_id === slot.id
+      );
+      if (entry) {
+        const subject = ctx.subjects.find((s) => s.id === entry.subject_id);
+        const teacher = ctx.teachers.find((t) => t.id === entry.teacher_id);
+        const groupNames = entry.group_ids
+          .map((gid) => ctx.groups.find((g) => g.id === gid)?.name)
+          .filter(Boolean)
+          .join(", ");
+        row.push(
+          `${subject?.short_name || "?"} — ${teacher?.short_name || "?"} — ${groupNames || "?"}`
+        );
+      } else {
+        row.push("");
+      }
+    }
+    return row;
+  });
+
+  const ws = XLSX.utils.aoa_to_sheet([header, ...rows]);
+  ws["!cols"] = [{ wch: 22 }, ...DAYS.map(() => ({ wch: 30 }))];
+
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, room.name.substring(0, 31));
+
+  XLSX.writeFile(wb, `xona_${room.name.replace(/\s+/g, "_")}.xlsx`);
+}
+
 // ─── Barcha guruhlar Excel (bir faylda) ─────────────────────────────────────
 
 export function exportAllGroupsExcel(ctx: ExportContext): void {

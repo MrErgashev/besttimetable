@@ -19,7 +19,7 @@ import type { ScheduleEntry } from "@/lib/types";
 export default function SubstitutionsPage() {
   const hydrated = useHydration();
   const { teachers } = useTeacherStore();
-  const { entries } = useTimetableStore();
+  const { entries, bulkLoad } = useTimetableStore();
   const { getSubjectById } = useSubjectStore();
   const { getRoomById } = useRoomStore();
   const { groups } = useGroupStore();
@@ -37,16 +37,18 @@ export default function SubstitutionsPage() {
   // Tanlangan slot uchun band bo'lmagan o'qituvchilar
   const availableTeachers = useMemo(() => {
     if (!selectedEntry) return teachers;
-    const busy = entries
-      .filter(
-        (e) =>
-          e.day === selectedEntry.day &&
-          e.slot_id === selectedEntry.slot_id &&
-          e.id !== selectedEntry.id
-      )
-      .map((e) => e.teacher_id);
+    const busySet = new Set(
+      entries
+        .filter(
+          (e) =>
+            e.day === selectedEntry.day &&
+            e.slot_id === selectedEntry.slot_id &&
+            e.id !== selectedEntry.id
+        )
+        .map((e) => e.teacher_id)
+    );
     return teachers.filter(
-      (t) => !busy.includes(t.id) && t.id !== selectedEntry.teacher_id
+      (t) => !busySet.has(t.id) && t.id !== selectedEntry.teacher_id
     );
   }, [selectedEntry, entries, teachers]);
 
@@ -174,15 +176,12 @@ export default function SubstitutionsPage() {
               <Button
                 disabled={!substituteTeacherId}
                 onClick={() => {
-                  // Oddiy usulda — entry ning teacher_id sini o'zgartirish
-                  // Haqiqiy ilovada bu Supabase orqali bo'ladi
-                  const store = useTimetableStore.getState();
-                  const updated = store.entries.map((e) =>
+                  const updated = entries.map((e) =>
                     e.id === selectedEntry.id
                       ? { ...e, teacher_id: substituteTeacherId, updated_at: new Date().toISOString() }
                       : e
                   );
-                  store.bulkLoad(updated);
+                  bulkLoad(updated);
                   setShowSubModal(false);
                 }}
               >

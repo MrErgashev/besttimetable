@@ -15,16 +15,22 @@ export function useRealtimeSchedule() {
 
   // Boshlang'ich yuklash
   const fetchEntries = useCallback(async () => {
-    const { data, error } = await supabase
-      .from("schedule_entries")
-      .select("*")
-      .order("day")
-      .order("slot_id");
+    try {
+      const { data, error } = await supabase
+        .from("schedule_entries")
+        .select("*")
+        .order("day")
+        .order("slot_id");
 
-    if (data && !error) {
-      const rows = data as unknown as Record<string, unknown>[];
-      const mapped: ScheduleEntry[] = rows.map((row) => mapRow(row));
-      useTimetableStore.getState().bulkLoad(mapped);
+      if (data && !error) {
+        const rows = data as unknown as Record<string, unknown>[];
+        const mapped: ScheduleEntry[] = rows.map((row) => mapRow(row));
+        useTimetableStore.getState().bulkLoad(mapped);
+      } else if (error) {
+        console.error("Failed to fetch schedule entries:", error.message);
+      }
+    } catch (err) {
+      console.error("Schedule fetch error:", err);
     }
   }, [supabase]);
 

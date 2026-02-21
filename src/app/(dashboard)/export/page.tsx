@@ -56,6 +56,9 @@ export default function ExportPage() {
         if (format === "pdf") {
           const { exportRoomPDF } = await import("@/lib/export/pdf");
           exportRoomPDF(selectedId, ctx);
+        } else {
+          const { exportRoomExcel } = await import("@/lib/export/excel");
+          exportRoomExcel(selectedId, ctx);
         }
       }
     } catch (err) {

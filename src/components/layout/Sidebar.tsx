@@ -3,10 +3,7 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
-import { ThemeToggle } from "@/components/ui/ThemeToggle";
-import { ROLE_LABELS } from "@/lib/constants";
 import { useRoleAccess } from "@/hooks/useRoleAccess";
-import { useHydration } from "@/hooks/useHydration";
 import { useAuth } from "@/hooks/useAuth";
 
 const ICONS: Record<string, React.ReactNode> = {
@@ -109,15 +106,8 @@ const ICONS: Record<string, React.ReactNode> = {
 export function Sidebar() {
   const pathname = usePathname();
   const router = useRouter();
-  const hydrated = useHydration();
-  const { filteredNavItems, profile, role } = useRoleAccess();
+  const { filteredNavItems } = useRoleAccess();
   const { signOut } = useAuth();
-
-  const displayName = hydrated && profile ? (profile.full_name || profile.email) : "";
-  const roleLabel = hydrated ? (ROLE_LABELS[role] || role) : "";
-  const initials = hydrated && displayName
-    ? displayName.split(" ").map((w) => w[0]).join("").slice(0, 2).toUpperCase()
-    : "?";
 
   return (
     <aside className="fixed left-0 top-0 h-full w-[var(--sidebar-width)] flex-col glass-primary border-r border-[var(--glass-border)] shadow-[var(--shadow-lg)] p-4 z-30 hidden lg:flex">
@@ -160,23 +150,8 @@ export function Sidebar() {
         })}
       </nav>
 
-      {/* User section at bottom */}
+      {/* Logout button at bottom */}
       <div className="mt-auto pt-4 border-t border-[var(--glass-border-subtle)]">
-        <div className="flex items-center gap-3 px-2 mb-3">
-          <div className="w-9 h-9 rounded-full bg-[var(--color-accent)]/80 backdrop-blur-sm flex items-center justify-center text-white text-sm font-semibold border border-white/20">
-            {initials}
-          </div>
-          <div className="flex-1 min-w-0">
-            <p className="text-sm font-medium text-[var(--foreground)] truncate">
-              {displayName || "Foydalanuvchi"}
-            </p>
-            <p className="text-xs text-[var(--muted)] truncate">{roleLabel}</p>
-          </div>
-        </div>
-        <div className="flex items-center justify-between px-2 mb-2">
-          <span className="text-xs text-[var(--muted)]">Tema</span>
-          <ThemeToggle />
-        </div>
         <button
           onClick={async () => {
             await signOut();

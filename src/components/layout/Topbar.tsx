@@ -7,6 +7,7 @@ import { useRoleAccess } from "@/hooks/useRoleAccess";
 import { useHydration } from "@/hooks/useHydration";
 import { useAuth } from "@/hooks/useAuth";
 import { useFilteredNotifications } from "@/hooks/useFilteredNotifications";
+import { ThemeToggle } from "@/components/ui/ThemeToggle";
 import { ROLE_LABELS } from "@/lib/constants";
 
 export function Topbar() {
@@ -67,6 +68,9 @@ export function Topbar() {
 
       {/* Right side */}
       <div className="flex items-center gap-2">
+        {/* Theme toggle */}
+        <ThemeToggle />
+
         {/* Notification bell */}
         <Link
           href="/notifications"

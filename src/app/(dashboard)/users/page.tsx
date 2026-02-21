@@ -23,6 +23,38 @@ import {
 import { BulkUserImport } from "@/components/import/BulkUserImport";
 import type { AppUser, UserRole } from "@/lib/types";
 
+// Demo rejimda ko'rsatiladigan foydalanuvchilar (Supabase ulanmagan holat)
+const DEMO_USERS: AppUser[] = [
+  {
+    id: "demo-1",
+    email: "admin@besttimetable.uz",
+    full_name: "Abdullayev Sherzod",
+    role: "admin",
+    created_at: "2025-09-01T10:00:00Z",
+  },
+  {
+    id: "demo-2",
+    email: "d.karimova@mail.uz",
+    full_name: "Karimova Dilnoza",
+    role: "teacher",
+    created_at: "2025-09-05T14:30:00Z",
+  },
+  {
+    id: "demo-3",
+    email: "m.ergashev@mail.uz",
+    full_name: "Ergashev Muhammadsodiq",
+    role: "teacher",
+    created_at: "2025-09-10T09:15:00Z",
+  },
+  {
+    id: "demo-4",
+    email: "j.rahimov@mail.uz",
+    full_name: "Rahimov Jasur",
+    role: "student",
+    created_at: "2025-10-01T11:00:00Z",
+  },
+];
+
 const ROLE_CONFIG: Record<
   UserRole,
   { label: string; bgClass: string; textClass: string; icon: React.ElementType }
@@ -61,7 +93,7 @@ export default function UsersPage() {
         .order("created_at", { ascending: false });
 
       if (error) throw error;
-      if (data) {
+      if (data && data.length > 0) {
         const rows = data as unknown as Record<string, unknown>[];
         setUsers(
           rows.map((r) => ({
@@ -74,9 +106,13 @@ export default function UsersPage() {
             created_at: r.created_at as string,
           }))
         );
+      } else {
+        // Supabase ulanmagan yoki ma'lumot yo'q — demo foydalanuvchilar
+        setUsers(DEMO_USERS);
       }
     } catch {
-      // Supabase ulanmagan bo'lishi mumkin
+      // Supabase ulanmagan — demo foydalanuvchilarni ko'rsatish
+      setUsers(DEMO_USERS);
     } finally {
       setLoading(false);
     }

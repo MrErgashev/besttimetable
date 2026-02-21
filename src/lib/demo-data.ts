@@ -469,14 +469,43 @@ export function seedDemoData(stores: DemoStores): {
     entryIds.push(entry.id);
   }
 
-  // 8. Changelog yozuvlari
-  const changelogCount = Math.min(5, entryIds.length);
+  // 8. Changelog yozuvlari — role-based filtrlash uchun to'liq data
+  // Turli o'qituvchilar, guruhlar va track'larni qamrab oluvchi yozuvlar
+  // [matrixIndex, action]
+  const CHANGELOG_ENTRIES: [number, "create" | "update" | "delete"][] = [
+    [0, "create"],   // teacher 0 (Ergashev), group 0 (1-K1) — kunduzgi
+    [1, "create"],   // teacher 3 (Rahimova), group 1 (1-K2) — kunduzgi
+    [3, "create"],   // teacher 6 (Nazarov), group 3 (3-K1) — kunduzgi
+    [4, "create"],   // teacher 1 (Karimova), group 0 (1-K1) — kunduzgi
+    [6, "create"],   // teacher 4 (Xasanov), group 2 (2-K1) — kunduzgi
+    [13, "create"],  // teacher 5 (Abdullayeva), group 4 (1-S1) — sirtqi
+    [16, "create"],  // teacher 3 (Rahimova), group 7 (2-E1) — kechki
+    [8, "update"],   // teacher 7 (Yusupova), groups 0,1 (1-K1+1-K2) — kunduzgi
+    [10, "update"],  // teacher 8 (Mirzayev), group 3 (3-K1) — kunduzgi
+    [11, "update"],  // teacher 8 (Mirzayev), group 4 (1-S1) — sirtqi
+    [12, "update"],  // teacher 9 (Qodirov), group 5 (2-S1) — sirtqi
+    [15, "update"],  // teacher 0 (Ergashev), group 6 (1-E1) — kechki
+    [2, "delete"],   // teacher 2 (Toshmatov), group 2 (2-K1) — kunduzgi
+    [9, "delete"],   // teacher 3 (Rahimova), group 2 (2-K1) — kunduzgi
+    [17, "delete"],  // teacher 9 (Qodirov), group 6 (1-E1) — kechki
+  ];
+  const changelogCount = Math.min(CHANGELOG_ENTRIES.length, entryIds.length);
   for (let i = 0; i < changelogCount; i++) {
+    const [mIdx, action] = CHANGELOG_ENTRIES[i];
+    const [dayIdx, slotId, gIdxArr, sIdx, tIdx, rIdx] = SCHEDULE_MATRIX[mIdx];
+    const fullData = {
+      slot_id: slotId,
+      day: DAYS_KEYS[dayIdx],
+      teacher_id: teacherIds[tIdx],
+      group_ids: gIdxArr.map((gi: number) => groupIds[gi]),
+      subject_id: subjectIds[sIdx],
+      room_id: roomIds[rIdx],
+    };
     changelogStore.addLog({
-      entry_id: entryIds[i],
-      action: i < 3 ? "create" : "update",
-      old_data: i < 3 ? null : { slot_id: "k1", day: "dushanba" },
-      new_data: { slot_id: SCHEDULE_MATRIX[i][1], day: DAYS_KEYS[SCHEDULE_MATRIX[i][0]] },
+      entry_id: entryIds[mIdx],
+      action,
+      old_data: action === "create" ? null : fullData,
+      new_data: action === "delete" ? null : fullData,
       changed_by: DEMO_USER_ID,
     });
   }

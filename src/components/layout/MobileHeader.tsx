@@ -59,7 +59,7 @@ export function MobileHeader() {
   }, [menuOpen]);
 
   return (
-    <header className="sticky top-0 z-30 md:hidden">
+    <header className="relative z-30 md:hidden shrink-0">
       <div
         className="flex items-center justify-between px-4 glass-primary border-b border-[var(--glass-border)] shadow-[0_1px_0_0_var(--glass-highlight)]"
         style={{ height: "var(--header-height)", paddingTop: "var(--safe-area-top)" }}

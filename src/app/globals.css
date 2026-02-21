@@ -150,6 +150,15 @@
 }
 
 /* ── Base ───────────────────────────────────── */
+html {
+  /* dvh — dynamic viewport height: mobil brauzer toolbar'ni hisobga oladi */
+  height: 100dvh;
+  height: 100vh; /* fallback eski brauzerlar uchun */
+  @supports (height: 100dvh) {
+    height: 100dvh;
+  }
+}
+
 body {
   background: var(--background);
   color: var(--foreground);
@@ -157,6 +166,11 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   overflow-x: hidden;
+  min-height: 100dvh;
+  min-height: 100vh; /* fallback */
+  @supports (min-height: 100dvh) {
+    min-height: 100dvh;
+  }
 }
 
 /* ── Liquid Glass Card ──────────────────────── */

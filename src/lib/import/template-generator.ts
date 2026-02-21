@@ -33,6 +33,10 @@ const EXAMPLE_DATA: Record<EntityType, Record<string, string>[]> = {
     { name: "305-xona", building: "A bino", capacity: "30", type: "oddiy", floor: "3" },
     { name: "Lab-1", building: "B bino", capacity: "20", type: "laboratoriya", floor: "1" },
   ],
+  users: [
+    { full_name: "Ergashev Sodiq", email: "sodiq@mail.uz" },
+    { full_name: "Karimova Dilnoza", email: "dilnoza@mail.uz" },
+  ],
 };
 
 export function downloadTemplate(entityType: EntityType): void {

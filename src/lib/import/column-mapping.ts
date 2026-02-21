@@ -167,9 +167,26 @@ export const ROOM_FIELDS: FieldMapping[] = [
   },
 ];
 
+export const USER_FIELDS: FieldMapping[] = [
+  {
+    key: "full_name",
+    label: "To'liq ism",
+    required: true,
+    type: "string",
+    aliases: ["ism", "name", "fullname", "full name", "ismi", "familiya ism", "f.i.o", "fio"],
+  },
+  {
+    key: "email",
+    label: "Email",
+    required: true,
+    type: "string",
+    aliases: ["email", "e-mail", "pochta", "elektron pochta", "login"],
+  },
+];
+
 // ─── Entity Type Config ──────────────────────────────────────────────────────
 
-export type EntityType = "teachers" | "groups" | "subjects" | "rooms";
+export type EntityType = "teachers" | "groups" | "subjects" | "rooms" | "users";
 
 export const ENTITY_CONFIG: Record<
   EntityType,
@@ -203,6 +220,12 @@ export const ENTITY_CONFIG: Record<
     label: "Xonalar",
     singularLabel: "xona",
     duplicateCheckKeys: ["name"],
+  },
+  users: {
+    fields: USER_FIELDS,
+    label: "Foydalanuvchilar",
+    singularLabel: "foydalanuvchi",
+    duplicateCheckKeys: ["email"],
   },
 };
 

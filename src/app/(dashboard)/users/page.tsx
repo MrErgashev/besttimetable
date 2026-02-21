@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { GlassCard } from "@/components/ui/GlassCard";
 import { GlassModal } from "@/components/ui/GlassModal";
@@ -19,9 +19,48 @@ import {
   Users,
   AlertCircle,
   UsersRound,
+  Clock,
 } from "lucide-react";
 import { BulkUserImport } from "@/components/import/BulkUserImport";
+import { useTeacherStore } from "@/stores/useTeacherStore";
+import { useSubjectLoadStore } from "@/stores/useSubjectLoadStore";
+import { useSubjectStore } from "@/stores/useSubjectStore";
+import { useGroupStore } from "@/stores/useGroupStore";
+import { useHydration } from "@/hooks/useHydration";
 import type { AppUser, UserRole } from "@/lib/types";
+
+// Demo rejimda ko'rsatiladigan foydalanuvchilar (Supabase ulanmagan holat)
+// Email'lar demo-data.ts dagi o'qituvchilarga mos keladi
+const DEMO_USERS: AppUser[] = [
+  {
+    id: "demo-1",
+    email: "admin@besttimetable.uz",
+    full_name: "Abdullayev Sherzod",
+    role: "admin",
+    created_at: "2025-09-01T10:00:00Z",
+  },
+  {
+    id: "demo-2",
+    email: "n.karimova@edu.uz",
+    full_name: "Karimova Nilufar",
+    role: "teacher",
+    created_at: "2025-09-05T14:30:00Z",
+  },
+  {
+    id: "demo-3",
+    email: "b.ergashev@edu.uz",
+    full_name: "Ergashev Bobur",
+    role: "teacher",
+    created_at: "2025-09-10T09:15:00Z",
+  },
+  {
+    id: "demo-4",
+    email: "j.rahimov@student.uz",
+    full_name: "Rahimov Jasur",
+    role: "student",
+    created_at: "2025-10-01T11:00:00Z",
+  },
+];
 
 const ROLE_CONFIG: Record<
   UserRole,
@@ -52,6 +91,32 @@ export default function UsersPage() {
   const [formError, setFormError] = useState("");
 
   const supabase = createClient();
+  const hydrated = useHydration();
+
+  // Store'lar — foydalanuvchi tafsilotlarini ko'rsatish uchun
+  const teachers = useTeacherStore((s) => s.teachers);
+  const loads = useSubjectLoadStore((s) => s.loads);
+  const subjects = useSubjectStore((s) => s.subjects);
+  const groups = useGroupStore((s) => s.groups);
+
+  // O'qituvchi email'i bo'yicha tafsilotlarni olish
+  const userDetails = useMemo(() => {
+    if (!hydrated) return new Map<string, { subjects: string[]; groups: string[]; weeklyHours: number }>();
+
+    const details = new Map<string, { subjects: string[]; groups: string[]; weeklyHours: number }>();
+    const subjectMap = new Map(subjects.map((s) => [s.id, s.name]));
+    const groupMap = new Map(groups.map((g) => [g.id, g.name]));
+
+    for (const teacher of teachers) {
+      if (!teacher.email) continue;
+      const teacherLoads = loads.filter((l) => l.teacher_id === teacher.id);
+      const subjectNames = [...new Set(teacherLoads.map((l) => subjectMap.get(l.subject_id)).filter(Boolean))] as string[];
+      const groupNames = [...new Set(teacherLoads.map((l) => groupMap.get(l.group_id)).filter(Boolean))] as string[];
+      const weeklyHours = teacherLoads.reduce((sum, l) => sum + l.weekly_hours, 0);
+      details.set(teacher.email, { subjects: subjectNames, groups: groupNames, weeklyHours });
+    }
+    return details;
+  }, [hydrated, teachers, loads, subjects, groups]);
 
   const fetchUsers = useCallback(async () => {
     try {
@@ -61,7 +126,7 @@ export default function UsersPage() {
         .order("created_at", { ascending: false });
 
       if (error) throw error;
-      if (data) {
+      if (data && data.length > 0) {
         const rows = data as unknown as Record<string, unknown>[];
         setUsers(
           rows.map((r) => ({
@@ -74,9 +139,13 @@ export default function UsersPage() {
             created_at: r.created_at as string,
           }))
         );
+      } else {
+        // Supabase ulanmagan yoki ma'lumot yo'q — demo foydalanuvchilar
+        setUsers(DEMO_USERS);
       }
     } catch {
-      // Supabase ulanmagan bo'lishi mumkin
+      // Supabase ulanmagan — demo foydalanuvchilarni ko'rsatish
+      setUsers(DEMO_USERS);
     } finally {
       setLoading(false);
     }
@@ -328,14 +397,15 @@ export default function UsersPage() {
             {filtered.map((user) => {
               const config = ROLE_CONFIG[user.role] || ROLE_CONFIG.student;
               const Icon = config.icon;
+              const detail = userDetails.get(user.email);
 
               return (
                 <div
                   key={user.id}
-                  className="flex items-center gap-4 p-4 hover:bg-[var(--surface-secondary)] transition-colors"
+                  className="flex items-start gap-4 p-4 hover:bg-[var(--surface-secondary)] transition-colors"
                 >
                   <div
-                    className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${config.bgClass}`}
+                    className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 mt-0.5 ${config.bgClass}`}
                   >
                     <Icon
                       className={`w-5 h-5 ${config.textClass}`}
@@ -348,29 +418,73 @@ export default function UsersPage() {
                     <div className="text-sm text-[var(--muted)] truncate">
                       {user.email}
                     </div>
+                    {/* Foydalanuvchi tafsilotlari */}
+                    {user.role === "teacher" && detail && detail.subjects.length > 0 && (
+                      <div className="mt-1.5 space-y-1">
+                        <div className="flex flex-wrap gap-1">
+                          {detail.subjects.map((s) => (
+                            <span
+                              key={s}
+                              className="inline-block text-[11px] px-2 py-0.5 rounded-md bg-[var(--color-accent)]/10 text-[var(--color-accent)]"
+                            >
+                              {s}
+                            </span>
+                          ))}
+                        </div>
+                        <div className="flex items-center gap-3 text-xs text-[var(--muted)]">
+                          <span>Guruhlar: {detail.groups.join(", ")}</span>
+                          <span className="flex items-center gap-1">
+                            <Clock className="w-3 h-3" />
+                            {detail.weeklyHours} soat/hafta
+                          </span>
+                        </div>
+                      </div>
+                    )}
+                    {user.role === "teacher" && (!detail || detail.subjects.length === 0) && (
+                      <div className="mt-1 text-xs text-[var(--muted-light)] italic">
+                        Fan yuklamasi hali biriktirilmagan
+                      </div>
+                    )}
+                    {user.role === "admin" && (
+                      <div className="mt-1 text-xs text-[var(--muted)]">
+                        Tizim administratori — barcha bo&apos;limlarni boshqaradi
+                      </div>
+                    )}
+                    {user.role === "super_admin" && (
+                      <div className="mt-1 text-xs text-[var(--muted)]">
+                        Tizim egasi — to&apos;liq boshqaruv huquqi
+                      </div>
+                    )}
+                    {user.role === "student" && (
+                      <div className="mt-1 text-xs text-[var(--muted)]">
+                        Talaba — faqat o&apos;z jadvalini ko&apos;radi
+                      </div>
+                    )}
                   </div>
-                  <Badge
-                    variant={
-                      user.role === "super_admin"
-                        ? "danger"
-                        : user.role === "admin"
-                        ? "accent"
-                        : user.role === "teacher"
-                        ? "success"
-                        : "default"
-                    }
-                  >
-                    {config.label}
-                  </Badge>
-                  <div className="text-xs text-[var(--muted)] hidden md:block w-24 text-right">
-                    {new Date(user.created_at).toLocaleDateString("uz-UZ")}
+                  <div className="flex flex-col items-end gap-1 shrink-0">
+                    <Badge
+                      variant={
+                        user.role === "super_admin"
+                          ? "danger"
+                          : user.role === "admin"
+                          ? "accent"
+                          : user.role === "teacher"
+                          ? "success"
+                          : "default"
+                      }
+                    >
+                      {config.label}
+                    </Badge>
+                    <div className="text-xs text-[var(--muted)] hidden md:block">
+                      {new Date(user.created_at).toLocaleDateString("uz-UZ")}
+                    </div>
                   </div>
                   {user.role !== "super_admin" && (
                     <button
                       onClick={() =>
                         handleDeleteUser(user.id, user.full_name || user.email)
                       }
-                      className="p-2 rounded-lg hover:bg-red-500/10 text-[var(--muted)] hover:text-red-500 transition-colors"
+                      className="p-2 rounded-lg hover:bg-red-500/10 text-[var(--muted)] hover:text-red-500 transition-colors shrink-0 mt-0.5"
                       title="O'chirish"
                     >
                       <Trash2 className="w-4 h-4" />

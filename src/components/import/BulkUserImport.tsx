@@ -10,6 +10,7 @@ import {
   autoMapColumns,
   convertValue,
 } from "@/lib/import/column-mapping";
+import { downloadTemplate } from "@/lib/import/template-generator";
 import {
   Upload,
   ClipboardPaste,
@@ -19,6 +20,7 @@ import {
   ArrowLeft,
   ArrowRight,
   X,
+  Download,
 } from "lucide-react";
 import * as XLSX from "xlsx";
 
@@ -227,6 +229,25 @@ export function BulkUserImport({ onImport, onClose }: BulkUserImportProps) {
           </button>
         </div>
 
+        {/* Shablon yuklab olish */}
+        <div className="flex items-center gap-3 p-3 rounded-[var(--radius)] border border-dashed border-[var(--border)] bg-[var(--surface-secondary)]">
+          <Download className="w-5 h-5 text-[var(--muted)] shrink-0" />
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-medium">Shablon kerakmi?</p>
+            <p className="text-xs text-[var(--muted)]">
+              Tayyor Excel shablonni yuklab, to&apos;ldirib, yuklang
+            </p>
+          </div>
+          <Button
+            variant="secondary"
+            onClick={() => downloadTemplate("users")}
+            className="shrink-0"
+          >
+            <Download className="w-4 h-4" />
+            Shablonni yuklash
+          </Button>
+        </div>
+
         <div className="flex justify-end pt-2">
           <Button variant="ghost" onClick={onClose}>Bekor qilish</Button>
         </div>
@@ -302,6 +323,14 @@ export function BulkUserImport({ onImport, onClose }: BulkUserImportProps) {
             {fileError}
           </div>
         )}
+
+        <button
+          onClick={() => downloadTemplate("users")}
+          className="text-xs text-[var(--color-accent)] hover:underline flex items-center gap-1"
+        >
+          <Download className="w-3 h-3" />
+          Namuna shablonni yuklab olish
+        </button>
 
         <div className="flex justify-between gap-3 pt-2">
           <Button variant="ghost" onClick={() => setStep("choose")}>

@@ -18,7 +18,9 @@ import {
   Search,
   Users,
   AlertCircle,
+  UsersRound,
 } from "lucide-react";
+import { BulkUserImport } from "@/components/import/BulkUserImport";
 import type { AppUser, UserRole } from "@/lib/types";
 
 const ROLE_CONFIG: Record<
@@ -35,6 +37,7 @@ export default function UsersPage() {
   const [users, setUsers] = useState<AppUser[]>([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
+  const [showBulkModal, setShowBulkModal] = useState(false);
   const [search, setSearch] = useState("");
   const [filterRole, setFilterRole] = useState<string>("all");
   const [error, setError] = useState("");
@@ -159,6 +162,48 @@ export default function UsersPage() {
     setFormError("");
   }
 
+  async function handleBulkImport(
+    usersToCreate: { full_name: string; email: string; password: string; role: string }[]
+  ): Promise<{ success: number; failed: number; errors: string[] }> {
+    let success = 0;
+    let failed = 0;
+    const errors: string[] = [];
+
+    for (const u of usersToCreate) {
+      try {
+        const { error: signUpError } = await supabase.auth.signUp({
+          email: u.email,
+          password: u.password,
+          options: {
+            data: {
+              full_name: u.full_name,
+              role: u.role,
+            },
+          },
+        });
+
+        if (signUpError) {
+          failed++;
+          if (signUpError.message.includes("already registered")) {
+            errors.push(`${u.email} — allaqachon ro'yxatdan o'tgan`);
+          } else {
+            errors.push(`${u.email} — ${signUpError.message}`);
+          }
+        } else {
+          success++;
+        }
+      } catch {
+        failed++;
+        errors.push(`${u.email} — kutilmagan xatolik`);
+      }
+    }
+
+    // Ro'yxatni yangilash
+    setTimeout(() => fetchUsers(), 1500);
+
+    return { success, failed, errors };
+  }
+
   // Filtrlangan foydalanuvchilar
   const filtered = users.filter((u) => {
     const matchesSearch =
@@ -188,10 +233,16 @@ export default function UsersPage() {
             Tizim foydalanuvchilarini boshqarish
           </p>
         </div>
-        <Button onClick={() => setShowModal(true)}>
-          <UserPlus className="w-4 h-4" />
-          Yangi foydalanuvchi
-        </Button>
+        <div className="flex gap-2">
+          <Button variant="secondary" onClick={() => setShowBulkModal(true)}>
+            <UsersRound className="w-4 h-4" />
+            <span className="hidden sm:inline">Ommaviy yuklash</span>
+          </Button>
+          <Button onClick={() => setShowModal(true)}>
+            <UserPlus className="w-4 h-4" />
+            <span className="hidden sm:inline">Yangi foydalanuvchi</span>
+          </Button>
+        </div>
       </div>
 
       {/* Xabarlar */}
@@ -331,6 +382,23 @@ export default function UsersPage() {
           </div>
         )}
       </GlassCard>
+
+      {/* Ommaviy yuklash modal */}
+      <GlassModal
+        open={showBulkModal}
+        onClose={() => setShowBulkModal(false)}
+        title="Ommaviy foydalanuvchi yuklash"
+        size="lg"
+      >
+        <BulkUserImport
+          onImport={handleBulkImport}
+          onClose={() => {
+            setShowBulkModal(false);
+            setSuccessMsg("Foydalanuvchilar muvaffaqiyatli import qilindi!");
+            setTimeout(() => setSuccessMsg(""), 4000);
+          }}
+        />
+      </GlassModal>
 
       {/* Yangi foydalanuvchi modal */}
       <GlassModal

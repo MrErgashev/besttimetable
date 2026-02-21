@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, Fragment } from "react";
 import { useRoomStore } from "@/stores/useRoomStore";
 import { useTimetableStore } from "@/stores/useTimetableStore";
 import { useSubjectStore } from "@/stores/useSubjectStore";
@@ -141,8 +141,8 @@ export default function ByRoomPage() {
                 </thead>
                 <tbody>
                   {Array.from(trackGroups.entries()).map(([track, slots], trackIdx) => (
-                    <>
-                      <tr key={`sep-${track}`}>
+                    <Fragment key={track}>
+                      <tr>
                         <td
                           colSpan={6}
                           className={cn(
@@ -206,7 +206,7 @@ export default function ByRoomPage() {
                           })}
                         </tr>
                       ))}
-                    </>
+                    </Fragment>
                   ))}
                 </tbody>
               </table>

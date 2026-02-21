@@ -80,6 +80,7 @@ export default function GeneratePage() {
     setGeneratedEntries([]);
 
     // setTimeout to let UI update before blocking
+    const generationStartTime = Date.now();
     setTimeout(() => {
       try {
         // Qo'lda qo'yilgan darslarni saqlash
@@ -147,7 +148,7 @@ export default function GeneratePage() {
           placed: totalPlaced,
           total: totalNeeded,
           conflicts,
-          duration_ms: greedyResult.result.duration_ms + Date.now(),
+          duration_ms: Date.now() - generationStartTime,
         };
 
         setResult(finalResult);
@@ -157,7 +158,18 @@ export default function GeneratePage() {
       } catch (err) {
         console.error("Generation error:", err);
         setStatus("failed");
-        setPhase("Xatolik yuz berdi");
+        setPhase(
+          err instanceof Error
+            ? `Xatolik: ${err.message}`
+            : "Xatolik yuz berdi"
+        );
+        setResult({
+          status: "failed",
+          placed: 0,
+          total: progress.total || 0,
+          conflicts: [],
+          duration_ms: Date.now() - generationStartTime,
+        });
       }
     }, 50);
   }, [loads, teachers, rooms, groups, constraints, existingEntries]);

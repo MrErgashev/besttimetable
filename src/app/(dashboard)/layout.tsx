@@ -5,6 +5,9 @@ import { MobileHeader } from "@/components/layout/MobileHeader";
 import { RoleGuard } from "@/components/layout/RoleGuard";
 import { MeshBackground } from "@/components/ui/MeshBackground";
 
+// Build vaqtida Supabase env yo'q — statik prerender o'rniga dinamik render
+export const dynamic = "force-dynamic";
+
 export default function DashboardLayout({
   children,
 }: {

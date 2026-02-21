@@ -1,17 +1,17 @@
 "use client";
 
-import { useState, useMemo, useCallback } from "react";
-import { useChangelogStore } from "@/stores/useChangelogStore";
+import { useState, useMemo } from "react";
 import { useTeacherStore } from "@/stores/useTeacherStore";
 import { useSubjectStore } from "@/stores/useSubjectStore";
 import { useRoomStore } from "@/stores/useRoomStore";
 import { useGroupStore } from "@/stores/useGroupStore";
 import { useHydration } from "@/hooks/useHydration";
+import { useFilteredNotifications } from "@/hooks/useFilteredNotifications";
 import { GlassCard } from "@/components/ui/GlassCard";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { Spinner } from "@/components/ui/Spinner";
-import { DAYS, TIME_SLOTS } from "@/lib/constants";
+import { DAYS, TIME_SLOTS, ROLE_LABELS } from "@/lib/constants";
 import type { ScheduleChangelog } from "@/lib/types";
 
 const ACTION_LABELS: Record<string, { label: string; variant: "success" | "warning" | "danger" }> = {
@@ -19,38 +19,6 @@ const ACTION_LABELS: Record<string, { label: string; variant: "success" | "warni
   update: { label: "O'zgartirildi", variant: "warning" },
   delete: { label: "O'chirildi", variant: "danger" },
 };
-
-function useReadState() {
-  const [readIds, setReadIds] = useState<Set<string>>(() => {
-    if (typeof window === "undefined") return new Set();
-    try {
-      const saved = localStorage.getItem("besttimetable-read-notifications");
-      return saved ? new Set(JSON.parse(saved) as string[]) : new Set();
-    } catch {
-      return new Set();
-    }
-  });
-
-  const markAsRead = useCallback((id: string) => {
-    setReadIds((prev) => {
-      const next = new Set(prev);
-      next.add(id);
-      localStorage.setItem("besttimetable-read-notifications", JSON.stringify([...next]));
-      return next;
-    });
-  }, []);
-
-  const markAllAsRead = useCallback((ids: string[]) => {
-    setReadIds((prev) => {
-      const next = new Set(prev);
-      for (const id of ids) next.add(id);
-      localStorage.setItem("besttimetable-read-notifications", JSON.stringify([...next]));
-      return next;
-    });
-  }, []);
-
-  return { readIds, markAsRead, markAllAsRead };
-}
 
 function formatTimeAgo(dateStr: string): string {
   const now = Date.now();
@@ -68,12 +36,12 @@ function formatTimeAgo(dateStr: string): string {
 
 export default function NotificationsPage() {
   const hydrated = useHydration();
-  const { logs } = useChangelogStore();
+  const { logs, readIds, unreadCount, markAsRead, markAllAsRead, role } =
+    useFilteredNotifications();
   const { teachers } = useTeacherStore();
   const { subjects } = useSubjectStore();
   const { rooms } = useRoomStore();
   const { groups } = useGroupStore();
-  const { readIds, markAsRead, markAllAsRead } = useReadState();
   const [filter, setFilter] = useState<"all" | "unread">("all");
 
   const resolvedLogs = useMemo(() => {
@@ -97,12 +65,15 @@ export default function NotificationsPage() {
     return resolvedLogs;
   }, [resolvedLogs, filter, readIds]);
 
-  const unreadCount = useMemo(
-    () => resolvedLogs.filter((l) => !readIds.has(l.id)).length,
-    [resolvedLogs, readIds]
-  );
-
   if (!hydrated) return <Spinner className="py-20" />;
+
+  const roleLabel = ROLE_LABELS[role] || role;
+  const roleDescription =
+    role === "teacher"
+      ? "Faqat sizga tegishli darslar haqida bildirishnomalar"
+      : role === "student"
+        ? "Faqat sizning guruhingizga tegishli o'zgarishlar"
+        : "Barcha jadval o'zgarishlari haqida bildirishnomalar";
 
   function buildMessage(log: ScheduleChangelog & { teacherName?: string; subjectName?: string; roomName?: string; groupNames?: string; day?: string; slot?: string }) {
     const parts: string[] = [];
@@ -122,12 +93,15 @@ export default function NotificationsPage() {
         <div>
           <h1 className="text-2xl font-bold">Bildirishnomalar</h1>
           <p className="text-sm text-[var(--muted)] mt-1">
-            Jadval o&apos;zgarishlari haqida bildirishnomalar
+            {roleDescription}
           </p>
         </div>
-        {unreadCount > 0 && (
-          <Badge variant="accent">{unreadCount} ta yangi</Badge>
-        )}
+        <div className="flex items-center gap-2">
+          <Badge variant="default">{roleLabel}</Badge>
+          {unreadCount > 0 && (
+            <Badge variant="accent">{unreadCount} ta yangi</Badge>
+          )}
+        </div>
       </div>
 
       {/* Filter + Actions */}

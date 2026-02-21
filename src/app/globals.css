@@ -2,9 +2,24 @@
 
 @custom-variant dark (&:where(.dark, .dark *));
 
+/* ── Local Fonts ────────────────────────────── */
+@font-face {
+  font-family: "Geist Sans";
+  src: url("./fonts/GeistVF.woff") format("woff");
+  font-weight: 100 900;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Geist Mono";
+  src: url("./fonts/GeistMonoVF.woff") format("woff");
+  font-weight: 100 900;
+  font-display: swap;
+}
+
 @theme inline {
-  --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, -apple-system, sans-serif;
-  --font-mono: var(--font-geist-mono), ui-monospace, monospace;
+  --font-sans: "Geist Sans", ui-sans-serif, system-ui, -apple-system, sans-serif;
+  --font-mono: "Geist Mono", ui-monospace, monospace;
   --color-accent: #007AFF;
   --color-accent-hover: #0056CC;
   --color-accent-light: #4DA3FF;

@@ -4,6 +4,7 @@ import { BottomTabBar } from "@/components/layout/BottomTabBar";
 import { MobileHeader } from "@/components/layout/MobileHeader";
 import { RoleGuard } from "@/components/layout/RoleGuard";
 import { MeshBackground } from "@/components/ui/MeshBackground";
+import { SupabaseDataProvider } from "@/components/providers/SupabaseDataProvider";
 
 // Build vaqtida Supabase env yo'q — statik prerender o'rniga dinamik render
 export const dynamic = "force-dynamic";
@@ -28,7 +29,9 @@ export default function DashboardLayout({
         }}
       >
         <div className="md:pt-0" style={{ paddingTop: 0 }}>
-          <RoleGuard>{children}</RoleGuard>
+          <SupabaseDataProvider>
+            <RoleGuard>{children}</RoleGuard>
+          </SupabaseDataProvider>
         </div>
       </main>
 

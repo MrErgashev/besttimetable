@@ -2,8 +2,9 @@
 
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
-import { nanoid } from "nanoid";
 import type { ScheduleEntry, ID, DayKey } from "@/lib/types";
+import { isSupabaseConfigured } from "@/lib/supabase/helpers";
+import { scheduleSync } from "@/lib/supabase/sync";
 
 interface TimetableState {
   entries: ScheduleEntry[];
@@ -32,15 +33,18 @@ export const useTimetableStore = create<TimetableState>()(
       placeEntry: (data) => {
         const entry: ScheduleEntry = {
           ...data,
-          id: nanoid(),
+          id: crypto.randomUUID(),
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
         };
         set((s) => ({ entries: [...s.entries, entry] }));
+        if (isSupabaseConfigured()) {
+          scheduleSync.insert(entry).catch(console.error);
+        }
         return entry;
       },
 
-      moveEntry: (entryId, newDay, newSlotId) =>
+      moveEntry: (entryId, newDay, newSlotId) => {
         set((s) => ({
           entries: s.entries.map((e) =>
             e.id === entryId
@@ -52,12 +56,27 @@ export const useTimetableStore = create<TimetableState>()(
                 }
               : e
           ),
-        })),
+        }));
+        if (isSupabaseConfigured()) {
+          scheduleSync
+            .update(entryId, { day: newDay, slot_id: newSlotId } as Partial<ScheduleEntry>)
+            .catch(console.error);
+        }
+      },
 
-      removeEntry: (entryId) =>
-        set((s) => ({ entries: s.entries.filter((e) => e.id !== entryId) })),
+      removeEntry: (entryId) => {
+        set((s) => ({ entries: s.entries.filter((e) => e.id !== entryId) }));
+        if (isSupabaseConfigured()) {
+          scheduleSync.remove(entryId).catch(console.error);
+        }
+      },
 
-      clearAll: () => set({ entries: [] }),
+      clearAll: () => {
+        set({ entries: [] });
+        if (isSupabaseConfigured()) {
+          scheduleSync.removeAll().catch(console.error);
+        }
+      },
 
       bulkLoad: (entries) => set({ entries }),
 
@@ -78,6 +97,13 @@ export const useTimetableStore = create<TimetableState>()(
       getEntriesForRoom: (roomId) =>
         get().entries.filter((e) => e.room_id === roomId),
     }),
-    { name: "besttimetable-timetable", version: 1 }
+    {
+      name: "besttimetable-timetable",
+      version: 2,
+      migrate: (_persisted, version) => {
+        if (version < 2) return { entries: [] };
+        return _persisted as Record<string, unknown>;
+      },
+    }
   )
 );

@@ -34,6 +34,7 @@ export interface Database {
           department_id?: string | null;
           telegram_chat_id?: string | null;
         };
+        Relationships: [];
       };
       departments: {
         Row: {
@@ -42,11 +43,13 @@ export interface Database {
           created_at: string;
         };
         Insert: {
+          id?: string;
           name: string;
         };
         Update: {
           name?: string;
         };
+        Relationships: [];
       };
       academic_periods: {
         Row: {
@@ -58,6 +61,7 @@ export interface Database {
           created_at: string;
         };
         Insert: {
+          id?: string;
           name: string;
           start_date: string;
           end_date: string;
@@ -69,6 +73,7 @@ export interface Database {
           end_date?: string;
           is_active?: boolean;
         };
+        Relationships: [];
       };
       teachers: {
         Row: {
@@ -84,6 +89,7 @@ export interface Database {
           updated_at: string;
         };
         Insert: {
+          id?: string;
           first_name: string;
           last_name: string;
           short_name: string;
@@ -100,6 +106,7 @@ export interface Database {
           phone?: string | null;
           max_weekly_hours?: number;
         };
+        Relationships: [];
       };
       subjects: {
         Row: {
@@ -112,6 +119,7 @@ export interface Database {
           updated_at: string;
         };
         Insert: {
+          id?: string;
           name: string;
           short_name: string;
           color?: string;
@@ -123,6 +131,7 @@ export interface Database {
           color?: string;
           requires_lab?: boolean;
         };
+        Relationships: [];
       };
       groups: {
         Row: {
@@ -136,6 +145,7 @@ export interface Database {
           updated_at: string;
         };
         Insert: {
+          id?: string;
           name: string;
           course?: number;
           department_id?: string | null;
@@ -149,6 +159,7 @@ export interface Database {
           track?: "kunduzgi" | "sirtqi" | "kechki";
           student_count?: number;
         };
+        Relationships: [];
       };
       rooms: {
         Row: {
@@ -162,6 +173,7 @@ export interface Database {
           updated_at: string;
         };
         Insert: {
+          id?: string;
           name: string;
           building?: string | null;
           capacity?: number;
@@ -175,6 +187,33 @@ export interface Database {
           type?: "oddiy" | "laboratoriya" | "kompyuter_xona" | "majlis_xonasi";
           floor?: number | null;
         };
+        Relationships: [];
+      };
+      subject_loads: {
+        Row: {
+          id: string;
+          group_id: string;
+          subject_id: string;
+          teacher_id: string;
+          weekly_hours: number;
+          room_type: "oddiy" | "laboratoriya" | "kompyuter_xona" | "majlis_xonasi";
+        };
+        Insert: {
+          id?: string;
+          group_id: string;
+          subject_id: string;
+          teacher_id: string;
+          weekly_hours?: number;
+          room_type?: "oddiy" | "laboratoriya" | "kompyuter_xona" | "majlis_xonasi";
+        };
+        Update: {
+          group_id?: string;
+          subject_id?: string;
+          teacher_id?: string;
+          weekly_hours?: number;
+          room_type?: "oddiy" | "laboratoriya" | "kompyuter_xona" | "majlis_xonasi";
+        };
+        Relationships: [];
       };
       schedule_entries: {
         Row: {
@@ -192,6 +231,7 @@ export interface Database {
           updated_at: string;
         };
         Insert: {
+          id?: string;
           period_id: string;
           day: "dushanba" | "seshanba" | "chorshanba" | "payshanba" | "juma";
           slot_id: string;
@@ -211,6 +251,7 @@ export interface Database {
           room_id?: string;
           is_manual?: boolean;
         };
+        Relationships: [];
       };
       schedule_changelog: {
         Row: {
@@ -223,6 +264,7 @@ export interface Database {
           changed_at: string;
         };
         Insert: {
+          id?: string;
           entry_id?: string | null;
           action: "create" | "update" | "delete";
           old_data?: Json | null;
@@ -230,6 +272,7 @@ export interface Database {
           changed_by?: string | null;
         };
         Update: never;
+        Relationships: [];
       };
       notifications: {
         Row: {
@@ -241,6 +284,7 @@ export interface Database {
           created_at: string;
         };
         Insert: {
+          id?: string;
           user_id: string;
           type?: "schedule_change" | "conflict" | "substitution" | "system";
           message: string;
@@ -249,6 +293,7 @@ export interface Database {
         Update: {
           is_read?: boolean;
         };
+        Relationships: [];
       };
       substitutions: {
         Row: {
@@ -261,6 +306,7 @@ export interface Database {
           created_at: string;
         };
         Insert: {
+          id?: string;
           date: string;
           original_entry_id?: string | null;
           substitute_teacher_id: string;
@@ -272,7 +318,12 @@ export interface Database {
           reason?: string;
           note?: string | null;
         };
+        Relationships: [];
       };
     };
+    Views: Record<string, never>;
+    Functions: Record<string, never>;
+    Enums: Record<string, never>;
+    CompositeTypes: Record<string, never>;
   };
 }

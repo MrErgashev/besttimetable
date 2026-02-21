@@ -1,11 +1,13 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useMemo } from "react";
+import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { ThemeToggle } from "@/components/ui/ThemeToggle";
 import { useRoleAccess } from "@/hooks/useRoleAccess";
 import { useHydration } from "@/hooks/useHydration";
 import { useAuth } from "@/hooks/useAuth";
+import { useChangelogStore } from "@/stores/useChangelogStore";
 import { ROLE_LABELS } from "@/lib/constants";
 
 const PAGE_TITLES: Record<string, string> = {
@@ -43,6 +45,19 @@ export function MobileHeader() {
     ? displayName.split(" ").map((w) => w[0]).join("").slice(0, 2).toUpperCase()
     : "?";
 
+  // O'qilmagan bildirishnomalar soni
+  const { logs } = useChangelogStore();
+  const unreadCount = useMemo(() => {
+    if (typeof window === "undefined") return 0;
+    try {
+      const saved = localStorage.getItem("besttimetable-read-notifications");
+      const readIds = saved ? new Set(JSON.parse(saved) as string[]) : new Set<string>();
+      return logs.filter((l) => !readIds.has(l.id)).length;
+    } catch {
+      return logs.length;
+    }
+  }, [logs]);
+
   useEffect(() => {
     function handleClick(e: MouseEvent) {
       if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
@@ -61,13 +76,17 @@ export function MobileHeader() {
       >
         <h1 className="text-[17px] font-semibold text-[var(--foreground)]">{title}</h1>
         <div className="flex items-center gap-2">
-          <button className="relative p-2 rounded-full hover:bg-[var(--glass-bg)] hover:backdrop-blur-sm transition-all duration-300 [transition-timing-function:var(--spring-smooth)]">
+          <Link href="/notifications" className="relative p-2 rounded-full hover:bg-[var(--glass-bg)] hover:backdrop-blur-sm transition-all duration-300 [transition-timing-function:var(--spring-smooth)]">
             <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
               <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
               <path d="M13.73 21a2 2 0 0 1-3.46 0" />
             </svg>
-            <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-[var(--color-danger)] rounded-full" />
-          </button>
+            {unreadCount > 0 && (
+              <span className="absolute top-1 right-1 min-w-[16px] h-4 flex items-center justify-center rounded-full bg-[var(--color-danger)] text-white text-[10px] font-bold px-1">
+                {unreadCount > 99 ? "99+" : unreadCount}
+              </span>
+            )}
+          </Link>
           <ThemeToggle />
 
           {/* User avatar + dropdown */}

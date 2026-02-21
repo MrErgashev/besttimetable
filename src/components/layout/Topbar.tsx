@@ -1,10 +1,12 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useMemo } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useRoleAccess } from "@/hooks/useRoleAccess";
 import { useHydration } from "@/hooks/useHydration";
 import { useAuth } from "@/hooks/useAuth";
+import { useChangelogStore } from "@/stores/useChangelogStore";
 import { ROLE_LABELS } from "@/lib/constants";
 
 export function Topbar() {
@@ -20,6 +22,19 @@ export function Topbar() {
   const initials = hydrated && displayName
     ? displayName.split(" ").map((w) => w[0]).join("").slice(0, 2).toUpperCase()
     : "?";
+
+  // O'qilmagan bildirishnomalar soni
+  const { logs } = useChangelogStore();
+  const unreadCount = useMemo(() => {
+    if (typeof window === "undefined") return 0;
+    try {
+      const saved = localStorage.getItem("besttimetable-read-notifications");
+      const readIds = saved ? new Set(JSON.parse(saved) as string[]) : new Set<string>();
+      return logs.filter((l) => !readIds.has(l.id)).length;
+    } catch {
+      return logs.length;
+    }
+  }, [logs]);
 
   // Tashqariga bosganda menuni yopish
   useEffect(() => {
@@ -63,7 +78,8 @@ export function Topbar() {
       {/* Right side */}
       <div className="flex items-center gap-2">
         {/* Notification bell */}
-        <button
+        <Link
+          href="/notifications"
           className="relative p-2 rounded-[var(--radius-sm)] text-[var(--muted)] hover:text-[var(--foreground)] hover:bg-[var(--glass-bg)] hover:backdrop-blur-sm transition-all duration-300 [transition-timing-function:var(--spring-smooth)]"
           aria-label="Bildirishnomalar"
         >
@@ -80,8 +96,12 @@ export function Topbar() {
             <path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9" />
             <path d="M10.3 21a1.94 1.94 0 0 0 3.4 0" />
           </svg>
-          <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-[var(--color-danger)] rounded-full" />
-        </button>
+          {unreadCount > 0 && (
+            <span className="absolute top-1 right-1 min-w-[16px] h-4 flex items-center justify-center rounded-full bg-[var(--color-danger)] text-white text-[10px] font-bold px-1">
+              {unreadCount > 99 ? "99+" : unreadCount}
+            </span>
+          )}
+        </Link>
 
         {/* Profile + Dropdown */}
         <div className="relative" ref={menuRef}>

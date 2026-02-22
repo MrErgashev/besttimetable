@@ -14,10 +14,12 @@ interface SheetModalProps {
 export function SheetModal({ open, onClose, title, children, size = "md" }: SheetModalProps) {
   const [isClosing, setIsClosing] = useState(false);
   const sheetRef = useRef<HTMLDivElement>(null);
+  const contentRef = useRef<HTMLDivElement>(null);
   const previousFocusRef = useRef<HTMLElement | null>(null);
   const mouseDownTarget = useRef<EventTarget | null>(null);
   const startY = useRef(0);
   const currentY = useRef(0);
+  const touchInContent = useRef(false);
   const titleId = useId();
 
   const handleClose = useCallback(() => {
@@ -93,6 +95,7 @@ export function SheetModal({ open, onClose, title, children, size = "md" }: Shee
   }, [open]);
 
   // Touch drag to dismiss (mobile) — input/select/textarea da drag qilmaslik
+  // Scroll ichidagi kontent scroll bo'lishi kerak, faqat tepada bo'lganda drag-to-dismiss ishlaydi
   const handleTouchStart = (e: React.TouchEvent) => {
     const tag = (e.target as HTMLElement).tagName;
     if (tag === "INPUT" || tag === "SELECT" || tag === "TEXTAREA") {
@@ -100,10 +103,22 @@ export function SheetModal({ open, onClose, title, children, size = "md" }: Shee
       return;
     }
     startY.current = e.touches[0].clientY;
+    touchInContent.current = contentRef.current?.contains(e.target as Node) ?? false;
   };
   const handleTouchMove = (e: React.TouchEvent) => {
     if (!startY.current) return;
-    currentY.current = e.touches[0].clientY - startY.current;
+    const dy = e.touches[0].clientY - startY.current;
+
+    // Agar touch scrollable kontent ichida boshlangan bo'lsa
+    if (touchInContent.current && contentRef.current) {
+      const { scrollTop } = contentRef.current;
+      // Kontent tepaga scroll qilinmagan yoki yuqoriga surish — normal scroll ishlaydi
+      if (scrollTop > 0 || dy < 0) {
+        return;
+      }
+    }
+
+    currentY.current = dy;
     if (currentY.current > 0 && sheetRef.current) {
       sheetRef.current.style.transform = `translateY(${currentY.current}px)`;
     }
@@ -119,6 +134,7 @@ export function SheetModal({ open, onClose, title, children, size = "md" }: Shee
       sheetRef.current.style.transform = "";
     }
     currentY.current = 0;
+    touchInContent.current = false;
   };
 
   if (!open && !isClosing) return null;
@@ -191,7 +207,10 @@ export function SheetModal({ open, onClose, title, children, size = "md" }: Shee
         )}
 
         {/* Content */}
-        <div className="px-5 py-4 overflow-y-auto max-h-[70vh]">
+        <div
+          ref={contentRef}
+          className="px-5 py-4 overflow-y-auto max-h-[70vh] overscroll-y-contain"
+        >
           {children}
         </div>
       </div>

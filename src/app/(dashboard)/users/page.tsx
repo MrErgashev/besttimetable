@@ -297,7 +297,9 @@ export default function UsersPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold">Foydalanuvchilar</h1>
+          <h1 className="text-2xl font-bold">
+            <span className="bg-gradient-to-r from-[var(--color-accent)] to-[var(--color-accent-light)] bg-clip-text text-transparent">Foydalanuvchilar</span>
+          </h1>
           <p className="text-sm text-[var(--muted)] mt-1">
             Tizim foydalanuvchilarini boshqarish
           </p>

@@ -77,7 +77,9 @@ export default function TeachersPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-[28px] font-bold tracking-tight md:text-[32px]">O&apos;qituvchilar</h1>
+          <h1 className="text-[28px] font-bold tracking-tight md:text-[32px]">
+            <span className="bg-gradient-to-r from-[var(--color-accent)] to-[var(--color-accent-light)] bg-clip-text text-transparent">O&apos;qituvchilar</span>
+          </h1>
           <p className="text-sm text-[var(--muted)] mt-1">
             {teachers.length} ta o&apos;qituvchi
           </p>

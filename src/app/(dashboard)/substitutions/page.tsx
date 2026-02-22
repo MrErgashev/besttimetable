@@ -57,7 +57,9 @@ export default function SubstitutionsPage() {
   return (
     <div className="max-w-4xl mx-auto space-y-6">
       <div>
-        <h1 className="text-2xl font-bold">O&apos;rinbosar boshqaruvi</h1>
+        <h1 className="text-2xl font-bold">
+          <span className="bg-gradient-to-r from-[var(--color-accent)] to-[var(--color-accent-light)] bg-clip-text text-transparent">O&apos;rinbosar boshqaruvi</span>
+        </h1>
         <p className="text-sm text-[var(--muted)] mt-1">
           O&apos;qituvchi kelmasa, o&apos;rniga boshqa o&apos;qituvchi tayinlash
         </p>

@@ -70,7 +70,9 @@ export default function RoomsPage() {
     <div className="max-w-7xl mx-auto space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-[28px] font-bold tracking-tight md:text-[32px]">Xonalar</h1>
+          <h1 className="text-[28px] font-bold tracking-tight md:text-[32px]">
+            <span className="bg-gradient-to-r from-[var(--color-accent)] to-[var(--color-accent-light)] bg-clip-text text-transparent">Xonalar</span>
+          </h1>
           <p className="text-sm text-[var(--muted)] mt-1">
             {rooms.length} ta xona
           </p>

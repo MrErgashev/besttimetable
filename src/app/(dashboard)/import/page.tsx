@@ -129,7 +129,9 @@ export default function ImportPage() {
   return (
     <div className="max-w-4xl mx-auto space-y-6">
       <div>
-        <h1 className="text-2xl font-bold">Import</h1>
+        <h1 className="text-2xl font-bold">
+          <span className="bg-gradient-to-r from-[var(--color-accent)] to-[var(--color-accent-light)] bg-clip-text text-transparent">Import</span>
+        </h1>
         <p className="text-sm text-[var(--muted)] mt-1">
           Excel (.xlsx) yoki Word (.docx) fayldan dars jadvalini yuklash
         </p>

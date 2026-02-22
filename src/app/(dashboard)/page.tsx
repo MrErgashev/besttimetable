@@ -35,8 +35,10 @@ function TeacherDashboard() {
         <h1 className="text-[28px] font-bold tracking-tight md:text-[32px]">
           Xush kelibsiz{profile?.full_name ? `, ${profile.full_name}` : ""}
         </h1>
-        <p className="text-sm text-[var(--muted)] mt-1">
-          Sizning dars jadvalingiz
+        <p className="text-sm mt-1">
+          <span className="bg-gradient-to-r from-[var(--color-accent)] to-[var(--color-accent-light)] bg-clip-text text-transparent font-medium">
+            Sizning dars jadvalingiz
+          </span>
         </p>
       </div>
 
@@ -115,8 +117,10 @@ function StudentDashboard() {
         <h1 className="text-[28px] font-bold tracking-tight md:text-[32px]">
           Xush kelibsiz{profile?.full_name ? `, ${profile.full_name}` : ""}
         </h1>
-        <p className="text-sm text-[var(--muted)] mt-1">
-          Sizning guruh jadvalingiz
+        <p className="text-sm mt-1">
+          <span className="bg-gradient-to-r from-[var(--color-accent)] to-[var(--color-accent-light)] bg-clip-text text-transparent font-medium">
+            Sizning guruh jadvalingiz
+          </span>
         </p>
       </div>
 
@@ -276,11 +280,15 @@ function AdminDashboard() {
       {/* Header */}
       <div>
         <h1 className="text-[28px] font-bold tracking-tight md:text-[32px]">
-          Bosh sahifa
+          <span className="bg-gradient-to-r from-[var(--color-accent)] to-[var(--color-accent-light)] bg-clip-text text-transparent">
+            Bosh sahifa
+          </span>
         </h1>
-        <p className="text-sm text-[var(--muted)] mt-1">
-          {profile?.full_name ? `${profile.full_name}, dars` : "Dars"} jadvali
-          tizimiga xush kelibsiz
+        <p className="text-sm mt-1">
+          <span className="bg-gradient-to-r from-[var(--color-accent)]/70 to-[var(--color-accent-light)]/70 bg-clip-text text-transparent font-medium">
+            {profile?.full_name ? `${profile.full_name}, dars` : "Dars"} jadvali
+            tizimiga xush kelibsiz
+          </span>
         </p>
       </div>
 

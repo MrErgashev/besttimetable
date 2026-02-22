@@ -52,7 +52,9 @@ export default function ByTeacherPage() {
     <div className="max-w-full mx-auto space-y-6">
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-[28px] font-bold tracking-tight md:text-[32px]">O&apos;qituvchi bo&apos;yicha jadval</h1>
+          <h1 className="text-[28px] font-bold tracking-tight md:text-[32px]">
+            <span className="bg-gradient-to-r from-[var(--color-accent)] to-[var(--color-accent-light)] bg-clip-text text-transparent">O&apos;qituvchi bo&apos;yicha jadval</span>
+          </h1>
           <p className="text-sm text-[var(--muted)] mt-1">
             O&apos;qituvchining haftalik dars jadvali va yuklamasi
           </p>

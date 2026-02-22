@@ -34,8 +34,8 @@ const EXAMPLE_DATA: Record<EntityType, Record<string, string>[]> = {
     { name: "Lab-1", building: "B bino", capacity: "20", type: "laboratoriya", floor: "1" },
   ],
   users: [
-    { full_name: "Ergashev Sodiq", email: "sodiq@mail.uz" },
-    { full_name: "Karimova Dilnoza", email: "dilnoza@mail.uz" },
+    { full_name: "Ergashev Sodiq", login: "ergashev_s", password: "Sodiq2024" },
+    { full_name: "Karimova Dilnoza", login: "karimova_d", password: "Dilnoza2024" },
   ],
 };
 

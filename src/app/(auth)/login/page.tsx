@@ -13,7 +13,7 @@ import {
   UserCog,
   GraduationCap,
   BookOpen,
-  Mail,
+  User,
   Lock,
   Eye,
   EyeOff,
@@ -30,7 +30,7 @@ const SHOW_TEST_ACCOUNTS_KEY = "showTestAccounts";
 const TEST_ACCOUNTS = [
   {
     role: "Super Admin",
-    email: "superadmin@timetable.uz",
+    login: "superadmin@timetable.uz",
     password: "Test1234!",
     icon: Shield,
     color: "text-red-500",
@@ -39,7 +39,7 @@ const TEST_ACCOUNTS = [
   },
   {
     role: "Admin",
-    email: "admin@timetable.uz",
+    login: "admin@timetable.uz",
     password: "Test1234!",
     icon: UserCog,
     color: "text-blue-500",
@@ -48,7 +48,7 @@ const TEST_ACCOUNTS = [
   },
   {
     role: "O\u2018qituvchi",
-    email: "teacher@timetable.uz",
+    login: "teacher@timetable.uz",
     password: "Test1234!",
     icon: BookOpen,
     color: "text-green-500",
@@ -57,7 +57,7 @@ const TEST_ACCOUNTS = [
   },
   {
     role: "Talaba",
-    email: "student@timetable.uz",
+    login: "student@timetable.uz",
     password: "Test1234!",
     icon: GraduationCap,
     color: "text-violet-500",
@@ -71,6 +71,11 @@ const STATS = [
   { icon: Users, label: "O\u2018qituvchilar", value: 50 },
   { icon: Building2, label: "Xonalar", value: 30 },
 ];
+
+/** Login yoki email ni Supabase email formatiga aylantirish */
+function toAuthEmail(input: string): string {
+  return input.includes("@") ? input : `${input}@besttimetable.uz`;
+}
 
 function AnimatedCounter({ value, delay = 600 }: { value: number; delay?: number }) {
   const [count, setCount] = useState(0);
@@ -108,7 +113,7 @@ function AnimatedCounter({ value, delay = 600 }: { value: number; delay?: number
 
 export default function LoginPage() {
   const router = useRouter();
-  const [email, setEmail] = useState("");
+  const [login, setLogin] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
@@ -133,15 +138,15 @@ export default function LoginPage() {
     try {
       const supabase = createClient();
       const { error: authError } = await supabase.auth.signInWithPassword({
-        email,
+        email: toAuthEmail(login),
         password,
       });
 
       if (authError) {
         if (authError.message.includes("Invalid login")) {
-          setError("Email yoki parol noto\u2018g\u2018ri");
+          setError("Login yoki parol noto\u2018g\u2018ri");
         } else if (authError.message.includes("Email not confirmed")) {
-          setError("Email tasdiqlanmagan. Pochtangizni tekshiring.");
+          setError("Hisob tasdiqlanmagan. Administratorga murojaat qiling.");
         } else {
           setError(authError.message);
         }
@@ -164,9 +169,9 @@ export default function LoginPage() {
     setTimeout(() => setShakeError(false), 600);
   }
 
-  function fillCredentials(fillEmail: string, fillPassword: string) {
-    setEmail(fillEmail);
-    setPassword(fillPassword);
+  function fillCredentials(loginVal: string, pwd: string) {
+    setLogin(loginVal);
+    setPassword(pwd);
     setError("");
   }
 
@@ -195,7 +200,6 @@ export default function LoginPage() {
               alt="Oriental Universiteti"
               width={120}
               height={120}
-              className="drop-shadow-lg"
               priority
             />
           </div>
@@ -260,7 +264,6 @@ export default function LoginPage() {
                 alt="Oriental Universiteti"
                 width={100}
                 height={100}
-                className="drop-shadow-md"
                 priority
               />
             </div>
@@ -293,16 +296,17 @@ export default function LoginPage() {
               </div>
 
               <form onSubmit={handleSubmit} className="space-y-4">
-                {/* Email input with icon */}
+                {/* Login input with icon */}
                 <div className="relative">
-                  <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-[18px] h-[18px] text-[var(--muted-light)] z-10 pointer-events-none" />
+                  <User className="absolute left-4 top-1/2 -translate-y-1/2 w-[18px] h-[18px] text-[var(--muted-light)] z-10 pointer-events-none" />
                   <Input
-                    type="email"
-                    placeholder="Email manzilingiz"
-                    aria-label="Email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
+                    type="text"
+                    placeholder="Login yoki email"
+                    aria-label="Login"
+                    value={login}
+                    onChange={(e) => setLogin(e.target.value)}
                     required
+                    autoComplete="username"
                     className="pl-11"
                   />
                 </div>
@@ -317,6 +321,7 @@ export default function LoginPage() {
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     required
+                    autoComplete="current-password"
                     className="pl-11 pr-12"
                   />
                   <button
@@ -436,9 +441,9 @@ export default function LoginPage() {
                 <div className="apple-card rounded-[var(--radius-lg)] p-4 space-y-2">
                   {TEST_ACCOUNTS.map((acc) => (
                     <button
-                      key={acc.email}
+                      key={acc.login}
                       type="button"
-                      onClick={() => fillCredentials(acc.email, acc.password)}
+                      onClick={() => fillCredentials(acc.login, acc.password)}
                       className="w-full flex items-center gap-3 p-2.5 rounded-[var(--radius)] bg-[var(--glass-bg)] backdrop-blur-[var(--glass-blur-light)] hover:bg-[var(--glass-bg-heavy)] border border-[var(--glass-border-subtle)] transition-all duration-300 [transition-timing-function:var(--spring-smooth)] text-left group"
                     >
                       <div

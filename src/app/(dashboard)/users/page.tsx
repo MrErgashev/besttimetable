@@ -29,8 +29,20 @@ import { useGroupStore } from "@/stores/useGroupStore";
 import { useHydration } from "@/hooks/useHydration";
 import type { AppUser, UserRole } from "@/lib/types";
 
+/** Login yoki email ni Supabase email formatiga aylantirish */
+function toAuthEmail(input: string): string {
+  return input.includes("@") ? input : `${input}@besttimetable.uz`;
+}
+
+/** Email dan login qismini ajratib olish */
+function extractLogin(email: string): string {
+  if (email.endsWith("@besttimetable.uz")) {
+    return email.replace("@besttimetable.uz", "");
+  }
+  return email;
+}
+
 // Demo rejimda ko'rsatiladigan foydalanuvchilar (Supabase ulanmagan holat)
-// Email'lar demo-data.ts dagi o'qituvchilarga mos keladi
 const DEMO_USERS: AppUser[] = [
   {
     id: "demo-1",
@@ -41,21 +53,21 @@ const DEMO_USERS: AppUser[] = [
   },
   {
     id: "demo-2",
-    email: "n.karimova@edu.uz",
+    email: "karimova_n@besttimetable.uz",
     full_name: "Karimova Nilufar",
     role: "teacher",
     created_at: "2025-09-05T14:30:00Z",
   },
   {
     id: "demo-3",
-    email: "b.ergashev@edu.uz",
+    email: "ergashev_b@besttimetable.uz",
     full_name: "Ergashev Bobur",
     role: "teacher",
     created_at: "2025-09-10T09:15:00Z",
   },
   {
     id: "demo-4",
-    email: "j.rahimov@student.uz",
+    email: "rahimov_j@besttimetable.uz",
     full_name: "Rahimov Jasur",
     role: "student",
     created_at: "2025-10-01T11:00:00Z",
@@ -83,7 +95,7 @@ export default function UsersPage() {
   const [successMsg, setSuccessMsg] = useState("");
 
   // Form states
-  const [newEmail, setNewEmail] = useState("");
+  const [newLogin, setNewLogin] = useState("");
   const [newFullName, setNewFullName] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [newRole, setNewRole] = useState<string>("teacher");
@@ -166,11 +178,17 @@ export default function UsersPage() {
       return;
     }
 
+    if (!newLogin.trim()) {
+      setFormError("Login kiritilishi shart");
+      setFormLoading(false);
+      return;
+    }
+
     try {
-      // Supabase Auth orqali yangi foydalanuvchi yaratish
-      // Admin tomonidan yaratilgani uchun email tasdiqlash kerak emas
+      const email = toAuthEmail(newLogin.trim());
+
       const { error: signUpError } = await supabase.auth.signUp({
-        email: newEmail,
+        email,
         password: newPassword,
         options: {
           data: {
@@ -182,7 +200,7 @@ export default function UsersPage() {
 
       if (signUpError) {
         if (signUpError.message.includes("already registered")) {
-          setFormError("Bu email allaqachon ro'yxatdan o'tgan");
+          setFormError("Bu login allaqachon ro'yxatdan o'tgan");
         } else {
           setFormError(signUpError.message);
         }
@@ -224,7 +242,7 @@ export default function UsersPage() {
   }
 
   function resetForm() {
-    setNewEmail("");
+    setNewLogin("");
     setNewFullName("");
     setNewPassword("");
     setNewRole("teacher");
@@ -232,7 +250,7 @@ export default function UsersPage() {
   }
 
   async function handleBulkImport(
-    usersToCreate: { full_name: string; email: string; password: string; role: string }[]
+    usersToCreate: { full_name: string; login: string; password: string; role: string }[]
   ): Promise<{ success: number; failed: number; errors: string[] }> {
     let success = 0;
     let failed = 0;
@@ -240,8 +258,10 @@ export default function UsersPage() {
 
     for (const u of usersToCreate) {
       try {
+        const email = toAuthEmail(u.login);
+
         const { error: signUpError } = await supabase.auth.signUp({
-          email: u.email,
+          email,
           password: u.password,
           options: {
             data: {
@@ -254,16 +274,16 @@ export default function UsersPage() {
         if (signUpError) {
           failed++;
           if (signUpError.message.includes("already registered")) {
-            errors.push(`${u.email} — allaqachon ro'yxatdan o'tgan`);
+            errors.push(`${u.login} — allaqachon ro'yxatdan o'tgan`);
           } else {
-            errors.push(`${u.email} — ${signUpError.message}`);
+            errors.push(`${u.login} — ${signUpError.message}`);
           }
         } else {
           success++;
         }
       } catch {
         failed++;
-        errors.push(`${u.email} — kutilmagan xatolik`);
+        errors.push(`${u.login} — kutilmagan xatolik`);
       }
     }
 
@@ -357,7 +377,7 @@ export default function UsersPage() {
             <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-[var(--muted)]" />
             <input
               type="text"
-              placeholder="Ism yoki email bo'yicha qidirish..."
+              placeholder="Ism yoki login bo'yicha qidirish..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               className="w-full pl-10 pr-4 py-2.5 text-sm rounded-[10px] bg-[var(--surface-secondary)] border border-[var(--border)] text-[var(--foreground)] focus:border-[var(--color-accent)] focus:ring-2 focus:ring-[var(--color-accent)]/20 focus:outline-none"
@@ -416,7 +436,7 @@ export default function UsersPage() {
                       {user.full_name || "Nomi ko'rsatilmagan"}
                     </div>
                     <div className="text-sm text-[var(--muted)] truncate">
-                      {user.email}
+                      {extractLogin(user.email)}
                     </div>
                     {/* Foydalanuvchi tafsilotlari */}
                     {user.role === "teacher" && detail && detail.subjects.length > 0 && (
@@ -533,11 +553,11 @@ export default function UsersPage() {
             required
           />
           <Input
-            label="Email"
-            type="email"
-            placeholder="email@example.com"
-            value={newEmail}
-            onChange={(e) => setNewEmail(e.target.value)}
+            label="Login"
+            type="text"
+            placeholder="masalan: karimova_n"
+            value={newLogin}
+            onChange={(e) => setNewLogin(e.target.value)}
             required
           />
           <Input

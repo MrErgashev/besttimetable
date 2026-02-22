@@ -28,7 +28,7 @@ type ImportMode = "paste" | "file";
 type Step = "choose" | "paste" | "file-upload" | "mapping" | "preview" | "importing" | "result";
 
 interface BulkUserImportProps {
-  onImport: (users: { full_name: string; email: string; password: string; role: string }[]) => Promise<{
+  onImport: (users: { full_name: string; login: string; password: string; role: string }[]) => Promise<{
     success: number;
     failed: number;
     errors: string[];
@@ -57,7 +57,7 @@ export function BulkUserImport({ onImport, onClose }: BulkUserImportProps) {
   // Mapping'dan keyin foydalanuvchilar ro'yxatini tuzish
   const mappedUsers = useMemo(() => {
     const fieldMap = new Map(config.fields.map((f) => [f.key, f]));
-    const items: { full_name: string; email: string }[] = [];
+    const items: { full_name: string; login: string; password?: string }[] = [];
 
     for (const row of parsedRows) {
       const item: Record<string, unknown> = {};
@@ -67,10 +67,11 @@ export function BulkUserImport({ onImport, onClose }: BulkUserImportProps) {
         const raw = row[Number(colIdx)] || "";
         item[fieldKey] = convertValue(raw, field);
       }
-      if (item.full_name && item.email) {
+      if (item.full_name && item.login) {
         items.push({
           full_name: String(item.full_name),
-          email: String(item.email),
+          login: String(item.login),
+          password: item.password ? String(item.password) : undefined,
         });
       }
     }
@@ -145,8 +146,9 @@ export function BulkUserImport({ onImport, onClose }: BulkUserImportProps) {
     setStep("importing");
 
     const usersToImport = mappedUsers.map((u) => ({
-      ...u,
-      password: defaultPassword,
+      full_name: u.full_name,
+      login: u.login,
+      password: u.password && u.password.length >= 6 ? u.password : defaultPassword,
       role,
     }));
 
@@ -181,7 +183,7 @@ export function BulkUserImport({ onImport, onClose }: BulkUserImportProps) {
             ]}
           />
           <Input
-            label="Umumiy parol"
+            label="Standart parol"
             type="text"
             value={defaultPassword}
             onChange={(e) => setDefaultPassword(e.target.value)}
@@ -265,7 +267,7 @@ export function BulkUserImport({ onImport, onClose }: BulkUserImportProps) {
         </p>
         <textarea
           className="w-full h-[200px] p-3 rounded-[10px] border border-[var(--border)] bg-[var(--surface-secondary)] text-sm font-mono resize-none focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)]"
-          placeholder={"To'liq ism\tEmail\nErgashev Sodiq\tsodiq@mail.com\nKarimov Ali\tali@mail.com\nRahimova Nargiz\tnargiz@mail.com"}
+          placeholder={"To'liq ism\tLogin\tParol\nErgashev Sodiq\tergashev_s\tSodiq2024\nKarimov Ali\tkarimov_a\tAli2024\nRahimova Nargiz\trahimova_n\tNargiz2024"}
           value={text}
           onChange={(e) => setText(e.target.value)}
         />
@@ -459,7 +461,8 @@ export function BulkUserImport({ onImport, onClose }: BulkUserImportProps) {
               <tr>
                 <th className="border border-[var(--border)] px-3 py-2 text-left bg-[var(--surface-secondary)]">#</th>
                 <th className="border border-[var(--border)] px-3 py-2 text-left bg-[var(--surface-secondary)]">To&apos;liq ism</th>
-                <th className="border border-[var(--border)] px-3 py-2 text-left bg-[var(--surface-secondary)]">Email</th>
+                <th className="border border-[var(--border)] px-3 py-2 text-left bg-[var(--surface-secondary)]">Login</th>
+                <th className="border border-[var(--border)] px-3 py-2 text-left bg-[var(--surface-secondary)]">Parol</th>
               </tr>
             </thead>
             <tbody>
@@ -467,7 +470,8 @@ export function BulkUserImport({ onImport, onClose }: BulkUserImportProps) {
                 <tr key={i}>
                   <td className="border border-[var(--border)] px-3 py-1.5 text-[var(--muted)]">{i + 1}</td>
                   <td className="border border-[var(--border)] px-3 py-1.5">{u.full_name}</td>
-                  <td className="border border-[var(--border)] px-3 py-1.5 font-mono text-xs">{u.email}</td>
+                  <td className="border border-[var(--border)] px-3 py-1.5 font-mono text-xs">{u.login}</td>
+                  <td className="border border-[var(--border)] px-3 py-1.5 font-mono text-xs text-[var(--muted)]">{u.password || defaultPassword}</td>
                 </tr>
               ))}
             </tbody>

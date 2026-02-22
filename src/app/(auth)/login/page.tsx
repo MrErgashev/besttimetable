@@ -185,21 +185,21 @@ export default function LoginPage() {
       </div>
 
       {/* ── LEFT PANEL: Branding (Desktop only) ────────── */}
-      <div className="hidden lg:flex lg:w-[55%] relative z-10 flex-col items-center justify-center p-12 xl:p-16">
+      <div className="hidden lg:flex lg:w-1/2 relative z-10 flex-col items-center justify-center p-10 xl:p-14">
         {/* Subtle accent gradient overlay */}
         <div className="absolute inset-0 bg-gradient-to-br from-[var(--color-accent)]/6 via-transparent to-[var(--color-accent)]/3 dark:from-[var(--color-accent)]/12 dark:via-transparent dark:to-[var(--color-accent)]/6" />
 
         <div className="relative z-10 max-w-lg">
           {/* Logo */}
           <div
-            className="mb-8 opacity-0"
+            className="mb-6 opacity-0"
             style={{ animation: "float-up 0.8s var(--spring-smooth) 0.1s forwards" }}
           >
             <Image
               src="/images/oriental-logo.png"
               alt="Oriental Universiteti"
-              width={120}
-              height={120}
+              width={80}
+              height={80}
               priority
             />
           </div>
@@ -209,7 +209,7 @@ export default function LoginPage() {
             className="mb-4 opacity-0"
             style={{ animation: "float-up 0.8s var(--spring-smooth) 0.2s forwards" }}
           >
-            <h1 className="text-4xl xl:text-5xl font-bold tracking-tight leading-tight">
+            <h1 className="text-3xl xl:text-4xl font-bold tracking-tight leading-tight">
               <span className="bg-gradient-to-r from-[var(--color-accent)] to-[var(--color-accent-light)] bg-clip-text text-transparent">
                 Dars jadvali
               </span>
@@ -222,7 +222,7 @@ export default function LoginPage() {
 
           {/* Slogan */}
           <p
-            className="text-lg text-[var(--muted)]/70 leading-relaxed mb-12 max-w-md opacity-0"
+            className="text-base text-[var(--muted)]/70 leading-relaxed mb-8 max-w-md opacity-0"
             style={{ animation: "float-up 0.8s var(--spring-smooth) 0.35s forwards" }}
           >
             Dars jadvalingizni oson rejalashtiring, vaqtingizni tejang.
@@ -231,16 +231,16 @@ export default function LoginPage() {
 
           {/* Stats */}
           <div
-            className="flex gap-4 opacity-0"
+            className="flex gap-3 opacity-0"
             style={{ animation: "float-up 0.8s var(--spring-smooth) 0.45s forwards" }}
           >
             {STATS.map((stat, i) => (
               <div
                 key={stat.label}
-                className="apple-card rounded-[var(--radius-lg)] p-4 flex-1 text-center"
+                className="apple-card rounded-[var(--radius-lg)] p-3 flex-1 text-center"
               >
                 <stat.icon className="w-5 h-5 text-[var(--color-accent)] mx-auto mb-2" />
-                <div className="text-2xl font-bold text-[var(--foreground)]">
+                <div className="text-xl font-bold text-[var(--foreground)]">
                   <AnimatedCounter value={stat.value} delay={800 + i * 200} />
                 </div>
                 <div className="text-xs text-[var(--muted)] mt-1">{stat.label}</div>
@@ -252,7 +252,7 @@ export default function LoginPage() {
 
       {/* ── RIGHT PANEL: Login Form ────────────────────── */}
       <div className="flex-1 flex flex-col items-center justify-center p-4 md:p-8 relative z-10">
-        <div className="w-full max-w-[420px]">
+        <div className="w-full max-w-sm">
           {/* Mobile branding (lg:hidden) */}
           <div className="lg:hidden text-center mb-8">
             <div
@@ -295,7 +295,7 @@ export default function LoginPage() {
                 </p>
               </div>
 
-              <form onSubmit={handleSubmit} className="space-y-4">
+              <form onSubmit={handleSubmit} className="space-y-3.5">
                 {/* Login input with icon */}
                 <div className="relative">
                   <User className="absolute left-4 top-1/2 -translate-y-1/2 w-[18px] h-[18px] text-[var(--muted-light)] z-10 pointer-events-none" />
@@ -417,14 +417,14 @@ export default function LoginPage() {
           {/* Test accounts — collapsible */}
           {mounted && showTestAccounts && (
             <div
-              className="mt-4 opacity-0"
+              className="mt-3 opacity-0"
               style={{ animation: "float-up 0.6s var(--spring-smooth) 0.5s forwards" }}
             >
               {/* Toggle button */}
               <button
                 type="button"
                 onClick={() => setTestAccountsExpanded(!testAccountsExpanded)}
-                className="w-full flex items-center justify-between px-5 py-3.5 apple-card rounded-[var(--radius-lg)] text-sm text-[var(--muted)] hover:text-[var(--foreground)] transition-colors"
+                className="w-full flex items-center justify-between px-4 py-3 apple-card rounded-[var(--radius-lg)] text-sm text-[var(--muted)] hover:text-[var(--foreground)] transition-colors"
               >
                 <span className="font-medium">Test hisoblar</span>
                 <ChevronDown
@@ -444,7 +444,7 @@ export default function LoginPage() {
                       key={acc.login}
                       type="button"
                       onClick={() => fillCredentials(acc.login, acc.password)}
-                      className="w-full flex items-center gap-3 p-2.5 rounded-[var(--radius)] bg-[var(--glass-bg)] backdrop-blur-[var(--glass-blur-light)] hover:bg-[var(--glass-bg-heavy)] border border-[var(--glass-border-subtle)] transition-all duration-300 [transition-timing-function:var(--spring-smooth)] text-left group"
+                      className="w-full flex items-center gap-3 p-2 rounded-[var(--radius)] bg-[var(--glass-bg)] backdrop-blur-[var(--glass-blur-light)] hover:bg-[var(--glass-bg-heavy)] border border-[var(--glass-border-subtle)] transition-all duration-300 [transition-timing-function:var(--spring-smooth)] text-left group"
                     >
                       <div
                         className={`w-8 h-8 rounded-lg ${acc.bg} flex items-center justify-center shrink-0`}
@@ -471,7 +471,7 @@ export default function LoginPage() {
 
           {/* Footer */}
           <p
-            className="mt-6 text-center text-xs text-[var(--muted-light)] opacity-0"
+            className="mt-5 text-center text-xs text-[var(--muted-light)] opacity-0"
             style={{ animation: "float-up 0.6s var(--spring-smooth) 0.65s forwards" }}
           >
             Oriental Universiteti &copy; 2026

@@ -529,17 +529,18 @@ Agar `NEXT_PUBLIC_SUPABASE_URL` sozlanmagan bo'lsa, ilova **demo rejimda** ishla
 - `src/app/(dashboard)/demo-data/page.tsx` — Demo ma'lumotlar boshqaruv sahifasi (faqat `super_admin` roli uchun)
 - `scripts/create-test-users.mjs` — Supabase da test foydalanuvchilarni yaratish skripti
 
-## Avtomatik PR Yaratish
+## Avtomatik PR Yaratish va Merge
 
-Har bir o'zgarish tugagandan keyin foydalanuvchi so'ramasdan ham **avtomatik PR yaratish va link berish MAJBURIY**.
+Har bir o'zgarish tugagandan keyin **avtomatik PR yaratish, merge qilish va link berish MAJBURIY**.
 
 **Tartib:**
 1. O'zgarishlarni commit qilish
 2. Branch ga push qilish
 3. `gh pr create` bilan PR yaratish
-4. PR link ni foydalanuvchiga ko'rsatish
+4. `gh pr merge --merge --delete-branch` bilan avtomatik merge qilish
+5. PR link ni foydalanuvchiga ko'rsatish (merge qilinganligi haqida xabar bilan)
 
-Foydalanuvchi faqat bitta ish qiladi — GitHub da "Merge" tugmasini bosadi. Boshqa hech narsa so'ralmasligi kerak.
+Foydalanuvchi hech narsa qilmaydi — o'zgartirish avtomatik main ga tushadi va Vercel deploy qiladi.
 
 ## O'zgarishlarni Qaytarish (Rollback)
 

@@ -134,7 +134,43 @@ export async function POST(request: NextRequest) {
             role: u.role || "student",
           },
         });
-        errorMsg = error?.message || null;
+
+        // Orphan auth entry ni tozalash: auth.users da bor, app_users da yo'q
+        if (error && (error.message.includes("already been registered") || error.message.includes("already exists"))) {
+          const { data: existingAppUser } = await adminClient
+            .from("app_users")
+            .select("id")
+            .eq("email", u.email)
+            .maybeSingle();
+
+          if (!existingAppUser) {
+            // Orphan: auth.users da bor lekin app_users da yo'q — tozalab qayta yaratish
+            const { data: listData } = await adminClient.auth.admin.listUsers();
+            const orphanUser = listData?.users?.find((au) => au.email === u.email);
+
+            if (orphanUser) {
+              await adminClient.auth.admin.deleteUser(orphanUser.id);
+
+              const { error: retryError } = await adminClient.auth.admin.createUser({
+                email: u.email,
+                password: u.password,
+                email_confirm: true,
+                user_metadata: {
+                  full_name: u.full_name || "",
+                  role: u.role || "student",
+                },
+              });
+              errorMsg = retryError?.message || null;
+            } else {
+              errorMsg = error.message;
+            }
+          } else {
+            // Haqiqiy duplikat — app_users da ham mavjud
+            errorMsg = error.message;
+          }
+        } else {
+          errorMsg = error?.message || null;
+        }
       } else if (anonClient) {
         // 2-usul: Oddiy signUp (Dashboard da "Confirm email" OFF bo'lishi kerak)
         const { error } = await anonClient.auth.signUp({

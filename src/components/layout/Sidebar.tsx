@@ -141,12 +141,16 @@ export function Sidebar() {
     <aside className="fixed left-0 top-0 h-full w-[var(--sidebar-width)] flex-col glass-primary border-r border-[var(--glass-border)] shadow-[var(--shadow-lg)] p-4 z-30 hidden lg:flex">
       {/* Logo */}
       <div className="mb-8 px-2">
-        <h1 className="text-xl font-bold text-[var(--color-accent)]">
-          BestTimetable
-        </h1>
-        <p className="text-xs text-[var(--muted)] mt-0.5">
-          Dars jadvali tizimi
-        </p>
+        <img
+          src="/images/logo-light.png"
+          alt="Oriental Universiteti"
+          className="h-10 w-auto block dark:hidden"
+        />
+        <img
+          src="/images/logo-dark.png"
+          alt="Oriental Universiteti"
+          className="h-10 w-auto hidden dark:block"
+        />
       </div>
 
       {/* Navigation */}

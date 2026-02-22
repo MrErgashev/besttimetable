@@ -529,6 +529,40 @@ Agar `NEXT_PUBLIC_SUPABASE_URL` sozlanmagan bo'lsa, ilova **demo rejimda** ishla
 - `src/app/(dashboard)/demo-data/page.tsx` — Demo ma'lumotlar boshqaruv sahifasi (faqat `super_admin` roli uchun)
 - `scripts/create-test-users.mjs` — Supabase da test foydalanuvchilarni yaratish skripti
 
+## O'zgarishlarni Qaytarish (Rollback)
+
+Har bir o'zgarish git commit orqali saqlanadi. Qaytarish uchun kodni qaytadan yozish MUMKIN EMAS — faqat git buyruqlari ishlatiladi.
+
+**Tartib:**
+
+1. **O'zgarish kiritishdan OLDIN** — avval joriy holatni commit qilish (checkpoint):
+   ```bash
+   git add <o'zgargan_fayllar> && git commit -m "checkpoint: <tavsif>"
+   ```
+
+2. **O'zgarish kiritgandan KEYIN** — yangi commit:
+   ```bash
+   git add <o'zgargan_fayllar> && git commit -m "<o'zgarish tavsifi>"
+   ```
+
+3. **Qaytarish kerak bo'lsa** — `git revert` bitta buyruq bilan:
+   ```bash
+   # Oxirgi commitni qaytarish:
+   git revert HEAD --no-edit
+
+   # Aniq bir commitni qaytarish:
+   git revert <commit-hash> --no-edit
+
+   # Bir nechta commitni qaytarish:
+   git revert <eski_commit>..<yangi_commit> --no-edit
+   ```
+
+**Qoidalar:**
+- Kodni qaytadan yozib qaytarish **TAQIQLANADI**
+- Har doim `git revert` ishlatish **MAJBURIY**
+- Har bir mustaqil o'zgarish alohida commitda bo'lishi kerak (kichik commitlar = oson qaytarish)
+- Foydalanuvchi "orqaga qaytar" desa → `git log` bilan oxirgi commitlarni ko'rsatish → `git revert` bilan qaytarish
+
 ## Kod Yozish Qoidalari
 
 - TypeScript strict mode yoqilgan

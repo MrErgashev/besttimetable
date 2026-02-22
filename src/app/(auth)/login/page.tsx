@@ -22,7 +22,6 @@ import {
   Calendar,
   Users,
   Building2,
-  ShieldCheck,
   X,
 } from "lucide-react";
 
@@ -201,32 +200,26 @@ export default function LoginPage() {
             />
           </div>
 
-          {/* University name */}
+          {/* Title */}
           <div
             className="mb-4 opacity-0"
             style={{ animation: "float-up 0.8s var(--spring-smooth) 0.2s forwards" }}
           >
-            <h1 className="text-4xl xl:text-5xl font-bold text-[var(--foreground)] tracking-tight leading-tight">
-              Oriental
-              <br />
+            <h1 className="text-4xl xl:text-5xl font-bold tracking-tight leading-tight">
               <span className="bg-gradient-to-r from-[var(--color-accent)] to-[var(--color-accent-light)] bg-clip-text text-transparent">
-                Universiteti
+                Dars jadvali
+              </span>
+              <br />
+              <span className="text-[var(--foreground)]">
+                boshqaruv tizimi
               </span>
             </h1>
           </div>
 
-          {/* Subtitle */}
-          <p
-            className="text-base text-[var(--muted)] mb-3 opacity-0"
-            style={{ animation: "float-up 0.8s var(--spring-smooth) 0.3s forwards" }}
-          >
-            Dars jadvali boshqaruv tizimi
-          </p>
-
           {/* Slogan */}
           <p
             className="text-lg text-[var(--muted)]/70 leading-relaxed mb-12 max-w-md opacity-0"
-            style={{ animation: "float-up 0.8s var(--spring-smooth) 0.4s forwards" }}
+            style={{ animation: "float-up 0.8s var(--spring-smooth) 0.35s forwards" }}
           >
             Dars jadvalingizni oson rejalashtiring, vaqtingizni tejang.
             Zamonaviy va qulay boshqaruv platformasi.
@@ -235,7 +228,7 @@ export default function LoginPage() {
           {/* Stats */}
           <div
             className="flex gap-4 opacity-0"
-            style={{ animation: "float-up 0.8s var(--spring-smooth) 0.55s forwards" }}
+            style={{ animation: "float-up 0.8s var(--spring-smooth) 0.45s forwards" }}
           >
             {STATS.map((stat, i) => (
               <div
@@ -272,20 +265,14 @@ export default function LoginPage() {
               />
             </div>
             <h1
-              className="text-2xl font-bold text-[var(--foreground)] opacity-0"
+              className="text-2xl font-bold opacity-0"
               style={{ animation: "float-up 0.6s var(--spring-smooth) 0.2s forwards" }}
             >
-              Oriental{" "}
               <span className="bg-gradient-to-r from-[var(--color-accent)] to-[var(--color-accent-light)] bg-clip-text text-transparent">
-                Universiteti
-              </span>
+                Dars jadvali
+              </span>{" "}
+              <span className="text-[var(--foreground)]">boshqaruv tizimi</span>
             </h1>
-            <p
-              className="text-sm text-[var(--muted)] mt-2 opacity-0"
-              style={{ animation: "float-up 0.6s var(--spring-smooth) 0.3s forwards" }}
-            >
-              Dars jadvali boshqaruv tizimi
-            </p>
           </div>
 
           {/* Login card */}
@@ -477,19 +464,13 @@ export default function LoginPage() {
             </div>
           )}
 
-          {/* Trust indicator + Footer */}
-          <div
-            className="mt-6 text-center opacity-0"
+          {/* Footer */}
+          <p
+            className="mt-6 text-center text-xs text-[var(--muted-light)] opacity-0"
             style={{ animation: "float-up 0.6s var(--spring-smooth) 0.65s forwards" }}
           >
-            <div className="flex items-center justify-center gap-1.5 text-xs text-[var(--muted-light)] mb-2">
-              <ShieldCheck className="w-3.5 h-3.5" />
-              <span>256-bit SSL shifrlash bilan himoyalangan</span>
-            </div>
-            <p className="text-xs text-[var(--muted-light)]">
-              Oriental Universiteti &copy; 2026
-            </p>
-          </div>
+            Oriental Universiteti &copy; 2026
+          </p>
         </div>
       </div>
     </div>

@@ -68,10 +68,10 @@ const TEST_ACCOUNTS = [
   },
 ];
 
-const STATS = [
-  { icon: Calendar, label: "Darslar", value: 500 },
-  { icon: Users, label: "O\u2018qituvchilar", value: 50 },
-  { icon: Building2, label: "Xonalar", value: 30 },
+const FEATURES = [
+  { icon: Calendar, label: "Dars jadvali" },
+  { icon: Users, label: "O\u2018qituvchilar" },
+  { icon: Building2, label: "Xonalar" },
 ];
 
 /* ── Helpers ───────────────────────────────────── */
@@ -240,27 +240,15 @@ export default function LoginPage() {
             className="flex gap-4 opacity-0"
             style={{ animation: "float-up 0.8s var(--spring-smooth) 0.5s forwards" }}
           >
-            {STATS.map((stat, i) => (
+            {FEATURES.map((feat) => (
               <div
-                key={stat.label}
-                className="flex flex-col items-center justify-center rounded-[20px] bg-[var(--glass-bg-heavy)] backdrop-blur-[var(--glass-blur)] border border-[var(--glass-border)] cursor-default transition-all duration-200 ease-out hover:-translate-y-1"
-                style={{
-                  width: 180,
-                  height: 128,
-                  boxShadow: "var(--shadow)",
-                }}
-                onMouseEnter={(e) => {
-                  (e.currentTarget as HTMLElement).style.boxShadow = "var(--shadow-lg)";
-                }}
-                onMouseLeave={(e) => {
-                  (e.currentTarget as HTMLElement).style.boxShadow = "var(--shadow)";
-                }}
+                key={feat.label}
+                className="apple-card rounded-[var(--radius-lg)] p-3 flex-1 text-center"
               >
-                <stat.icon className="w-6 h-6 text-blue-500 mb-3" />
-                <div className="text-[38px] font-bold text-[var(--foreground)] leading-none">
-                  <AnimatedCounter value={stat.value} delay={1000 + i * 200} />
+                <feat.icon className="w-5 h-5 text-[var(--color-accent)] mx-auto mb-2" />
+                <div className="text-sm font-medium text-[var(--foreground)]">
+                  {feat.label}
                 </div>
-                <div className="text-[16px] text-[var(--muted)] mt-2">{stat.label}</div>
               </div>
             ))}
           </div>

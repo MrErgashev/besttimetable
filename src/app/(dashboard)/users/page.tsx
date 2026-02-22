@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback, useMemo } from "react";
+import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { GlassCard } from "@/components/ui/GlassCard";
 import { GlassModal } from "@/components/ui/GlassModal";
@@ -27,6 +27,8 @@ import { useSubjectLoadStore } from "@/stores/useSubjectLoadStore";
 import { useSubjectStore } from "@/stores/useSubjectStore";
 import { useGroupStore } from "@/stores/useGroupStore";
 import { useHydration } from "@/hooks/useHydration";
+import { teacherSync } from "@/lib/supabase/sync";
+import { isSupabaseConfigured } from "@/lib/supabase/helpers";
 import type { AppUser, UserRole } from "@/lib/types";
 
 /** Login yoki email ni Supabase email formatiga aylantirish */
@@ -102,12 +104,14 @@ export default function UsersPage() {
   const [formLoading, setFormLoading] = useState(false);
   const [formError, setFormError] = useState("");
 
-  const supabase = createClient();
+  const supabaseRef = useRef(createClient());
+  const supabase = supabaseRef.current;
   const hydrated = useHydration();
 
   // Store'lar — foydalanuvchi tafsilotlarini ko'rsatish uchun
   const teachers = useTeacherStore((s) => s.teachers);
   const addTeacher = useTeacherStore((s) => s.addTeacher);
+  const deleteTeacher = useTeacherStore((s) => s.deleteTeacher);
   const loads = useSubjectLoadStore((s) => s.loads);
   const subjects = useSubjectStore((s) => s.subjects);
   const groups = useGroupStore((s) => s.groups);
@@ -132,6 +136,13 @@ export default function UsersPage() {
   }, [hydrated, teachers, loads, subjects, groups]);
 
   const fetchUsers = useCallback(async () => {
+    if (!isSupabaseConfigured()) {
+      // Demo rejimda foydalanuvchilar avval yuklanmagan bo'lsa DEMO_USERS
+      setUsers((prev) => (prev.length === 0 ? DEMO_USERS : prev));
+      setLoading(false);
+      return;
+    }
+
     try {
       const { data, error } = await supabase
         .from("app_users")
@@ -153,11 +164,9 @@ export default function UsersPage() {
           }))
         );
       } else {
-        // Supabase ulanmagan yoki ma'lumot yo'q — demo foydalanuvchilar
         setUsers(DEMO_USERS);
       }
     } catch {
-      // Supabase ulanmagan — demo foydalanuvchilarni ko'rsatish
       setUsers(DEMO_USERS);
     } finally {
       setLoading(false);
@@ -167,6 +176,18 @@ export default function UsersPage() {
   useEffect(() => {
     fetchUsers();
   }, [fetchUsers]);
+
+  /** Supabase dan o'qituvchilar ro'yxatini qayta yuklash */
+  async function refreshTeachersFromSupabase() {
+    try {
+      const freshTeachers = await teacherSync.fetchAll();
+      if (freshTeachers.length > 0) {
+        useTeacherStore.getState().bulkLoad(freshTeachers);
+      }
+    } catch {
+      // Xatolik bo'lsa jimgina o'tkazamiz — asosiy operatsiya allaqachon bajarilgan
+    }
+  }
 
   async function handleCreateUser(e: React.FormEvent) {
     e.preventDefault();
@@ -185,9 +206,46 @@ export default function UsersPage() {
       return;
     }
 
-    try {
-      const email = toAuthEmail(newLogin.trim());
+    const email = toAuthEmail(newLogin.trim());
 
+    // ── Demo rejim: Supabase yo'q — lokal state ga qo'shish ──
+    if (!isSupabaseConfigured()) {
+      const newUser: AppUser = {
+        id: crypto.randomUUID(),
+        email,
+        full_name: newFullName,
+        role: newRole as UserRole,
+        created_at: new Date().toISOString(),
+      };
+      setUsers((prev) => [newUser, ...prev]);
+
+      // O'qituvchi bo'lsa teacher store ga ham qo'shish
+      if (newRole === "teacher" && newFullName) {
+        const parts = newFullName.trim().split(/\s+/);
+        const lastName = parts[0] || "";
+        const firstName = parts.slice(1).join(" ") || "";
+        const shortName = firstName
+          ? `${lastName} ${firstName.charAt(0)}.`
+          : lastName;
+        addTeacher({
+          first_name: firstName,
+          last_name: lastName,
+          short_name: shortName,
+          email,
+          max_weekly_hours: 18,
+        });
+      }
+
+      setShowModal(false);
+      resetForm();
+      setSuccessMsg(`${newFullName} muvaffaqiyatli qo'shildi!`);
+      setTimeout(() => setSuccessMsg(""), 4000);
+      setFormLoading(false);
+      return;
+    }
+
+    // ── Supabase rejim: API orqali yaratish ──
+    try {
       const res = await fetch("/api/users/create", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -222,21 +280,11 @@ export default function UsersPage() {
         return;
       }
 
-      // O'qituvchi rolida bo'lsa, teacher store ga ham qo'shish
-      if (newRole === "teacher" && newFullName) {
-        const parts = newFullName.trim().split(/\s+/);
-        const lastName = parts[0] || "";
-        const firstName = parts.slice(1).join(" ") || "";
-        const shortName = firstName
-          ? `${lastName} ${firstName.charAt(0)}.`
-          : lastName;
-        addTeacher({
-          first_name: firstName,
-          last_name: lastName,
-          short_name: shortName,
-          email,
-          max_weekly_hours: 18,
-        });
+      // O'qituvchi rolida bo'lsa — API allaqachon teachers jadvaliga yozgan,
+      // shuning uchun addTeacher() chaqirmaymiz (dublikat bo'lmasligi uchun).
+      // O'rniga teachers ro'yxatini Supabase dan qayta yuklaymiz.
+      if (newRole === "teacher" && data.created_teachers?.length > 0) {
+        await refreshTeachersFromSupabase();
       }
 
       // Modal yopish va ro'yxatni yangilash
@@ -257,19 +305,37 @@ export default function UsersPage() {
   async function handleDeleteUser(userId: string, userName: string) {
     if (!confirm(`"${userName}" ni o'chirishga ishonchingiz komilmi?`)) return;
 
-    try {
-      const { error } = await supabase
-        .from("app_users")
-        .delete()
-        .eq("id", userId);
-      if (error) throw error;
-      setUsers((prev) => prev.filter((u) => u.id !== userId));
-      setSuccessMsg("Foydalanuvchi o'chirildi");
-      setTimeout(() => setSuccessMsg(""), 3000);
-    } catch {
-      setError("O'chirishda xatolik yuz berdi");
-      setTimeout(() => setError(""), 3000);
+    // O'chirilayotgan foydalanuvchini topish (teacher tozalash uchun)
+    const deletedUser = users.find((u) => u.id === userId);
+
+    if (isSupabaseConfigured()) {
+      try {
+        const { error } = await supabase
+          .from("app_users")
+          .delete()
+          .eq("id", userId);
+        if (error) throw error;
+      } catch {
+        setError("O'chirishda xatolik yuz berdi");
+        setTimeout(() => setError(""), 3000);
+        return;
+      }
     }
+
+    setUsers((prev) => prev.filter((u) => u.id !== userId));
+
+    // O'qituvchi bo'lsa — teacher store dan ham o'chirish
+    if (deletedUser?.role === "teacher" && deletedUser.email) {
+      const matchingTeacher = teachers.find(
+        (t) => t.email === deletedUser.email
+      );
+      if (matchingTeacher) {
+        deleteTeacher(matchingTeacher.id);
+      }
+    }
+
+    setSuccessMsg("Foydalanuvchi o'chirildi");
+    setTimeout(() => setSuccessMsg(""), 3000);
   }
 
   function resetForm() {
@@ -283,6 +349,41 @@ export default function UsersPage() {
   async function handleBulkImport(
     usersToCreate: { full_name: string; login: string; password: string; role: string }[]
   ): Promise<{ success: number; failed: number; errors: string[] }> {
+    // ── Demo rejim: lokal state ga qo'shish ──
+    if (!isSupabaseConfigured()) {
+      let success = 0;
+      for (const u of usersToCreate) {
+        const email = toAuthEmail(u.login);
+        const newUser: AppUser = {
+          id: crypto.randomUUID(),
+          email,
+          full_name: u.full_name,
+          role: u.role as UserRole,
+          created_at: new Date().toISOString(),
+        };
+        setUsers((prev) => [newUser, ...prev]);
+        success++;
+
+        if (u.role === "teacher" && u.full_name) {
+          const parts = u.full_name.trim().split(/\s+/);
+          const lastName = parts[0] || "";
+          const firstName = parts.slice(1).join(" ") || "";
+          const shortName = firstName
+            ? `${lastName} ${firstName.charAt(0)}.`
+            : lastName;
+          addTeacher({
+            first_name: firstName,
+            last_name: lastName,
+            short_name: shortName,
+            email,
+            max_weekly_hours: 18,
+          });
+        }
+      }
+      return { success, failed: 0, errors: [] };
+    }
+
+    // ── Supabase rejim ──
     try {
       const res = await fetch("/api/users/create", {
         method: "POST",
@@ -308,23 +409,10 @@ export default function UsersPage() {
 
       const data = await res.json();
 
-      // O'qituvchi rolida yaratilganlarni teacher store ga ham qo'shish
+      // O'qituvchilar yaratilgan bo'lsa — Supabase dan qayta yuklash
+      // (API allaqachon teachers jadvaliga yozgan, addTeacher() chaqirmaymiz)
       if (data.created_teachers?.length > 0) {
-        for (const t of data.created_teachers) {
-          const parts = t.full_name.trim().split(/\s+/);
-          const lastName = parts[0] || "";
-          const firstName = parts.slice(1).join(" ") || "";
-          const shortName = firstName
-            ? `${lastName} ${firstName.charAt(0)}.`
-            : lastName;
-          addTeacher({
-            first_name: firstName,
-            last_name: lastName,
-            short_name: shortName,
-            email: t.email,
-            max_weekly_hours: 18,
-          });
-        }
+        await refreshTeachersFromSupabase();
       }
 
       // Ro'yxatni yangilash

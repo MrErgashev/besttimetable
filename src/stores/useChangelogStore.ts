@@ -3,8 +3,8 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import type { ScheduleChangelog, ID } from "@/lib/types";
+import { isSupabaseConfigured } from "@/lib/supabase/helpers";
 import { changelogSync } from "@/lib/supabase/sync";
-import { syncSafe } from "@/lib/supabase/sync-safe";
 
 interface ChangelogState {
   logs: ScheduleChangelog[];
@@ -27,7 +27,9 @@ export const useChangelogStore = create<ChangelogState>()(
           changed_at: new Date().toISOString(),
         };
         set((s) => ({ logs: [log, ...s.logs] }));
-        syncSafe(() => changelogSync.insert(log));
+        if (isSupabaseConfigured()) {
+          changelogSync.insert(log).catch(console.error);
+        }
       },
 
       getLogs: (limit = 50) => get().logs.slice(0, limit),
@@ -37,7 +39,9 @@ export const useChangelogStore = create<ChangelogState>()(
 
       clearAll: () => {
         set({ logs: [] });
-        syncSafe(() => changelogSync.removeAll());
+        if (isSupabaseConfigured()) {
+          changelogSync.removeAll().catch(console.error);
+        }
       },
 
       bulkLoad: (logs) => set({ logs }),

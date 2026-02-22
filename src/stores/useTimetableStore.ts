@@ -3,8 +3,8 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import type { ScheduleEntry, ID, DayKey } from "@/lib/types";
+import { isSupabaseConfigured } from "@/lib/supabase/helpers";
 import { scheduleSync } from "@/lib/supabase/sync";
-import { syncSafe } from "@/lib/supabase/sync-safe";
 
 interface TimetableState {
   entries: ScheduleEntry[];
@@ -38,7 +38,9 @@ export const useTimetableStore = create<TimetableState>()(
           updated_at: new Date().toISOString(),
         };
         set((s) => ({ entries: [...s.entries, entry] }));
-        syncSafe(() => scheduleSync.insert(entry));
+        if (isSupabaseConfigured()) {
+          scheduleSync.insert(entry).catch(console.error);
+        }
         return entry;
       },
 
@@ -55,19 +57,25 @@ export const useTimetableStore = create<TimetableState>()(
               : e
           ),
         }));
-        syncSafe(() =>
-          scheduleSync.update(entryId, { day: newDay, slot_id: newSlotId } as Partial<ScheduleEntry>)
-        );
+        if (isSupabaseConfigured()) {
+          scheduleSync
+            .update(entryId, { day: newDay, slot_id: newSlotId } as Partial<ScheduleEntry>)
+            .catch(console.error);
+        }
       },
 
       removeEntry: (entryId) => {
         set((s) => ({ entries: s.entries.filter((e) => e.id !== entryId) }));
-        syncSafe(() => scheduleSync.remove(entryId));
+        if (isSupabaseConfigured()) {
+          scheduleSync.remove(entryId).catch(console.error);
+        }
       },
 
       clearAll: () => {
         set({ entries: [] });
-        syncSafe(() => scheduleSync.removeAll());
+        if (isSupabaseConfigured()) {
+          scheduleSync.removeAll().catch(console.error);
+        }
       },
 
       bulkLoad: (entries) => set({ entries }),

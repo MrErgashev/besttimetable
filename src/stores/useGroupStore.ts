@@ -3,8 +3,8 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import type { Group, ID } from "@/lib/types";
+import { isSupabaseConfigured } from "@/lib/supabase/helpers";
 import { groupSync } from "@/lib/supabase/sync";
-import { syncSafe } from "@/lib/supabase/sync-safe";
 
 interface GroupState {
   groups: Group[];
@@ -33,7 +33,9 @@ export const useGroupStore = create<GroupState>()(
           updated_at: new Date().toISOString(),
         };
         set((s) => ({ groups: [...s.groups, group] }));
-        syncSafe(() => groupSync.insert(group));
+        if (isSupabaseConfigured()) {
+          groupSync.insert(group).catch(console.error);
+        }
         return group;
       },
 
@@ -46,7 +48,9 @@ export const useGroupStore = create<GroupState>()(
           updated_at: now,
         }));
         set((s) => ({ groups: [...s.groups, ...newGroups] }));
-        syncSafe(() => groupSync.bulkInsert(newGroups));
+        if (isSupabaseConfigured()) {
+          groupSync.bulkInsert(newGroups).catch(console.error);
+        }
         return newGroups.length;
       },
 
@@ -58,7 +62,9 @@ export const useGroupStore = create<GroupState>()(
               : g
           ),
         }));
-        syncSafe(() => groupSync.update(id, data));
+        if (isSupabaseConfigured()) {
+          groupSync.update(id, data).catch(console.error);
+        }
       },
 
       bulkUpdateGroups: (ids, data) => {
@@ -70,12 +76,16 @@ export const useGroupStore = create<GroupState>()(
               : g
           ),
         }));
-        ids.forEach((id) => syncSafe(() => groupSync.update(id, data)));
+        if (isSupabaseConfigured()) {
+          ids.forEach((id) => groupSync.update(id, data).catch(console.error));
+        }
       },
 
       deleteGroup: (id) => {
         set((s) => ({ groups: s.groups.filter((g) => g.id !== id) }));
-        syncSafe(() => groupSync.remove(id));
+        if (isSupabaseConfigured()) {
+          groupSync.remove(id).catch(console.error);
+        }
       },
 
       deleteGroups: (ids) => {
@@ -83,7 +93,9 @@ export const useGroupStore = create<GroupState>()(
         set((s) => ({
           groups: s.groups.filter((g) => !idSet.has(g.id)),
         }));
-        syncSafe(() => groupSync.removeMany(ids));
+        if (isSupabaseConfigured()) {
+          groupSync.removeMany(ids).catch(console.error);
+        }
       },
 
       getGroupById: (id) => get().groups.find((g) => g.id === id),

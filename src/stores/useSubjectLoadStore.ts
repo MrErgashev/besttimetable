@@ -3,8 +3,8 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import type { SubjectLoad, ID } from "@/lib/types";
+import { isSupabaseConfigured } from "@/lib/supabase/helpers";
 import { subjectLoadSync } from "@/lib/supabase/sync";
-import { syncSafe } from "@/lib/supabase/sync-safe";
 
 interface SubjectLoadState {
   loads: SubjectLoad[];
@@ -26,7 +26,9 @@ export const useSubjectLoadStore = create<SubjectLoadState>()(
       addLoad: (data) => {
         const load: SubjectLoad = { ...data, id: crypto.randomUUID() };
         set((s) => ({ loads: [...s.loads, load] }));
-        syncSafe(() => subjectLoadSync.insert(load));
+        if (isSupabaseConfigured()) {
+          subjectLoadSync.insert(load).catch(console.error);
+        }
         return load;
       },
 
@@ -34,12 +36,16 @@ export const useSubjectLoadStore = create<SubjectLoadState>()(
         set((s) => ({
           loads: s.loads.map((l) => (l.id === id ? { ...l, ...data } : l)),
         }));
-        syncSafe(() => subjectLoadSync.update(id, data));
+        if (isSupabaseConfigured()) {
+          subjectLoadSync.update(id, data).catch(console.error);
+        }
       },
 
       removeLoad: (id) => {
         set((s) => ({ loads: s.loads.filter((l) => l.id !== id) }));
-        syncSafe(() => subjectLoadSync.remove(id));
+        if (isSupabaseConfigured()) {
+          subjectLoadSync.remove(id).catch(console.error);
+        }
       },
 
       getLoadsForGroup: (groupId) =>

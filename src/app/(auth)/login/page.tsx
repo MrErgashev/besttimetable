@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { createClient } from "@/lib/supabase/client";
+import { isSupabaseConfigured } from "@/lib/supabase/helpers";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { ThemeToggle } from "@/components/ui/ThemeToggle";
@@ -126,8 +127,13 @@ export default function LoginPage() {
 
   useEffect(() => {
     setMounted(true);
-    const stored = localStorage.getItem(SHOW_TEST_ACCOUNTS_KEY);
-    setShowTestAccounts(stored !== "false");
+    if (isSupabaseConfigured()) {
+      // Supabase ulangan — test hisoblar ko'rsatilmasin
+      setShowTestAccounts(false);
+    } else {
+      const stored = localStorage.getItem(SHOW_TEST_ACCOUNTS_KEY);
+      setShowTestAccounts(stored !== "false");
+    }
   }, []);
 
   async function handleSubmit(e: React.FormEvent) {

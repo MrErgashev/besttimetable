@@ -98,13 +98,6 @@ const MINI_GRID_CELLS = [
 const MINI_DAYS = ["Du", "Se", "Ch", "Pa"];
 const MINI_SLOTS = ["1-p", "2-p", "3-p"];
 
-/** Suzib yuruvchi dars kartalari */
-const FLOATING_SNIPPETS = [
-  { subject: "Matematika", detail: "08:30 - 10:00", style: { top: "8%", right: "8%" } },
-  { subject: "Fizika", detail: "A. Karimov", style: { top: "52%", right: "3%" } },
-  { subject: "Ingliz tili", detail: "204-xona", style: { bottom: "15%", left: "5%" } },
-];
-
 /** Login yoki email ni Supabase email formatiga aylantirish */
 function toAuthEmail(input: string): string {
   return input.includes("@") ? input : `${input}@besttimetable.uz`;
@@ -221,23 +214,6 @@ export default function LoginPage() {
       <div className="hidden lg:flex lg:w-1/2 relative z-10 flex-col items-center justify-center p-10 xl:p-14">
         {/* Subtle accent gradient overlay */}
         <div className="absolute inset-0 bg-gradient-to-br from-[var(--color-accent)]/6 via-transparent to-[var(--color-accent)]/3 dark:from-[var(--color-accent)]/12 dark:via-transparent dark:to-[var(--color-accent)]/6" />
-
-        {/* Floating glass snippet'lar */}
-        {FLOATING_SNIPPETS.map((snippet, i) => (
-          <div
-            key={snippet.subject}
-            className="absolute z-[5] opacity-0"
-            style={{
-              ...snippet.style,
-              animation: `orbFloat${i + 1} ${20 + i * 3}s ease-in-out infinite alternate, fade-in 1s var(--spring-smooth) ${1.2 + i * 0.4}s forwards`,
-            }}
-          >
-            <div className="apple-card rounded-[var(--radius)] px-3 py-2 opacity-50">
-              <div className="text-xs font-semibold text-[var(--foreground)]">{snippet.subject}</div>
-              <div className="text-[10px] text-[var(--muted)]">{snippet.detail}</div>
-            </div>
-          </div>
-        ))}
 
         <div className="relative z-10 max-w-lg">
           {/* Logo */}

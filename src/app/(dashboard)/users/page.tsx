@@ -310,13 +310,20 @@ export default function UsersPage() {
 
     if (isSupabaseConfigured()) {
       try {
-        const { error } = await supabase
-          .from("app_users")
-          .delete()
-          .eq("id", userId);
-        if (error) throw error;
-      } catch {
-        setError("O'chirishda xatolik yuz berdi");
+        // API orqali auth.users + app_users dan to'liq o'chirish
+        const res = await fetch("/api/users/delete", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ userId }),
+        });
+        if (!res.ok) {
+          const data = await res.json();
+          throw new Error(data.error || "O'chirishda xatolik");
+        }
+      } catch (err) {
+        setError(
+          err instanceof Error ? err.message : "O'chirishda xatolik yuz berdi"
+        );
         setTimeout(() => setError(""), 3000);
         return;
       }
@@ -332,6 +339,11 @@ export default function UsersPage() {
       if (matchingTeacher) {
         deleteTeacher(matchingTeacher.id);
       }
+    }
+
+    // Supabase rejimda teachers ni ham yangilash
+    if (isSupabaseConfigured() && deletedUser?.role === "teacher") {
+      await refreshTeachersFromSupabase();
     }
 
     setSuccessMsg("Foydalanuvchi o'chirildi");

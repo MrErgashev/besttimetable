@@ -533,12 +533,16 @@ Agar `NEXT_PUBLIC_SUPABASE_URL` sozlanmagan bo'lsa, ilova **demo rejimda** ishla
 
 Har bir o'zgarish tugagandan keyin **avtomatik PR yaratish, merge qilish va link berish MAJBURIY**.
 
+**GitHub CLI sozlangan:** `GH_TOKEN` environment variable `~/.profile` da doimiy saqlangan — har bir sessiyada avtomatik yuklanadi. Alohida `gh auth login` yoki `export GH_TOKEN=...` yozish KERAK EMAS.
+
 **Tartib:**
 1. O'zgarishlarni commit qilish
 2. Branch ga push qilish
-3. `gh pr create` bilan PR yaratish
-4. `gh pr merge --merge --delete-branch` bilan avtomatik merge qilish
+3. `gh pr create --repo MrErgashev/besttimetable` bilan PR yaratish
+4. `gh pr merge --repo MrErgashev/besttimetable --merge --delete-branch` bilan avtomatik merge qilish
 5. PR link ni foydalanuvchiga ko'rsatish (merge qilinganligi haqida xabar bilan)
+
+**Muhim:** `gh` buyruqlarida `--repo MrErgashev/besttimetable` flag ishlatish kerak (remote URL local proxy orqali ishlaydi).
 
 Foydalanuvchi hech narsa qilmaydi — o'zgartirish avtomatik main ga tushadi va Vercel deploy qiladi.
 

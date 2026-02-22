@@ -19,7 +19,7 @@ import type { ScheduleEntry } from "@/lib/types";
 export default function SubstitutionsPage() {
   const hydrated = useHydration();
   const { teachers } = useTeacherStore();
-  const { entries, bulkLoad } = useTimetableStore();
+  const { entries, updateEntry } = useTimetableStore();
   const { getSubjectById } = useSubjectStore();
   const { getRoomById } = useRoomStore();
   const { groups } = useGroupStore();
@@ -176,12 +176,7 @@ export default function SubstitutionsPage() {
               <Button
                 disabled={!substituteTeacherId}
                 onClick={() => {
-                  const updated = entries.map((e) =>
-                    e.id === selectedEntry.id
-                      ? { ...e, teacher_id: substituteTeacherId, updated_at: new Date().toISOString() }
-                      : e
-                  );
-                  bulkLoad(updated);
+                  updateEntry(selectedEntry.id, { teacher_id: substituteTeacherId });
                   setShowSubModal(false);
                 }}
               >

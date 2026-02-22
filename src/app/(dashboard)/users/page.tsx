@@ -107,6 +107,7 @@ export default function UsersPage() {
 
   // Store'lar — foydalanuvchi tafsilotlarini ko'rsatish uchun
   const teachers = useTeacherStore((s) => s.teachers);
+  const addTeacher = useTeacherStore((s) => s.addTeacher);
   const loads = useSubjectLoadStore((s) => s.loads);
   const subjects = useSubjectStore((s) => s.subjects);
   const groups = useGroupStore((s) => s.groups);
@@ -221,6 +222,23 @@ export default function UsersPage() {
         return;
       }
 
+      // O'qituvchi rolida bo'lsa, teacher store ga ham qo'shish
+      if (newRole === "teacher" && newFullName) {
+        const parts = newFullName.trim().split(/\s+/);
+        const lastName = parts[0] || "";
+        const firstName = parts.slice(1).join(" ") || "";
+        const shortName = firstName
+          ? `${lastName} ${firstName.charAt(0)}.`
+          : lastName;
+        addTeacher({
+          first_name: firstName,
+          last_name: lastName,
+          short_name: shortName,
+          email,
+          max_weekly_hours: 18,
+        });
+      }
+
       // Modal yopish va ro'yxatni yangilash
       setShowModal(false);
       resetForm();
@@ -289,6 +307,25 @@ export default function UsersPage() {
       }
 
       const data = await res.json();
+
+      // O'qituvchi rolida yaratilganlarni teacher store ga ham qo'shish
+      if (data.created_teachers?.length > 0) {
+        for (const t of data.created_teachers) {
+          const parts = t.full_name.trim().split(/\s+/);
+          const lastName = parts[0] || "";
+          const firstName = parts.slice(1).join(" ") || "";
+          const shortName = firstName
+            ? `${lastName} ${firstName.charAt(0)}.`
+            : lastName;
+          addTeacher({
+            first_name: firstName,
+            last_name: lastName,
+            short_name: shortName,
+            email: t.email,
+            max_weekly_hours: 18,
+          });
+        }
+      }
 
       // Ro'yxatni yangilash
       setTimeout(() => fetchUsers(), 1500);

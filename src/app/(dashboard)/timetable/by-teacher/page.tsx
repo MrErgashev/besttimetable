@@ -33,7 +33,7 @@ export default function ByTeacherPage() {
     [entries, activeTeacherId]
   );
 
-  // Haftalik yuklamani hisoblash (soatda)
+  // Haftalik yuklamani hisoblash (har bir juftlik = 1.5 soat)
   const weeklyHours = teacherEntries.length * 1.5;
 
   // Track bo'yicha guruhlash

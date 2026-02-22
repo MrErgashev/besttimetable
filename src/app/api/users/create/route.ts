@@ -10,6 +10,26 @@ interface CreateUserPayload {
   role: string;
 }
 
+/** full_name dan first_name, last_name, short_name ajratib olish */
+function parseFullName(fullName: string): {
+  first_name: string;
+  last_name: string;
+  short_name: string;
+} {
+  const parts = fullName.trim().split(/\s+/);
+  if (parts.length >= 2) {
+    const last_name = parts[0];
+    const first_name = parts.slice(1).join(" ");
+    const short_name = `${last_name} ${first_name.charAt(0)}.`;
+    return { first_name, last_name, short_name };
+  }
+  return {
+    first_name: fullName,
+    last_name: "",
+    short_name: fullName,
+  };
+}
+
 export async function POST(request: NextRequest) {
   try {
     // Demo rejimda ishlamaydi
@@ -85,7 +105,12 @@ export async function POST(request: NextRequest) {
         })
       : null;
 
-    const results = { success: 0, failed: 0, errors: [] as string[] };
+    const results = {
+      success: 0,
+      failed: 0,
+      errors: [] as string[],
+      created_teachers: [] as { full_name: string; email: string }[],
+    };
 
     for (const u of users) {
       const loginName = u.email?.split("@")[0] || "noma'lum";
@@ -144,6 +169,31 @@ export async function POST(request: NextRequest) {
         }
       } else {
         results.success++;
+
+        // O'qituvchi rolida bo'lsa, teachers jadvaliga ham yozish
+        if (u.role === "teacher" && u.full_name) {
+          const { first_name, last_name, short_name } = parseFullName(u.full_name);
+          const dbClient = adminClient || supabase;
+          await dbClient
+            .from("teachers")
+            .insert({
+              first_name,
+              last_name,
+              short_name,
+              email: u.email,
+              max_weekly_hours: 18,
+            })
+            .then(({ error: teacherErr }) => {
+              if (teacherErr) {
+                console.error("Teacher insert error:", teacherErr.message);
+              } else {
+                results.created_teachers.push({
+                  full_name: u.full_name,
+                  email: u.email,
+                });
+              }
+            });
+        }
       }
     }
 

@@ -187,22 +187,35 @@ export default function UsersPage() {
     try {
       const email = toAuthEmail(newLogin.trim());
 
-      const { error: signUpError } = await supabase.auth.signUp({
-        email,
-        password: newPassword,
-        options: {
-          data: {
-            full_name: newFullName,
-            role: newRole,
-          },
-        },
+      const res = await fetch("/api/users/create", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          users: [
+            {
+              email,
+              password: newPassword,
+              full_name: newFullName,
+              role: newRole,
+            },
+          ],
+        }),
       });
 
-      if (signUpError) {
-        if (signUpError.message.includes("already registered")) {
+      const data = await res.json();
+
+      if (!res.ok) {
+        setFormError(data.error || "Foydalanuvchi yaratishda xatolik");
+        setFormLoading(false);
+        return;
+      }
+
+      if (data.failed > 0 && data.errors?.length > 0) {
+        const msg = data.errors[0];
+        if (msg.includes("allaqachon")) {
           setFormError("Bu login allaqachon ro'yxatdan o'tgan");
         } else {
-          setFormError(signUpError.message);
+          setFormError(msg);
         }
         setFormLoading(false);
         return;
@@ -252,45 +265,46 @@ export default function UsersPage() {
   async function handleBulkImport(
     usersToCreate: { full_name: string; login: string; password: string; role: string }[]
   ): Promise<{ success: number; failed: number; errors: string[] }> {
-    let success = 0;
-    let failed = 0;
-    const errors: string[] = [];
+    try {
+      const res = await fetch("/api/users/create", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          users: usersToCreate.map((u) => ({
+            email: toAuthEmail(u.login),
+            password: u.password,
+            full_name: u.full_name,
+            role: u.role,
+          })),
+        }),
+      });
 
-    for (const u of usersToCreate) {
-      try {
-        const email = toAuthEmail(u.login);
-
-        const { error: signUpError } = await supabase.auth.signUp({
-          email,
-          password: u.password,
-          options: {
-            data: {
-              full_name: u.full_name,
-              role: u.role,
-            },
-          },
-        });
-
-        if (signUpError) {
-          failed++;
-          if (signUpError.message.includes("already registered")) {
-            errors.push(`${u.login} — allaqachon ro'yxatdan o'tgan`);
-          } else {
-            errors.push(`${u.login} — ${signUpError.message}`);
-          }
-        } else {
-          success++;
-        }
-      } catch {
-        failed++;
-        errors.push(`${u.login} — kutilmagan xatolik`);
+      if (!res.ok) {
+        const data = await res.json();
+        return {
+          success: 0,
+          failed: usersToCreate.length,
+          errors: [data.error || "Server xatolik"],
+        };
       }
+
+      const data = await res.json();
+
+      // Ro'yxatni yangilash
+      setTimeout(() => fetchUsers(), 1500);
+
+      return {
+        success: data.success,
+        failed: data.failed,
+        errors: data.errors || [],
+      };
+    } catch {
+      return {
+        success: 0,
+        failed: usersToCreate.length,
+        errors: ["Tarmoq xatolik — server bilan aloqa yo'q"],
+      };
     }
-
-    // Ro'yxatni yangilash
-    setTimeout(() => fetchUsers(), 1500);
-
-    return { success, failed, errors };
   }
 
   // Filtrlangan foydalanuvchilar

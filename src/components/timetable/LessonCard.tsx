@@ -36,7 +36,7 @@ export function LessonCard({
   return (
     <div
       ref={setNodeRef}
-      style={{ ...style, borderLeftColor: subject?.color || "#007AFF" }}
+      style={{ ...style, borderLeftColor: subject?.color || "#007AFF", touchAction: "none" }}
       {...listeners}
       {...attributes}
       className={cn(

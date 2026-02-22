@@ -144,12 +144,12 @@ export function Sidebar() {
         <img
           src="/images/logo-light.png"
           alt="Oriental Universiteti"
-          className="h-10 w-auto block dark:hidden"
+          className="h-14 w-auto block dark:hidden"
         />
         <img
           src="/images/logo-dark.png"
           alt="Oriental Universiteti"
-          className="h-10 w-auto hidden dark:block"
+          className="h-14 w-auto hidden dark:block"
         />
       </div>
 

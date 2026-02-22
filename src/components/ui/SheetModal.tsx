@@ -15,6 +15,7 @@ export function SheetModal({ open, onClose, title, children, size = "md" }: Shee
   const [isClosing, setIsClosing] = useState(false);
   const sheetRef = useRef<HTMLDivElement>(null);
   const previousFocusRef = useRef<HTMLElement | null>(null);
+  const mouseDownTarget = useRef<EventTarget | null>(null);
   const startY = useRef(0);
   const currentY = useRef(0);
   const titleId = useId();
@@ -133,7 +134,15 @@ export function SheetModal({ open, onClose, title, children, size = "md" }: Shee
       role="dialog"
       aria-modal="true"
       aria-labelledby={title ? titleId : undefined}
-      onClick={handleClose}
+      onMouseDown={(e) => { mouseDownTarget.current = e.target; }}
+      onClick={(e) => {
+        // Agar mousedown modal ichida boshlangan bo'lsa — yopmaslik
+        // (matn tanlashda sichqoncha tashqariga chiqsa modal yopilmasin)
+        if (sheetRef.current?.contains(mouseDownTarget.current as Node)) return;
+        // Agar click target modal ichida bo'lsa — yopmaslik
+        if (sheetRef.current?.contains(e.target as Node)) return;
+        handleClose();
+      }}
     >
       {/* Backdrop */}
       <div className="absolute inset-0 bg-black/30 backdrop-blur-md" />

@@ -209,7 +209,7 @@ export function SheetModal({ open, onClose, title, children, size = "md" }: Shee
         {/* Content */}
         <div
           ref={contentRef}
-          className="px-5 py-4 overflow-y-auto max-h-[70vh] overscroll-y-contain"
+          className="px-5 py-4 pb-[calc(var(--tab-bar-height)+var(--safe-area-bottom)+16px)] md:pb-4 overflow-y-auto max-h-[70vh] overscroll-y-contain"
         >
           {children}
         </div>

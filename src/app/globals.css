@@ -359,6 +359,12 @@ body {
 }
 
 /* ── Animations ─────────────────────────────── */
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
+  20%, 40%, 60%, 80% { transform: translateX(5px); }
+}
+
 @keyframes spring-up {
   0% { transform: translateY(100%); opacity: 0; }
   40% { transform: translateY(-6%); opacity: 1; }

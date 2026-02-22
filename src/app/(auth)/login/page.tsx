@@ -1,7 +1,8 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import Image from "next/image";
 import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/Button";
@@ -23,6 +24,11 @@ import {
   Users,
   Building2,
   X,
+  Sparkles,
+  CheckCircle2,
+  Clock,
+  BarChart3,
+  Zap,
 } from "lucide-react";
 
 const SHOW_TEST_ACCOUNTS_KEY = "showTestAccounts";
@@ -35,6 +41,7 @@ const TEST_ACCOUNTS = [
     icon: Shield,
     color: "text-red-500",
     bg: "bg-red-500/10",
+    border: "border-red-500/20",
     desc: "Tizimni to\u2018liq boshqaradi",
   },
   {
@@ -44,6 +51,7 @@ const TEST_ACCOUNTS = [
     icon: UserCog,
     color: "text-blue-500",
     bg: "bg-blue-500/10",
+    border: "border-blue-500/20",
     desc: "Bo\u2018lim jadvalini boshqaradi",
   },
   {
@@ -53,6 +61,7 @@ const TEST_ACCOUNTS = [
     icon: BookOpen,
     color: "text-green-500",
     bg: "bg-green-500/10",
+    border: "border-green-500/20",
     desc: "O\u2018z jadvalini ko\u2018radi",
   },
   {
@@ -62,6 +71,7 @@ const TEST_ACCOUNTS = [
     icon: GraduationCap,
     color: "text-violet-500",
     bg: "bg-violet-500/10",
+    border: "border-violet-500/20",
     desc: "Faqat jadval ko\u2018radi",
   },
 ];
@@ -72,9 +82,23 @@ const STATS = [
   { icon: Building2, label: "Xonalar", value: 30 },
 ];
 
+const FEATURES = [
+  { icon: Zap, text: "Avtomatik jadval generatsiyasi" },
+  { icon: Clock, text: "Real-time o\u2018zgarishlar" },
+  { icon: BarChart3, text: "Statistika va hisobotlar" },
+  { icon: CheckCircle2, text: "Ziddiyatlarni aniqlash" },
+];
+
 /** Login yoki email ni Supabase email formatiga aylantirish */
 function toAuthEmail(input: string): string {
   return input.includes("@") ? input : `${input}@besttimetable.uz`;
+}
+
+function getGreeting(): string {
+  const hour = new Date().getHours();
+  if (hour >= 5 && hour < 12) return "Xayrli tong";
+  if (hour >= 12 && hour < 18) return "Xayrli kun";
+  return "Xayrli kech";
 }
 
 function AnimatedCounter({ value, delay = 600 }: { value: number; delay?: number }) {
@@ -123,6 +147,8 @@ export default function LoginPage() {
   const [testAccountsExpanded, setTestAccountsExpanded] = useState(false);
   const [mounted, setMounted] = useState(false);
   const [shakeError, setShakeError] = useState(false);
+
+  const greeting = useMemo(() => getGreeting(), []);
 
   useEffect(() => {
     setMounted(true);
@@ -222,25 +248,45 @@ export default function LoginPage() {
 
           {/* Slogan */}
           <p
-            className="text-base text-[var(--muted)]/70 leading-relaxed mb-8 max-w-md opacity-0"
+            className="text-base text-[var(--muted)] leading-relaxed mb-8 max-w-md opacity-0"
             style={{ animation: "float-up 0.8s var(--spring-smooth) 0.35s forwards" }}
           >
             Dars jadvalingizni oson rejalashtiring, vaqtingizni tejang.
             Zamonaviy va qulay boshqaruv platformasi.
           </p>
 
+          {/* Feature list */}
+          <div
+            className="mb-8 space-y-3 opacity-0"
+            style={{ animation: "float-up 0.8s var(--spring-smooth) 0.4s forwards" }}
+          >
+            {FEATURES.map((feature, i) => (
+              <div
+                key={i}
+                className="flex items-center gap-3"
+              >
+                <div className="w-8 h-8 rounded-[var(--radius-sm)] bg-[var(--color-accent)]/10 flex items-center justify-center shrink-0">
+                  <feature.icon className="w-4 h-4 text-[var(--color-accent)]" />
+                </div>
+                <span className="text-sm text-[var(--foreground)]/80">{feature.text}</span>
+              </div>
+            ))}
+          </div>
+
           {/* Stats */}
           <div
             className="flex gap-3 opacity-0"
-            style={{ animation: "float-up 0.8s var(--spring-smooth) 0.45s forwards" }}
+            style={{ animation: "float-up 0.8s var(--spring-smooth) 0.5s forwards" }}
           >
             {STATS.map((stat, i) => (
               <div
                 key={stat.label}
-                className="apple-card rounded-[var(--radius-lg)] p-3 flex-1 text-center"
+                className="apple-card rounded-[var(--radius-lg)] p-4 flex-1 text-center"
               >
-                <stat.icon className="w-5 h-5 text-[var(--color-accent)] mx-auto mb-2" />
-                <div className="text-xl font-bold text-[var(--foreground)]">
+                <div className="w-9 h-9 rounded-[var(--radius-sm)] bg-[var(--color-accent)]/10 flex items-center justify-center mx-auto mb-2.5">
+                  <stat.icon className="w-[18px] h-[18px] text-[var(--color-accent)]" />
+                </div>
+                <div className="text-2xl font-bold text-[var(--foreground)]">
                   <AnimatedCounter value={stat.value} delay={800 + i * 200} />
                 </div>
                 <div className="text-xs text-[var(--muted)] mt-1">{stat.label}</div>
@@ -252,7 +298,7 @@ export default function LoginPage() {
 
       {/* ── RIGHT PANEL: Login Form ────────────────────── */}
       <div className="flex-1 flex flex-col items-center justify-center p-4 md:p-8 relative z-10">
-        <div className="w-full max-w-sm">
+        <div className="w-full max-w-[400px]">
           {/* Mobile branding (lg:hidden) */}
           <div className="lg:hidden text-center mb-8">
             <div
@@ -262,8 +308,8 @@ export default function LoginPage() {
               <Image
                 src="/images/oriental-logo.png"
                 alt="Oriental Universiteti"
-                width={100}
-                height={100}
+                width={88}
+                height={88}
                 priority
               />
             </div>
@@ -274,8 +320,16 @@ export default function LoginPage() {
               <span className="bg-gradient-to-r from-[var(--color-accent)] to-[var(--color-accent-light)] bg-clip-text text-transparent">
                 Dars jadvali
               </span>{" "}
-              <span className="bg-gradient-to-r from-[var(--color-accent)] to-[var(--color-accent-light)] bg-clip-text text-transparent">boshqaruv tizimi</span>
+              <span className="bg-gradient-to-r from-[var(--color-accent)] to-[var(--color-accent-light)] bg-clip-text text-transparent">
+                boshqaruv tizimi
+              </span>
             </h1>
+            <p
+              className="text-sm text-[var(--muted)] mt-2 opacity-0"
+              style={{ animation: "float-up 0.6s var(--spring-smooth) 0.25s forwards" }}
+            >
+              Zamonaviy jadval boshqaruv platformasi
+            </p>
           </div>
 
           {/* Login card */}
@@ -286,83 +340,103 @@ export default function LoginPage() {
             <div
               className={`apple-card rounded-[var(--radius-xl)] p-6 md:p-8 ${shakeError ? "animate-[shake_0.5s_ease-in-out]" : ""}`}
             >
+              {/* Greeting with decorative icon */}
               <div className="mb-6">
-                <h2 className="text-xl font-semibold text-[var(--foreground)]">
-                  Xush kelibsiz
-                </h2>
-                <p className="text-sm text-[var(--muted)] mt-1">
-                  Tizimga kirish uchun ma&apos;lumotlaringizni kiriting
-                </p>
+                <div className="flex items-center gap-3 mb-3">
+                  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[var(--color-accent)] to-[var(--color-accent-light)] flex items-center justify-center shadow-sm">
+                    <Sparkles className="w-5 h-5 text-white" />
+                  </div>
+                  <div>
+                    <h2 className="text-xl font-semibold text-[var(--foreground)]">
+                      {greeting}!
+                    </h2>
+                    <p className="text-[13px] text-[var(--muted)]">
+                      Tizimga kirish
+                    </p>
+                  </div>
+                </div>
               </div>
 
-              <form onSubmit={handleSubmit} className="space-y-3.5">
-                {/* Login input with icon */}
-                <div className="relative">
-                  <User className="absolute left-4 top-1/2 -translate-y-1/2 w-[18px] h-[18px] text-[var(--muted-light)] z-10 pointer-events-none" />
-                  <Input
-                    type="text"
-                    placeholder="Login yoki email"
-                    aria-label="Login"
-                    value={login}
-                    onChange={(e) => setLogin(e.target.value)}
-                    required
-                    autoComplete="username"
-                    className="pl-11"
-                  />
-                </div>
-
-                {/* Password input with icon and toggle */}
-                <div className="relative">
-                  <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-[18px] h-[18px] text-[var(--muted-light)] z-10 pointer-events-none" />
-                  <Input
-                    type={showPassword ? "text" : "password"}
-                    placeholder="Parolingiz"
-                    aria-label="Parol"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    required
-                    autoComplete="current-password"
-                    className="pl-11 pr-12"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 z-10 p-1.5 rounded-[var(--radius-sm)] hover:bg-[var(--glass-bg)] transition-colors"
-                    tabIndex={-1}
-                    aria-label={showPassword ? "Parolni yashirish" : "Parolni ko\u2018rsatish"}
-                  >
-                    {showPassword ? (
-                      <EyeOff className="w-[18px] h-[18px] text-[var(--muted)]" />
-                    ) : (
-                      <Eye className="w-[18px] h-[18px] text-[var(--muted)]" />
-                    )}
-                  </button>
-                </div>
-
-                {/* Remember me */}
-                <label className="flex items-center gap-2.5 cursor-pointer select-none">
-                  <div
-                    className={`w-[18px] h-[18px] rounded-[5px] border flex items-center justify-center transition-all duration-200 shrink-0 ${
-                      rememberMe
-                        ? "bg-[var(--color-accent)] border-[var(--color-accent)]"
-                        : "border-[var(--border-strong)] bg-[var(--glass-bg)] backdrop-blur-sm"
-                    }`}
-                    onClick={() => setRememberMe(!rememberMe)}
-                  >
-                    <svg
-                      className={`w-2.5 h-2.5 text-white transition-all duration-200 ${rememberMe ? "opacity-100 scale-100" : "opacity-0 scale-75"}`}
-                      viewBox="0 0 10 10"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="1.5"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    >
-                      <path d="M1.5 5.5L4 8L8.5 2" />
-                    </svg>
+              <form onSubmit={handleSubmit} className="space-y-4">
+                {/* Login input with label */}
+                <div>
+                  <label className="block text-[13px] font-medium text-[var(--muted)] mb-1.5">
+                    Login
+                  </label>
+                  <div className="relative">
+                    <User className="absolute left-4 top-1/2 -translate-y-1/2 w-[18px] h-[18px] text-[var(--muted-light)] z-10 pointer-events-none" />
+                    <Input
+                      type="text"
+                      placeholder="Login yoki email kiriting"
+                      aria-label="Login"
+                      value={login}
+                      onChange={(e) => setLogin(e.target.value)}
+                      required
+                      autoComplete="username"
+                      className="pl-11"
+                    />
                   </div>
-                  <span className="text-sm text-[var(--muted)]">Meni eslab qol</span>
-                </label>
+                </div>
+
+                {/* Password input with label */}
+                <div>
+                  <label className="block text-[13px] font-medium text-[var(--muted)] mb-1.5">
+                    Parol
+                  </label>
+                  <div className="relative">
+                    <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-[18px] h-[18px] text-[var(--muted-light)] z-10 pointer-events-none" />
+                    <Input
+                      type={showPassword ? "text" : "password"}
+                      placeholder="Parolingizni kiriting"
+                      aria-label="Parol"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      required
+                      autoComplete="current-password"
+                      className="pl-11 pr-12"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 z-10 p-1.5 rounded-[var(--radius-sm)] hover:bg-[var(--glass-bg)] transition-colors"
+                      tabIndex={-1}
+                      aria-label={showPassword ? "Parolni yashirish" : "Parolni ko\u2018rsatish"}
+                    >
+                      {showPassword ? (
+                        <EyeOff className="w-[18px] h-[18px] text-[var(--muted)]" />
+                      ) : (
+                        <Eye className="w-[18px] h-[18px] text-[var(--muted)]" />
+                      )}
+                    </button>
+                  </div>
+                </div>
+
+                {/* Remember me + Forgot password row */}
+                <div className="flex items-center justify-between">
+                  <label className="flex items-center gap-2.5 cursor-pointer select-none">
+                    <div
+                      className={`w-[18px] h-[18px] rounded-[5px] border flex items-center justify-center transition-all duration-200 shrink-0 ${
+                        rememberMe
+                          ? "bg-[var(--color-accent)] border-[var(--color-accent)]"
+                          : "border-[var(--border-strong)] bg-[var(--glass-bg)] backdrop-blur-sm"
+                      }`}
+                      onClick={() => setRememberMe(!rememberMe)}
+                    >
+                      <svg
+                        className={`w-2.5 h-2.5 text-white transition-all duration-200 ${rememberMe ? "opacity-100 scale-100" : "opacity-0 scale-75"}`}
+                        viewBox="0 0 10 10"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="1.5"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      >
+                        <path d="M1.5 5.5L4 8L8.5 2" />
+                      </svg>
+                    </div>
+                    <span className="text-sm text-[var(--muted)]">Meni eslab qol</span>
+                  </label>
+                </div>
 
                 {/* Error */}
                 {error && (
@@ -400,7 +474,7 @@ export default function LoginPage() {
                       </>
                     ) : (
                       <>
-                        Kirish
+                        Tizimga kirish
                         <ArrowRight className="w-4 h-4 transition-transform duration-300 group-hover:translate-x-1" />
                       </>
                     )}
@@ -411,13 +485,38 @@ export default function LoginPage() {
                   )}
                 </Button>
               </form>
+
+              {/* Register link */}
+              <div className="mt-5 text-center">
+                <p className="text-sm text-[var(--muted)]">
+                  Hisobingiz yo&apos;qmi?{" "}
+                  <Link
+                    href="/register"
+                    className="text-[var(--color-accent)] font-medium hover:underline underline-offset-2 transition-colors"
+                  >
+                    Ro&apos;yxatdan o&apos;tish
+                  </Link>
+                </p>
+              </div>
             </div>
           </div>
+
+          {/* Divider with "yoki" */}
+          {mounted && showTestAccounts && (
+            <div
+              className="flex items-center gap-3 my-4 opacity-0"
+              style={{ animation: "float-up 0.6s var(--spring-smooth) 0.45s forwards" }}
+            >
+              <div className="flex-1 h-px bg-[var(--border)]" />
+              <span className="text-xs text-[var(--muted-light)] font-medium uppercase tracking-wider">yoki</span>
+              <div className="flex-1 h-px bg-[var(--border)]" />
+            </div>
+          )}
 
           {/* Test accounts — collapsible */}
           {mounted && showTestAccounts && (
             <div
-              className="mt-3 opacity-0"
+              className="opacity-0"
               style={{ animation: "float-up 0.6s var(--spring-smooth) 0.5s forwards" }}
             >
               {/* Toggle button */}
@@ -426,7 +525,12 @@ export default function LoginPage() {
                 onClick={() => setTestAccountsExpanded(!testAccountsExpanded)}
                 className="w-full flex items-center justify-between px-4 py-3 apple-card rounded-[var(--radius-lg)] text-sm text-[var(--muted)] hover:text-[var(--foreground)] transition-colors"
               >
-                <span className="font-medium">Test hisoblar</span>
+                <div className="flex items-center gap-2">
+                  <div className="w-6 h-6 rounded-md bg-[var(--color-accent)]/10 flex items-center justify-center">
+                    <Users className="w-3.5 h-3.5 text-[var(--color-accent)]" />
+                  </div>
+                  <span className="font-medium">Test hisoblar</span>
+                </div>
                 <ChevronDown
                   className={`w-4 h-4 transition-transform duration-300 [transition-timing-function:var(--spring-smooth)] ${testAccountsExpanded ? "rotate-180" : ""}`}
                 />
@@ -438,44 +542,47 @@ export default function LoginPage() {
                   testAccountsExpanded ? "max-h-[500px] opacity-100 mt-2" : "max-h-0 opacity-0"
                 }`}
               >
-                <div className="apple-card rounded-[var(--radius-lg)] p-4 space-y-2">
+                <div className="grid grid-cols-2 gap-2">
                   {TEST_ACCOUNTS.map((acc) => (
                     <button
                       key={acc.login}
                       type="button"
                       onClick={() => fillCredentials(acc.login, acc.password)}
-                      className="w-full flex items-center gap-3 p-2 rounded-[var(--radius)] bg-[var(--glass-bg)] backdrop-blur-[var(--glass-blur-light)] hover:bg-[var(--glass-bg-heavy)] border border-[var(--glass-border-subtle)] transition-all duration-300 [transition-timing-function:var(--spring-smooth)] text-left group"
+                      className={`apple-card rounded-[var(--radius-lg)] p-3 flex flex-col items-center gap-2 text-center hover:scale-[1.02] active:scale-[0.98] transition-all duration-300 [transition-timing-function:var(--spring-smooth)] group border ${acc.border}`}
                     >
                       <div
-                        className={`w-8 h-8 rounded-lg ${acc.bg} flex items-center justify-center shrink-0`}
+                        className={`w-10 h-10 rounded-xl ${acc.bg} flex items-center justify-center transition-transform duration-300 group-hover:scale-110`}
                       >
-                        <acc.icon className={`w-4 h-4 ${acc.color}`} />
+                        <acc.icon className={`w-5 h-5 ${acc.color}`} />
                       </div>
-                      <div className="min-w-0 flex-1">
-                        <div className="text-sm font-medium truncate">{acc.role}</div>
-                        <div className="text-xs text-[var(--muted)] truncate">{acc.desc}</div>
-                      </div>
-                      <div className="text-xs text-[var(--color-accent)] opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
-                        Kirish
+                      <div>
+                        <div className="text-sm font-semibold text-[var(--foreground)]">{acc.role}</div>
+                        <div className="text-[11px] text-[var(--muted)] mt-0.5 leading-tight">{acc.desc}</div>
                       </div>
                     </button>
                   ))}
+                </div>
 
-                  <div className="p-2 rounded-[var(--radius-sm)] bg-[var(--color-warning)]/10 border border-[var(--color-warning)]/15 text-[var(--color-warning)] text-xs text-center">
-                    <strong>Parol:</strong> Test1234! (barchasi uchun)
-                  </div>
+                <div className="mt-2 p-2.5 rounded-[var(--radius)] bg-[var(--color-warning)]/8 border border-[var(--color-warning)]/15 text-[var(--color-warning)] text-xs text-center flex items-center justify-center gap-1.5">
+                  <Lock className="w-3 h-3" />
+                  <span><strong>Parol:</strong> Test1234!</span>
                 </div>
               </div>
             </div>
           )}
 
           {/* Footer */}
-          <p
-            className="mt-5 text-center text-xs text-[var(--muted-light)] opacity-0"
+          <div
+            className="mt-6 text-center opacity-0"
             style={{ animation: "float-up 0.6s var(--spring-smooth) 0.65s forwards" }}
           >
-            Oriental Universiteti &copy; 2026
-          </p>
+            <p className="text-xs text-[var(--muted-light)]">
+              Oriental Universiteti &copy; 2026
+            </p>
+            <p className="text-[10px] text-[var(--muted-light)]/50 mt-1">
+              v0.1.0 &middot; BestTimetable
+            </p>
+          </div>
         </div>
       </div>
     </div>

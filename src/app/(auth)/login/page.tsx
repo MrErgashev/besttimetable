@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Fragment } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { createClient } from "@/lib/supabase/client";
@@ -23,6 +23,9 @@ import {
   Users,
   Building2,
   X,
+  Sun,
+  CloudSun,
+  Moon,
 } from "lucide-react";
 
 const SHOW_TEST_ACCOUNTS_KEY = "showTestAccounts";
@@ -70,6 +73,36 @@ const STATS = [
   { icon: Calendar, label: "Darslar", value: 500 },
   { icon: Users, label: "O\u2018qituvchilar", value: 50 },
   { icon: Building2, label: "Xonalar", value: 30 },
+];
+
+/** Vaqtga asoslangan salomlash */
+function getGreeting(): { text: string; icon: typeof Sun } {
+  const hour = new Date().getHours();
+  if (hour >= 6 && hour < 12) return { text: "Xayrli tong", icon: Sun };
+  if (hour >= 12 && hour < 18) return { text: "Xayrli kun", icon: CloudSun };
+  return { text: "Xayrli kech", icon: Moon };
+}
+
+/** Mini jadval preview uchun katakchalar */
+const MINI_GRID_CELLS = [
+  { day: 0, slot: 0, color: "bg-[var(--color-accent)]/20", label: "Mat" },
+  { day: 1, slot: 1, color: "bg-[var(--color-success)]/20", label: "Fiz" },
+  { day: 0, slot: 2, color: "bg-[var(--color-warning)]/20", label: "Ing" },
+  { day: 2, slot: 0, color: "bg-[var(--color-accent)]/20", label: "Kim" },
+  { day: 3, slot: 1, color: "bg-[var(--color-success)]/20", label: "Bio" },
+  { day: 2, slot: 2, color: "bg-[var(--color-warning)]/20", label: "Tar" },
+  { day: 1, slot: 0, color: "bg-[var(--color-accent-light)]/15", label: "Adab" },
+  { day: 3, slot: 2, color: "bg-[var(--color-accent)]/15", label: "Rus" },
+];
+
+const MINI_DAYS = ["Du", "Se", "Ch", "Pa"];
+const MINI_SLOTS = ["1-p", "2-p", "3-p"];
+
+/** Suzib yuruvchi dars kartalari */
+const FLOATING_SNIPPETS = [
+  { subject: "Matematika", detail: "08:30 - 10:00", style: { top: "8%", right: "8%" } },
+  { subject: "Fizika", detail: "A. Karimov", style: { top: "52%", right: "3%" } },
+  { subject: "Ingliz tili", detail: "204-xona", style: { bottom: "15%", left: "5%" } },
 ];
 
 /** Login yoki email ni Supabase email formatiga aylantirish */
@@ -189,6 +222,23 @@ export default function LoginPage() {
         {/* Subtle accent gradient overlay */}
         <div className="absolute inset-0 bg-gradient-to-br from-[var(--color-accent)]/6 via-transparent to-[var(--color-accent)]/3 dark:from-[var(--color-accent)]/12 dark:via-transparent dark:to-[var(--color-accent)]/6" />
 
+        {/* Floating glass snippet'lar */}
+        {FLOATING_SNIPPETS.map((snippet, i) => (
+          <div
+            key={snippet.subject}
+            className="absolute z-[5] opacity-0"
+            style={{
+              ...snippet.style,
+              animation: `orbFloat${i + 1} ${20 + i * 3}s ease-in-out infinite alternate, fade-in 1s var(--spring-smooth) ${1.2 + i * 0.4}s forwards`,
+            }}
+          >
+            <div className="apple-card rounded-[var(--radius)] px-3 py-2 opacity-50">
+              <div className="text-xs font-semibold text-[var(--foreground)]">{snippet.subject}</div>
+              <div className="text-[10px] text-[var(--muted)]">{snippet.detail}</div>
+            </div>
+          </div>
+        ))}
+
         <div className="relative z-10 max-w-lg">
           {/* Logo */}
           <div
@@ -229,10 +279,63 @@ export default function LoginPage() {
             Zamonaviy va qulay boshqaruv platformasi.
           </p>
 
+          {/* Mini Jadval Preview */}
+          <div
+            className="mb-6 opacity-0"
+            style={{ animation: "float-up 0.8s var(--spring-smooth) 0.45s forwards" }}
+          >
+            <div className="apple-card rounded-[var(--radius-lg)] p-4">
+              <div className="grid grid-cols-5 gap-1.5">
+                {/* Header row */}
+                <div className="text-[10px] text-[var(--muted-light)] font-medium text-center py-1" />
+                {MINI_DAYS.map((day) => (
+                  <div key={day} className="text-[10px] text-[var(--muted)] font-semibold text-center py-1">
+                    {day}
+                  </div>
+                ))}
+
+                {/* Grid rows */}
+                {MINI_SLOTS.map((slot, slotIdx) => (
+                  <Fragment key={slot}>
+                    <div className="text-[10px] text-[var(--muted-light)] font-medium flex items-center justify-center">
+                      {slot}
+                    </div>
+                    {MINI_DAYS.map((_, dayIdx) => {
+                      const cell = MINI_GRID_CELLS.find(
+                        (c) => c.day === dayIdx && c.slot === slotIdx
+                      );
+                      return (
+                        <div
+                          key={`${dayIdx}-${slotIdx}`}
+                          className="opacity-0"
+                          style={{
+                            animation: `stagger-fade 0.4s var(--spring-smooth) ${0.6 + (slotIdx * 4 + dayIdx) * 0.08}s forwards`,
+                          }}
+                        >
+                          {cell ? (
+                            <div
+                              className={`${cell.color} rounded-[var(--radius-sm)] p-1.5 text-center backdrop-blur-sm border border-[var(--glass-border-subtle)]`}
+                            >
+                              <span className="text-[10px] font-semibold text-[var(--foreground)]">
+                                {cell.label}
+                              </span>
+                            </div>
+                          ) : (
+                            <div className="rounded-[var(--radius-sm)] p-1.5 bg-[var(--surface-secondary)]/40 min-h-[28px]" />
+                          )}
+                        </div>
+                      );
+                    })}
+                  </Fragment>
+                ))}
+              </div>
+            </div>
+          </div>
+
           {/* Stats */}
           <div
             className="flex gap-3 opacity-0"
-            style={{ animation: "float-up 0.8s var(--spring-smooth) 0.45s forwards" }}
+            style={{ animation: "float-up 0.8s var(--spring-smooth) 0.55s forwards" }}
           >
             {STATS.map((stat, i) => (
               <div
@@ -241,7 +344,7 @@ export default function LoginPage() {
               >
                 <stat.icon className="w-5 h-5 text-[var(--color-accent)] mx-auto mb-2" />
                 <div className="text-xl font-bold text-[var(--foreground)]">
-                  <AnimatedCounter value={stat.value} delay={800 + i * 200} />
+                  <AnimatedCounter value={stat.value} delay={1000 + i * 200} />
                 </div>
                 <div className="text-xs text-[var(--muted)] mt-1">{stat.label}</div>
               </div>
@@ -287,12 +390,25 @@ export default function LoginPage() {
               className={`apple-card rounded-[var(--radius-xl)] p-6 md:p-8 ${shakeError ? "animate-[shake_0.5s_ease-in-out]" : ""}`}
             >
               <div className="mb-6">
-                <h2 className="text-xl font-semibold text-[var(--foreground)]">
-                  Xush kelibsiz
-                </h2>
-                <p className="text-sm text-[var(--muted)] mt-1">
-                  Tizimga kirish uchun ma&apos;lumotlaringizni kiriting
-                </p>
+                {(() => {
+                  const greeting = getGreeting();
+                  const GreetingIcon = greeting.icon;
+                  return (
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-[var(--radius)] bg-[var(--color-accent)]/10 flex items-center justify-center shrink-0">
+                        <GreetingIcon className="w-5 h-5 text-[var(--color-accent)]" />
+                      </div>
+                      <div>
+                        <h2 className="text-xl font-semibold text-[var(--foreground)]">
+                          {greeting.text}
+                        </h2>
+                        <p className="text-sm text-[var(--muted)] mt-0.5">
+                          Tizimga kirish uchun ma&apos;lumotlaringizni kiriting
+                        </p>
+                      </div>
+                    </div>
+                  );
+                })()}
               </div>
 
               <form onSubmit={handleSubmit} className="space-y-3.5">

@@ -1,14 +1,25 @@
 /**
  * Excel (.xlsx) fayllardan dars jadvali ma'lumotlarini o'qish.
  *
- * Kutilayotgan format:
- * - 1-qator: ustun sarlavhalari (Kun, Vaqt, Guruh, Fan, O'qituvchi, Xona)
- * - Keyingi qatorlar: ma'lumotlar
+ * Qo'llab-quvvatlanadigan formatlar:
  *
- * Yoki jadval formatida:
- * - 1-qator: bo'sh, Dushanba, Seshanba, ...
- * - 1-ustun: vaqt slotlari (08:30-10:00, ...)
- * - Hujayralar: "Fan — O'qituvchi — Xona"
+ * 1) LIST format:
+ *    - 1-qator: ustun sarlavhalari (Kun, Vaqt, Guruh, Fan, O'qituvchi, Xona)
+ *    - Keyingi qatorlar: ma'lumotlar
+ *
+ * 2) GRID format:
+ *    - 1-qator: bo'sh, Dushanba, Seshanba, ...
+ *    - 1-ustun: vaqt slotlari (08:30-10:00, ...)
+ *    - Hujayralar: "Fan — O'qituvchi — Xona"
+ *
+ * 3) SCHEDULE format (universitet dars jadvali):
+ *    - Metadata qatorlari (ta'lim shakli, yil, kurs)
+ *    - Guruh nomlari ustunlarda (masalan: BR-501, IQT-501, DI-501)
+ *    - Kunlar vertikal (chap ustunda)
+ *    - Har bir slot 2 qator: dars + xona
+ *    - Dars hujayra: "Fan (tur) O'qituvchi"
+ *    - Xona hujayra: "Xona No 210"
+ *    - Merged cell'lar — umumiy darslar bir nechta guruhga tegishli
  */
 
 import * as XLSX from "xlsx";
@@ -20,6 +31,7 @@ export interface ParsedRow {
   subject?: string;
   teacher?: string;
   room?: string;
+  lessonType?: string;
   raw: Record<string, string>;
 }
 
@@ -30,9 +42,11 @@ export interface ParsedSheet {
   rawData: string[][];
 }
 
+export type ParseFormat = "list" | "grid" | "schedule" | "unknown";
+
 export interface ExcelParseResult {
   sheets: ParsedSheet[];
-  format: "list" | "grid" | "unknown";
+  format: ParseFormat;
   totalRows: number;
 }
 
@@ -148,9 +162,348 @@ function parseGridFormat(data: string[][]): ParsedRow[] {
   return rows;
 }
 
+// ─── Schedule format parser (universitet dars jadvali) ─────────────────────
+
+/** Guruh nomi pattern: 2+ harf, keyin tire, keyin raqamlar (masalan BR-501, IQT-501) */
+const GROUP_NAME_PATTERN = /^[A-Za-z\u0400-\u04FF]{2,}[_-]\d+/;
+
+/**
+ * Dars hujayrasini parse qilish.
+ * Format: "Fan nomi (tur) O'qituvchi ismi"
+ * Masalan: "Dinshunoslik (ma'ruza) D. Nishonova"
+ *          "Fizika 1,2 (laboratoriya) A. Axunjanov"
+ */
+function parseLessonCell(text: string): {
+  subject: string;
+  lessonType: string;
+  teacher: string;
+} | null {
+  const trimmed = text.trim();
+  if (!trimmed) return null;
+
+  // Pattern: Fan nomi (tur) O'qituvchi
+  // Tur: ma'ruza, amaliy, seminar, laboratoriya
+  const match = trimmed.match(
+    /^(.+?)\s*\((ma'ruza|amaliy|seminar|laboratoriya|maruza|lab)\)\s*(.+)$/i
+  );
+
+  if (match) {
+    let lessonType = match[2].toLowerCase();
+    // Normalize
+    if (lessonType === "maruza") lessonType = "ma'ruza";
+    if (lessonType === "lab") lessonType = "laboratoriya";
+    return {
+      subject: match[1].trim(),
+      lessonType,
+      teacher: match[3].trim(),
+    };
+  }
+
+  // Agar qavslar bo'lmasa, to'liq matnni fan deb olish
+  // (ba'zi hollarda tur ko'rsatilmagan bo'lishi mumkin)
+  // Pattern: agar oxirida "I. Familiya" format bo'lsa
+  const teacherMatch = trimmed.match(
+    /^(.+?)\s+([A-Z\u0400-\u04FF][a-z\u0400-\u04FF]*\.?\s+[A-Z\u0400-\u04FF][a-z\u0400-\u04FF']+(?:ova|yev|ov|eva|yeva|nov|nova|yevich|ovna)?)$/
+  );
+  if (teacherMatch) {
+    return {
+      subject: teacherMatch[1].trim(),
+      lessonType: "",
+      teacher: teacherMatch[2].trim(),
+    };
+  }
+
+  return null;
+}
+
+/**
+ * Xona hujayrasidan xona nomini ajratish.
+ * Format: "Xona No 210", "210-xona", "210", "A-210" va h.k.
+ */
+function parseRoomCell(text: string): string {
+  const trimmed = text.trim();
+  if (!trimmed) return "";
+
+  // "Xona No 210" yoki "Xona №210" yoki "xona 210"
+  const xonaMatch = trimmed.match(/xona\s*(?:no|№|#)?\s*(\S+)/i);
+  if (xonaMatch) return xonaMatch[1];
+
+  // Agar faqat raqam bo'lsa
+  if (/^\d+[A-Za-z]?$/.test(trimmed)) return trimmed;
+
+  return trimmed;
+}
+
+/**
+ * Merged cell'larni hisobga olib, to'ldirilgan ma'lumot massivini yaratish.
+ * XLSX merged cell'larda faqat yuqori-chap katakda qiymat bo'ladi,
+ * qolgan kataklar bo'sh bo'ladi.
+ */
+function fillMergedCells(
+  rawData: string[][],
+  merges: XLSX.Range[] | undefined
+): string[][] {
+  if (!merges || merges.length === 0) return rawData;
+
+  // Deep copy
+  const filled = rawData.map((row) => [...row]);
+
+  for (const merge of merges) {
+    const { s, e } = merge; // s = start, e = end
+    const value = filled[s.r]?.[s.c] ?? "";
+
+    for (let r = s.r; r <= e.r; r++) {
+      for (let c = s.c; c <= e.c; c++) {
+        if (r === s.r && c === s.c) continue; // O'zi allaqachon bor
+        if (!filled[r]) filled[r] = [];
+        filled[r][c] = value?.toString() || "";
+      }
+    }
+  }
+
+  return filled;
+}
+
+/**
+ * Merged cell lookup yaratish — qaysi cell'lar birlashganini bilish uchun.
+ * Kalit: "row:col" → { startRow, startCol, endRow, endCol }
+ */
+function buildMergeMap(merges: XLSX.Range[] | undefined): Map<string, XLSX.Range> {
+  const map = new Map<string, XLSX.Range>();
+  if (!merges) return map;
+
+  for (const merge of merges) {
+    for (let r = merge.s.r; r <= merge.e.r; r++) {
+      for (let c = merge.s.c; c <= merge.e.c; c++) {
+        map.set(`${r}:${c}`, merge);
+      }
+    }
+  }
+
+  return map;
+}
+
+/**
+ * Schedule format ekanligini aniqlash.
+ * Belgilar:
+ * - "DARS JADVALI" matni bor (qator 0-10 orasida)
+ * - Yoki guruh nomlari pattern (XXX-NNN) 2+ ta topilgan (qator 0-15 orasida)
+ * - Va kun nomlari chap ustunlarda bor
+ */
+function isScheduleFormat(data: string[][]): boolean {
+  const searchRows = Math.min(data.length, 15);
+
+  // "DARS JADVALI" matnini qidirish
+  for (let r = 0; r < searchRows; r++) {
+    const rowText = (data[r] || []).join(" ").toLowerCase();
+    if (rowText.includes("dars jadvali")) return true;
+  }
+
+  // Guruh nomlari pattern qidirish
+  let groupNameCount = 0;
+  for (let r = 0; r < searchRows; r++) {
+    for (const cell of data[r] || []) {
+      const str = cell?.toString().trim() || "";
+      if (GROUP_NAME_PATTERN.test(str)) groupNameCount++;
+    }
+    if (groupNameCount >= 2) return true;
+  }
+
+  return false;
+}
+
+/**
+ * Guruh nomlari qatorini va ustunlarini topish.
+ * Qator 0-15 orasida 2+ guruh nomi bor bo'lgan qatorni topadi.
+ */
+function findGroupRow(
+  data: string[][]
+): { row: number; groups: { col: number; name: string }[] } | null {
+  const searchRows = Math.min(data.length, 15);
+
+  for (let r = 0; r < searchRows; r++) {
+    const groups: { col: number; name: string }[] = [];
+
+    for (let c = 0; c < (data[r]?.length || 0); c++) {
+      const cell = data[r][c]?.toString().trim() || "";
+      if (GROUP_NAME_PATTERN.test(cell)) {
+        groups.push({ col: c, name: cell });
+      }
+    }
+
+    if (groups.length >= 2) {
+      return { row: r, groups };
+    }
+  }
+
+  // Agar 2 ta topilmasa, 1 ta bo'lsa ham qaytarish (bitta guruh uchun jadval)
+  for (let r = 0; r < searchRows; r++) {
+    for (let c = 0; c < (data[r]?.length || 0); c++) {
+      const cell = data[r][c]?.toString().trim() || "";
+      if (GROUP_NAME_PATTERN.test(cell)) {
+        return { row: r, groups: [{ col: c, name: cell }] };
+      }
+    }
+  }
+
+  return null;
+}
+
+/**
+ * Kun nomi va vaqt ustunlarini aniqlash.
+ * Jadvalda kunlar vertikal — masalan C ustunida "Dushanba", D da slot raqami, E da vaqt.
+ */
+function findDayAndTimeColumns(
+  data: string[][],
+  startRow: number
+): { dayCol: number; slotCol: number; timeCol: number } | null {
+  // startRow dan keyingi 20 qatorda kun nomini qidirish
+  const endRow = Math.min(data.length, startRow + 30);
+
+  for (let r = startRow; r < endRow; r++) {
+    for (let c = 0; c < Math.min(data[r]?.length || 0, 8); c++) {
+      const cell = data[r][c]?.toString().trim() || "";
+      if (normalizeDay(cell)) {
+        // Kun topildi — slot va vaqt ustunlarini aniqlash
+        // Odatda: kun = C, slot = D (yoki kun+1), vaqt = E (yoki kun+2)
+        return {
+          dayCol: c,
+          slotCol: c + 1,
+          timeCol: c + 2,
+        };
+      }
+    }
+  }
+
+  return null;
+}
+
+/**
+ * Dars jadvali formatini parse qilish.
+ * Murakkab format: merged cell'lar, vertikal kunlar, 2+ qatorli slotlar.
+ *
+ * Muhim: rawData (original) dan STRUKTURA aniqlash uchun foydalaniladi
+ * (slot qatorlarini topish, dublikat merge qatorlardan qochish),
+ * filledData dan esa KONTENT o'qish uchun (merged guruh ustunlarini to'g'ri o'qish).
+ */
+function parseScheduleFormat(
+  rawData: string[][],
+  merges: XLSX.Range[] | undefined
+): ParsedRow[] {
+  // 1. Merged cell'larni to'ldirilgan versiyasini yaratish (kontent uchun)
+  const filledData = fillMergedCells(rawData, merges);
+
+  // 2. Guruh qatori va ustunlarini topish (filled data dan — merge ichida ham guruh nomlari bo'lishi mumkin)
+  const groupInfo = findGroupRow(filledData);
+  if (!groupInfo) return [];
+
+  const { row: groupRow, groups } = groupInfo;
+
+  // 3. Kun va vaqt ustunlarini topish (filled data dan)
+  const colInfo = findDayAndTimeColumns(filledData, groupRow + 1);
+  if (!colInfo) return [];
+
+  const { dayCol, timeCol } = colInfo;
+
+  // 4. Slot boshlanish qatorlarini aniqlash (ORIGINAL rawData dan!)
+  // Merged cell'lar tufayli vaqt ma'lumoti bir nechta qatorda takrorlanadi.
+  // Faqat ORIGINAL rawData da vaqt qiymati bor qatorlar = haqiqiy slot boshlangich qatori.
+  // Room qatorlarini ham aniqlash — dars qatoridan keyin, "Xona" so'zi bor yoki dars ma'lumoti yo'q qator.
+  const rows: ParsedRow[] = [];
+  let currentDay = "";
+
+  for (let r = groupRow + 1; r < rawData.length; r++) {
+    // Kun nomini ORIGINAL data dan tekshirish (merge bo'lmagan hujayra)
+    const rawDayCell = rawData[r]?.[dayCol]?.toString().trim() || "";
+    const normalizedRaw = normalizeDay(rawDayCell);
+    if (normalizedRaw) {
+      currentDay = rawDayCell;
+    }
+
+    // Agar filled data da kun bor lekin raw da yo'q — bu merge tufayli,
+    // currentDay avvalgi qiymatini saqlab qoladi
+    if (!currentDay) {
+      // filled data dan ham tekshirish — birinchi marta
+      const filledDayCell = filledData[r]?.[dayCol]?.toString().trim() || "";
+      const normalizedFilled = normalizeDay(filledDayCell);
+      if (normalizedFilled) currentDay = filledDayCell;
+    }
+
+    if (!currentDay) continue;
+
+    // ORIGINAL rawData da vaqt tekshirish — faqat haqiqiy slot boshlanish qatorlari
+    const rawTimeCell = rawData[r]?.[timeCol]?.toString().trim() || "";
+    const hasOriginalTime = /\d{1,2}[:.]\d{2}/.test(rawTimeCell);
+
+    if (!hasOriginalTime) continue;
+
+    // Vaqtdan boshlanish vaqtini olish
+    const timeFromFilled = filledData[r]?.[timeCol]?.toString().trim() || rawTimeCell;
+    const startTime = timeFromFilled.match(/(\d{1,2}[:.]\d{2})/)?.[1]?.replace(".", ":") || timeFromFilled;
+
+    // Xona qatorini topish — keyingi 1-3 qator ichida "xona" so'zi bor qator
+    let roomRowIdx = -1;
+    for (let offset = 1; offset <= 3 && r + offset < filledData.length; offset++) {
+      const candidateRow = filledData[r + offset];
+      if (!candidateRow) continue;
+
+      // Guruh ustunlarida "xona" so'zi bor-yo'qligini tekshirish
+      const hasRoom = groups.some((g) => {
+        const cell = candidateRow[g.col]?.toString().trim().toLowerCase() || "";
+        return cell.includes("xona") || cell.includes("аудитория") || /^\d{3,4}[A-Za-z]?$/.test(cell.trim());
+      });
+
+      if (hasRoom) {
+        roomRowIdx = r + offset;
+        break;
+      }
+    }
+
+    // Har bir guruh ustuni uchun
+    for (const group of groups) {
+      // FILLED data dan dars hujayrasini o'qish (merged cell'lar to'g'ri ko'rinadi)
+      const lessonCell = filledData[r]?.[group.col]?.toString().trim() || "";
+      if (!lessonCell) continue;
+
+      // Dars hujayrasini parse qilish
+      const lesson = parseLessonCell(lessonCell);
+      if (!lesson) continue;
+
+      // Xona qatoridan xonani olish (FILLED data dan)
+      let roomText = "";
+      if (roomRowIdx >= 0) {
+        const rawRoom = filledData[roomRowIdx]?.[group.col]?.toString().trim() || "";
+        roomText = parseRoomCell(rawRoom);
+      }
+
+      rows.push({
+        day: currentDay,
+        time: startTime,
+        group: group.name,
+        subject: lesson.subject,
+        teacher: lesson.teacher,
+        room: roomText,
+        lessonType: lesson.lessonType,
+        raw: {
+          day: currentDay,
+          time: timeFromFilled,
+          group: group.name,
+          lesson: lessonCell,
+          room: roomText,
+        },
+      });
+    }
+  }
+
+  return rows;
+}
+
 // ─── Detect format ──────────────────────────────────────────────────────────
 
-function detectFormat(headers: string[], data: string[][]): "list" | "grid" | "unknown" {
+function detectFormat(headers: string[], data: string[][]): ParseFormat {
+  // Schedule format — universitet dars jadvali
+  if (isScheduleFormat(data)) return "schedule";
+
   // List formatmi? Ustun sarlavhalari bor
   const matchedColumns = headers.filter((h) => matchColumn(h) !== null);
   if (matchedColumns.length >= 3) return "list";
@@ -169,7 +522,7 @@ function detectFormat(headers: string[], data: string[][]): "list" | "grid" | "u
 export function parseExcelFile(buffer: ArrayBuffer): ExcelParseResult {
   const workbook = XLSX.read(buffer, { type: "array" });
   const sheets: ParsedSheet[] = [];
-  let detectedFormat: "list" | "grid" | "unknown" = "unknown";
+  let detectedFormat: ParseFormat = "unknown";
   let totalRows = 0;
 
   for (const sheetName of workbook.SheetNames) {
@@ -187,13 +540,18 @@ export function parseExcelFile(buffer: ArrayBuffer): ExcelParseResult {
     if (format !== "unknown") detectedFormat = format;
 
     let rows: ParsedRow[];
-    if (format === "list") {
+    if (format === "schedule") {
+      rows = parseScheduleFormat(rawData, sheet["!merges"]);
+    } else if (format === "list") {
       rows = parseListFormat(rawData, headers);
     } else if (format === "grid") {
       rows = parseGridFormat(rawData);
     } else {
-      // Ikkala formatni sinash
-      rows = parseListFormat(rawData, headers);
+      // Barcha formatlarni ketma-ket sinash
+      rows = parseScheduleFormat(rawData, sheet["!merges"]);
+      if (rows.length === 0) {
+        rows = parseListFormat(rawData, headers);
+      }
       if (rows.length === 0) {
         rows = parseGridFormat(rawData);
       }

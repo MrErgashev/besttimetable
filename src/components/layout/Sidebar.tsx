@@ -113,15 +113,11 @@ export function Sidebar() {
     <aside className="fixed left-0 top-0 h-full w-[var(--sidebar-width)] flex-col glass-primary border-r border-[var(--glass-border)] shadow-[var(--shadow-lg)] p-4 z-30 hidden lg:flex">
       {/* Logo */}
       <div className="mb-8 px-2">
-        <h1 className="text-xl font-bold">
-          <span className="bg-gradient-to-r from-[var(--color-accent)] to-[var(--color-accent-light)] bg-clip-text text-transparent">
-            BestTimetable
-          </span>
+        <h1 className="text-xl font-bold text-[var(--color-accent)]">
+          BestTimetable
         </h1>
-        <p className="text-xs mt-0.5">
-          <span className="bg-gradient-to-r from-[var(--color-accent)]/70 to-[var(--color-accent-light)]/70 bg-clip-text text-transparent font-medium">
-            Dars jadvali tizimi
-          </span>
+        <p className="text-xs text-[var(--muted)] mt-0.5">
+          Dars jadvali tizimi
         </p>
       </div>
 

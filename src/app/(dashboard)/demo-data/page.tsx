@@ -101,9 +101,7 @@ export default function DemoDataPage() {
   return (
     <div className="max-w-2xl mx-auto space-y-6">
       <div>
-        <h1 className="text-2xl font-bold">
-          <span className="bg-gradient-to-r from-[var(--color-accent)] to-[var(--color-accent-light)] bg-clip-text text-transparent">Demo ma&apos;lumotlar</span>
-        </h1>
+        <h1 className="text-2xl font-bold">Demo ma&apos;lumotlar</h1>
         <p className="text-sm text-[var(--muted)] mt-1">
           Tizimni ko&apos;rsatish uchun namuna ma&apos;lumotlar yuklash va o&apos;chirish
         </p>

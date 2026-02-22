@@ -191,9 +191,7 @@ export default function GeneratePage() {
     <div className="max-w-7xl mx-auto space-y-6">
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold">
-            <span className="bg-gradient-to-r from-[var(--color-accent)] to-[var(--color-accent-light)] bg-clip-text text-transparent">Avtomatik jadval tuzish</span>
-          </h1>
+          <h1 className="text-2xl font-bold">Avtomatik jadval tuzish</h1>
           <p className="text-sm text-[var(--muted)] mt-1">
             Dars yuklamalarini kiriting va avtomatik jadval tuzilsin
           </p>

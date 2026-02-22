@@ -1,7 +1,7 @@
 "use client";
 
 import { cn } from "@/lib/utils";
-import { useEffect, useRef, useState, useCallback, useId } from "react";
+import { useEffect, useRef, useState, useCallback, useId, type RefObject } from "react";
 
 interface SheetModalProps {
   open: boolean;
@@ -27,7 +27,11 @@ export function SheetModal({ open, onClose, title, children, size = "md" }: Shee
     }, 300);
   }, [onClose]);
 
-  // Focus trap va keyboard events
+  // handleClose ni ref orqali saqlash — useEffect qayta ishlamasigi uchun
+  const handleCloseRef: RefObject<(() => void) | null> = useRef(null);
+  handleCloseRef.current = handleClose;
+
+  // Focus trap va keyboard events — faqat `open` o'zgarganda ishlaydi
   useEffect(() => {
     if (!open) return;
 
@@ -36,7 +40,7 @@ export function SheetModal({ open, onClose, title, children, size = "md" }: Shee
 
     const handler = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
-        handleClose();
+        handleCloseRef.current?.();
         return;
       }
 
@@ -65,35 +69,49 @@ export function SheetModal({ open, onClose, title, children, size = "md" }: Shee
     document.addEventListener("keydown", handler);
     document.body.style.overflow = "hidden";
 
-    // Modal ochilganda birinchi elementga fokus berish
-    requestAnimationFrame(() => {
+    // Modal ochilganda birinchi inputga fokus berish
+    const rafId = requestAnimationFrame(() => {
       if (sheetRef.current) {
-        const firstFocusable = sheetRef.current.querySelector<HTMLElement>(
-          'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+        const firstInput = sheetRef.current.querySelector<HTMLElement>(
+          'input, select, textarea'
+        );
+        const firstFocusable = firstInput || sheetRef.current.querySelector<HTMLElement>(
+          'button, [href], [tabindex]:not([tabindex="-1"])'
         );
         firstFocusable?.focus();
       }
     });
 
     return () => {
+      cancelAnimationFrame(rafId);
       document.removeEventListener("keydown", handler);
       document.body.style.overflow = "";
       // Fokusni qaytarish
       previousFocusRef.current?.focus();
     };
-  }, [open, handleClose]);
+  }, [open]);
 
-  // Touch drag to dismiss (mobile)
+  // Touch drag to dismiss (mobile) — input/select/textarea da drag qilmaslik
   const handleTouchStart = (e: React.TouchEvent) => {
+    const tag = (e.target as HTMLElement).tagName;
+    if (tag === "INPUT" || tag === "SELECT" || tag === "TEXTAREA") {
+      startY.current = 0;
+      return;
+    }
     startY.current = e.touches[0].clientY;
   };
   const handleTouchMove = (e: React.TouchEvent) => {
+    if (!startY.current) return;
     currentY.current = e.touches[0].clientY - startY.current;
     if (currentY.current > 0 && sheetRef.current) {
       sheetRef.current.style.transform = `translateY(${currentY.current}px)`;
     }
   };
   const handleTouchEnd = () => {
+    if (!startY.current) {
+      currentY.current = 0;
+      return;
+    }
     if (currentY.current > 120) {
       handleClose();
     } else if (sheetRef.current) {

@@ -9,7 +9,7 @@ Ta'lim muassasalari uchun dars jadvalini yaratish, boshqarish va optimallashtiri
 - **Database:** Supabase (PostgreSQL + Auth + RLS) — `@supabase/supabase-js` ^2.97.0, `@supabase/ssr` ^0.8.0
 - **State:** Zustand 5 (persist middleware bilan localStorage ga saqlaydi)
 - **Drag & Drop:** @dnd-kit (core ^6.3.1 + sortable ^10.0.0 + utilities ^3.2.2)
-- **Validation:** Zod 4
+- **Validation:** Zod 4 (`^4.3.6`)
 - **Export:** xlsx ^0.18.5 (Excel), jspdf ^4.2.0 + jspdf-autotable ^5.0.7 (PDF)
 - **Import:** xlsx (Excel), mammoth ^1.11.0 (Word .docx)
 - **Icons:** lucide-react ^0.575.0
@@ -37,7 +37,7 @@ src/
       login/page.tsx    # Kirish sahifasi
       register/page.tsx # Ro'yxatdan o'tish sahifasi
     (dashboard)/        # Asosiy sahifalar (layout bilan)
-      layout.tsx        # Dashboard layout (Sidebar, Topbar, BottomTabBar)
+      layout.tsx        # Dashboard layout (Sidebar, Topbar, BottomTabBar, SupabaseDataProvider, force-dynamic)
       error.tsx         # Dashboard error boundary
       page.tsx          # Bosh sahifa (Dashboard — statistika, grafiklar)
       timetable/        # Jadval ko'rishlar
@@ -69,17 +69,18 @@ src/
     layout/             # Sidebar, Topbar, BottomTabBar, MobileHeader, RoleGuard
     timetable/          # TimetableGrid, CellAssignModal, LessonCard
     dashboard/          # QuickStats, AlertsPanel, TeacherWorkloadChart, RoomUtilizationChart, ScheduleHeatmap
-    import/             # MasterDataImportWizard, PasteBulkEntry
+    import/             # MasterDataImportWizard, PasteBulkEntry, BulkUserImport
+    providers/          # SupabaseDataProvider (Supabase dan ma'lumot yuklash va realtime sync)
     crud/               # DataTable (umumiy CRUD jadval, mobil karta + desktop jadval)
     ui/                 # Card, SheetModal, Button, Input, Select, Badge, FAB, SegmentControl, Skeleton, Spinner, ThemeToggle, MeshBackground, GlassCard (re-export), GlassModal (re-export)
   stores/               # Zustand store'lar (barchasi persist bilan, localStorage key: besttimetable-{entity})
-  hooks/                # useAuth, useHydration, useMediaQuery, useRealtimeSchedule, useRoleAccess, useSpecularLight, useFilteredNotifications
+  hooks/                # useAuth, useHydration, useMediaQuery, useRealtimeSchedule, useRoleAccess, useSpecularLight, useFilteredNotifications, useSupabaseData
   lib/
     types.ts            # Barcha TypeScript tiplar
     constants.ts        # DAYS, TIME_SLOTS, TRACK_LABELS, ROOM_TYPE_LABELS, SUBJECT_COLORS, NAV_ITEMS, ROLE_LABELS, DEFAULT_CONSTRAINTS
     utils.ts            # cn(), formatDate(), formatShortDate(), getCurrentWeekRange(), truncate(), getColorByIndex()
     demo-data.ts        # Demo ma'lumotlar generatori
-    supabase/           # client.ts, server.ts, middleware.ts, database.types.ts
+    supabase/           # client.ts, server.ts, middleware.ts, database.types.ts, helpers.ts, sync.ts
     generator/          # Jadval generatsiya algoritmlari
     export/             # excel.ts, pdf.ts
     import/             # excel-parser.ts, word-parser.ts, mapper.ts, column-mapping.ts, master-data-parser.ts, master-data-validator.ts, paste-parser.ts, template-generator.ts
@@ -103,7 +104,7 @@ public/
 
 | Fayl | Vazifa |
 |------|--------|
-| `next.config.ts` | Next.js config (compress, security headers: X-Frame-Options DENY, X-Content-Type-Options nosniff, Referrer-Policy) |
+| `next.config.ts` | Next.js config (output: standalone, compress, reactStrictMode, poweredByHeader: false, security headers: X-Frame-Options DENY, X-Content-Type-Options nosniff, Referrer-Policy) |
 | `tsconfig.json` | TypeScript strict mode, `@/*` → `./src/*` path alias, ES2017 target, react-jsx |
 | `postcss.config.mjs` | Tailwind CSS 4 via `@tailwindcss/postcss` plugin |
 | `eslint.config.mjs` | ESLint 9 flat config — `eslint-config-next/core-web-vitals` + `eslint-config-next/typescript` |
@@ -193,12 +194,12 @@ Barcha store'lar `zustand/middleware` dan `persist` ishlatadi — ma'lumotlar lo
 | Store | Fayl | State | Asosiy metodlar |
 |-------|------|-------|-----------------|
 | `useTimetableStore` | `stores/useTimetableStore.ts` | `entries: ScheduleEntry[]` | `placeEntry()`, `moveEntry()`, `removeEntry()`, `clearAll()`, `bulkLoad()`, `getCell()`, `getEntriesForGroup()`, `getEntriesForTeacher()`, `getEntriesForRoom()` |
-| `useTeacherStore` | `stores/useTeacherStore.ts` | `teachers: Teacher[]` | `addTeacher()`, `addTeachers()`, `updateTeacher()`, `bulkUpdateTeachers()`, `deleteTeacher()`, `deleteTeachers()`, `getTeacherById()` |
-| `useGroupStore` | `stores/useGroupStore.ts` | `groups: Group[]` | `addGroup()`, `addGroups()`, `updateGroup()`, `bulkUpdateGroups()`, `deleteGroup()`, `deleteGroups()`, `getGroupById()` |
-| `useSubjectStore` | `stores/useSubjectStore.ts` | `subjects: Subject[]` | `addSubject()`, `addSubjects()`, `updateSubject()`, `bulkUpdateSubjects()`, `deleteSubject()`, `deleteSubjects()`, `getSubjectById()` |
-| `useRoomStore` | `stores/useRoomStore.ts` | `rooms: Room[]` | `addRoom()`, `addRooms()`, `updateRoom()`, `bulkUpdateRooms()`, `deleteRoom()`, `deleteRooms()`, `getRoomById()` |
-| `useSubjectLoadStore` | `stores/useSubjectLoadStore.ts` | `loads: SubjectLoad[]` | `addLoad()`, `updateLoad()`, `removeLoad()`, `getLoadsForGroup()`, `getLoadsForTeacher()`, `clearAll()` |
-| `useChangelogStore` | `stores/useChangelogStore.ts` | `logs: ScheduleChangelog[]` | `addLog()`, `getLogs()`, `getLogsByEntry()`, `clearAll()` |
+| `useTeacherStore` | `stores/useTeacherStore.ts` | `teachers: Teacher[]` | `addTeacher()`, `addTeachers()`, `updateTeacher()`, `bulkUpdateTeachers()`, `deleteTeacher()`, `deleteTeachers()`, `getTeacherById()`, `bulkLoad()` |
+| `useGroupStore` | `stores/useGroupStore.ts` | `groups: Group[]` | `addGroup()`, `addGroups()`, `updateGroup()`, `bulkUpdateGroups()`, `deleteGroup()`, `deleteGroups()`, `getGroupById()`, `bulkLoad()` |
+| `useSubjectStore` | `stores/useSubjectStore.ts` | `subjects: Subject[]` | `addSubject()`, `addSubjects()`, `updateSubject()`, `bulkUpdateSubjects()`, `deleteSubject()`, `deleteSubjects()`, `getSubjectById()`, `bulkLoad()` |
+| `useRoomStore` | `stores/useRoomStore.ts` | `rooms: Room[]` | `addRoom()`, `addRooms()`, `updateRoom()`, `bulkUpdateRooms()`, `deleteRoom()`, `deleteRooms()`, `getRoomById()`, `bulkLoad()` |
+| `useSubjectLoadStore` | `stores/useSubjectLoadStore.ts` | `loads: SubjectLoad[]` | `addLoad()`, `updateLoad()`, `removeLoad()`, `getLoadsForGroup()`, `getLoadsForTeacher()`, `clearAll()`, `bulkLoad()` |
+| `useChangelogStore` | `stores/useChangelogStore.ts` | `logs: ScheduleChangelog[]` | `addLog()`, `getLogs()`, `getLogsByEntry()`, `clearAll()`, `bulkLoad()` |
 
 ## Autentifikatsiya va Rollar
 
@@ -249,6 +250,7 @@ Import komponentlari (`src/components/import/`):
 |-----------|--------|
 | `MasterDataImportWizard` | Bosqichma-bosqich import wizard (upload → mapping → validate → result) |
 | `PasteBulkEntry` | Matn qo'yish orqali ko'plab yozuvlarni import qilish |
+| `BulkUserImport` | Ko'plab foydalanuvchilarni matn yoki Excel fayl orqali import qilish (rol va parol bilan) |
 
 ## Eksport Tizimi
 
@@ -455,19 +457,47 @@ Ranglar va glass token'lar CSS custom properties orqali boshqariladi (`@theme in
 | `useRoleAccess` | `hooks/useRoleAccess.ts` | `{ role, profile, loading, filteredNavItems, canAccess(href) }` |
 | `useSpecularLight` | `hooks/useSpecularLight.ts` | `void` — Mouse/gyroscope/auto-drift orqali `--specular-x/y` CSS o'zgaruvchilarini boshqarish |
 | `useFilteredNotifications` | `hooks/useFilteredNotifications.ts` | `{ logs, readIds, unreadCount, markAsRead(id), markAllAsRead(ids), role }` — Rol asosida bildirishnomalarni filtrlash |
+| `useSupabaseData` | `hooks/useSupabaseData.ts` | `{ loading, error }` — Supabase dan barcha ma'lumotlarni yuklash va realtime subscription (Dashboard layout da ishlatiladi) |
 
 ## Providers (`src/app/providers.tsx`)
 
 ```typescript
-<ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+<ThemeProvider attribute="class" defaultTheme="light" enableSystem>
   <SpecularLightProvider>
     {children}
   </SpecularLightProvider>
 </ThemeProvider>
 ```
 
-- **ThemeProvider** — `class` atributi orqali dark mode (next-themes)
+- **ThemeProvider** — `class` atributi orqali dark mode (next-themes), standart tema: `light`
 - **SpecularLightProvider** — `useSpecularLight()` hook ni faollashtiradi
+
+### SupabaseDataProvider (`src/components/providers/SupabaseDataProvider.tsx`)
+
+Dashboard layout da ishlatiladi. `useSupabaseData()` hook orqali:
+1. Supabase sozlangan bo'lsa — barcha jadvallardan (teachers, groups, subjects, rooms, subject_loads, schedule_entries, schedule_changelog) ma'lumotlarni yuklaydi
+2. Realtime subscription orqali o'zgarishlarni kuzatadi va Zustand store'larni yangilaydi
+3. Supabase sozlanmagan bo'lsa — hech narsa qilmaydi (demo rejim, localStorage dan yuklaydi)
+
+## Supabase Sync Layer (`src/lib/supabase/sync.ts`)
+
+Barcha entity jadvallar uchun CRUD service. Store'lar optimistic update qiladi, keyin sync service orqali Supabase ga yozadi.
+
+| Service | Jadval | Metodlar |
+|---------|--------|----------|
+| `teacherSync` | `teachers` | `fetchAll()`, `insert()`, `bulkInsert()`, `update()`, `remove()`, `removeMany()` |
+| `groupSync` | `groups` | `fetchAll()`, `insert()`, `bulkInsert()`, `update()`, `remove()`, `removeMany()` |
+| `subjectSync` | `subjects` | `fetchAll()`, `insert()`, `bulkInsert()`, `update()`, `remove()`, `removeMany()` |
+| `roomSync` | `rooms` | `fetchAll()`, `insert()`, `bulkInsert()`, `update()`, `remove()`, `removeMany()` |
+| `subjectLoadSync` | `subject_loads` | `fetchAll()`, `insert()`, `update()`, `remove()` |
+| `scheduleSync` | `schedule_entries` | `fetchAll()`, `insert()`, `bulkInsert()`, `update()`, `remove()`, `removeAll()` |
+| `changelogSync` | `schedule_changelog` | `fetchAll()`, `insert()`, `removeAll()` |
+
+### Supabase Helper (`src/lib/supabase/helpers.ts`)
+
+| Funksiya | Vazifa |
+|----------|--------|
+| `isSupabaseConfigured()` | `NEXT_PUBLIC_SUPABASE_URL` sozlanganligini tekshiradi (demo rejim aniqlash uchun) |
 
 ## Middleware (`src/middleware.ts`)
 
@@ -519,11 +549,13 @@ Agar `NEXT_PUBLIC_SUPABASE_URL` sozlanmagan bo'lsa, ilova **demo rejimda** ishla
 - Accessibility: `prefers-reduced-motion` va `prefers-reduced-transparency` media query'lar qo'llab-quvvatlanadi
 - ESLint: flat config format (ESLint 9+), `eslint-config-next/core-web-vitals` + `typescript`
 - Barcha komponentlar `"use client"` direktivasi bilan (client-side rendering)
+- Dashboard layout `export const dynamic = "force-dynamic"` — build vaqtida Supabase env yo'q bo'lganda statik prerender xatoligini oldini oladi
+- Supabase sync: CRUD operatsiyalar uchun `src/lib/supabase/sync.ts` ishlatiladi; `isSupabaseConfigured()` bilan demo rejim aniqlash
 - **O'zgartirmaslik kerak:** stores, types, constants, utils, generator, import/export logic, supabase, middleware, tsconfig, postcss
 
-## CI/CD
+## CI/CD va Deploy
 
-Hozircha CI/CD konfiguratsiyasi yo'q. Loyiha Vercel'da deploy qilishga tayyor (Next.js 16 avtomatik tanib olinadi).
+Hozircha CI/CD konfiguratsiyasi yo'q. `next.config.ts` da `output: "standalone"` sozlangan — Docker yoki standalone deploy uchun tayyor. Vercel'da ham avtomatik tanib olinadi (Next.js 16).
 
 ## Testlar
 

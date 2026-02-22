@@ -210,7 +210,7 @@ export default function LoginPage() {
                 Dars jadvali
               </span>
               <br />
-              <span className="text-[var(--foreground)]">
+              <span className="bg-gradient-to-r from-[var(--color-accent)] to-[var(--color-accent-light)] bg-clip-text text-transparent">
                 boshqaruv tizimi
               </span>
             </h1>
@@ -271,7 +271,7 @@ export default function LoginPage() {
               <span className="bg-gradient-to-r from-[var(--color-accent)] to-[var(--color-accent-light)] bg-clip-text text-transparent">
                 Dars jadvali
               </span>{" "}
-              <span className="text-[var(--foreground)]">boshqaruv tizimi</span>
+              <span className="bg-gradient-to-r from-[var(--color-accent)] to-[var(--color-accent-light)] bg-clip-text text-transparent">boshqaruv tizimi</span>
             </h1>
           </div>
 

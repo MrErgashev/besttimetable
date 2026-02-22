@@ -4,8 +4,8 @@ import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import type { Subject, ID } from "@/lib/types";
 import { SUBJECT_COLORS } from "@/lib/constants";
-import { isSupabaseConfigured } from "@/lib/supabase/helpers";
 import { subjectSync } from "@/lib/supabase/sync";
+import { syncSafe } from "@/lib/supabase/sync-safe";
 
 interface SubjectState {
   subjects: Subject[];
@@ -39,9 +39,7 @@ export const useSubjectStore = create<SubjectState>()(
           updated_at: new Date().toISOString(),
         };
         set((s) => ({ subjects: [...s.subjects, subject] }));
-        if (isSupabaseConfigured()) {
-          subjectSync.insert(subject).catch(console.error);
-        }
+        syncSafe(() => subjectSync.insert(subject));
         return subject;
       },
 
@@ -58,9 +56,7 @@ export const useSubjectStore = create<SubjectState>()(
           updated_at: now,
         }));
         set((s) => ({ subjects: [...s.subjects, ...newSubjects] }));
-        if (isSupabaseConfigured()) {
-          subjectSync.bulkInsert(newSubjects).catch(console.error);
-        }
+        syncSafe(() => subjectSync.bulkInsert(newSubjects));
         return newSubjects.length;
       },
 
@@ -72,9 +68,7 @@ export const useSubjectStore = create<SubjectState>()(
               : sub
           ),
         }));
-        if (isSupabaseConfigured()) {
-          subjectSync.update(id, data).catch(console.error);
-        }
+        syncSafe(() => subjectSync.update(id, data));
       },
 
       bulkUpdateSubjects: (ids, data) => {
@@ -86,20 +80,14 @@ export const useSubjectStore = create<SubjectState>()(
               : sub
           ),
         }));
-        if (isSupabaseConfigured()) {
-          ids.forEach((id) =>
-            subjectSync.update(id, data).catch(console.error)
-          );
-        }
+        ids.forEach((id) => syncSafe(() => subjectSync.update(id, data)));
       },
 
       deleteSubject: (id) => {
         set((s) => ({
           subjects: s.subjects.filter((sub) => sub.id !== id),
         }));
-        if (isSupabaseConfigured()) {
-          subjectSync.remove(id).catch(console.error);
-        }
+        syncSafe(() => subjectSync.remove(id));
       },
 
       deleteSubjects: (ids) => {
@@ -107,9 +95,7 @@ export const useSubjectStore = create<SubjectState>()(
         set((s) => ({
           subjects: s.subjects.filter((sub) => !idSet.has(sub.id)),
         }));
-        if (isSupabaseConfigured()) {
-          subjectSync.removeMany(ids).catch(console.error);
-        }
+        syncSafe(() => subjectSync.removeMany(ids));
       },
 
       getSubjectById: (id) => get().subjects.find((sub) => sub.id === id),

@@ -3,8 +3,8 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import type { Room, ID } from "@/lib/types";
-import { isSupabaseConfigured } from "@/lib/supabase/helpers";
 import { roomSync } from "@/lib/supabase/sync";
+import { syncSafe } from "@/lib/supabase/sync-safe";
 
 interface RoomState {
   rooms: Room[];
@@ -33,9 +33,7 @@ export const useRoomStore = create<RoomState>()(
           updated_at: new Date().toISOString(),
         };
         set((s) => ({ rooms: [...s.rooms, room] }));
-        if (isSupabaseConfigured()) {
-          roomSync.insert(room).catch(console.error);
-        }
+        syncSafe(() => roomSync.insert(room));
         return room;
       },
 
@@ -48,9 +46,7 @@ export const useRoomStore = create<RoomState>()(
           updated_at: now,
         }));
         set((s) => ({ rooms: [...s.rooms, ...newRooms] }));
-        if (isSupabaseConfigured()) {
-          roomSync.bulkInsert(newRooms).catch(console.error);
-        }
+        syncSafe(() => roomSync.bulkInsert(newRooms));
         return newRooms.length;
       },
 
@@ -62,9 +58,7 @@ export const useRoomStore = create<RoomState>()(
               : r
           ),
         }));
-        if (isSupabaseConfigured()) {
-          roomSync.update(id, data).catch(console.error);
-        }
+        syncSafe(() => roomSync.update(id, data));
       },
 
       bulkUpdateRooms: (ids, data) => {
@@ -76,16 +70,12 @@ export const useRoomStore = create<RoomState>()(
               : r
           ),
         }));
-        if (isSupabaseConfigured()) {
-          ids.forEach((id) => roomSync.update(id, data).catch(console.error));
-        }
+        ids.forEach((id) => syncSafe(() => roomSync.update(id, data)));
       },
 
       deleteRoom: (id) => {
         set((s) => ({ rooms: s.rooms.filter((r) => r.id !== id) }));
-        if (isSupabaseConfigured()) {
-          roomSync.remove(id).catch(console.error);
-        }
+        syncSafe(() => roomSync.remove(id));
       },
 
       deleteRooms: (ids) => {
@@ -93,9 +83,7 @@ export const useRoomStore = create<RoomState>()(
         set((s) => ({
           rooms: s.rooms.filter((r) => !idSet.has(r.id)),
         }));
-        if (isSupabaseConfigured()) {
-          roomSync.removeMany(ids).catch(console.error);
-        }
+        syncSafe(() => roomSync.removeMany(ids));
       },
 
       getRoomById: (id) => get().rooms.find((r) => r.id === id),

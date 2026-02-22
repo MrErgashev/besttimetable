@@ -3,8 +3,8 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import type { Teacher, ID } from "@/lib/types";
-import { isSupabaseConfigured } from "@/lib/supabase/helpers";
 import { teacherSync } from "@/lib/supabase/sync";
+import { syncSafe } from "@/lib/supabase/sync-safe";
 
 interface TeacherState {
   teachers: Teacher[];
@@ -35,9 +35,7 @@ export const useTeacherStore = create<TeacherState>()(
           updated_at: new Date().toISOString(),
         };
         set((s) => ({ teachers: [...s.teachers, teacher] }));
-        if (isSupabaseConfigured()) {
-          teacherSync.insert(teacher).catch(console.error);
-        }
+        syncSafe(() => teacherSync.insert(teacher));
         return teacher;
       },
 
@@ -50,9 +48,7 @@ export const useTeacherStore = create<TeacherState>()(
           updated_at: now,
         }));
         set((s) => ({ teachers: [...s.teachers, ...newTeachers] }));
-        if (isSupabaseConfigured()) {
-          teacherSync.bulkInsert(newTeachers).catch(console.error);
-        }
+        syncSafe(() => teacherSync.bulkInsert(newTeachers));
         return newTeachers.length;
       },
 
@@ -64,9 +60,7 @@ export const useTeacherStore = create<TeacherState>()(
               : t
           ),
         }));
-        if (isSupabaseConfigured()) {
-          teacherSync.update(id, data).catch(console.error);
-        }
+        syncSafe(() => teacherSync.update(id, data));
       },
 
       bulkUpdateTeachers: (ids, data) => {
@@ -78,16 +72,12 @@ export const useTeacherStore = create<TeacherState>()(
               : t
           ),
         }));
-        if (isSupabaseConfigured()) {
-          ids.forEach((id) => teacherSync.update(id, data).catch(console.error));
-        }
+        ids.forEach((id) => syncSafe(() => teacherSync.update(id, data)));
       },
 
       deleteTeacher: (id) => {
         set((s) => ({ teachers: s.teachers.filter((t) => t.id !== id) }));
-        if (isSupabaseConfigured()) {
-          teacherSync.remove(id).catch(console.error);
-        }
+        syncSafe(() => teacherSync.remove(id));
       },
 
       deleteTeachers: (ids) => {
@@ -95,9 +85,7 @@ export const useTeacherStore = create<TeacherState>()(
         set((s) => ({
           teachers: s.teachers.filter((t) => !idSet.has(t.id)),
         }));
-        if (isSupabaseConfigured()) {
-          teacherSync.removeMany(ids).catch(console.error);
-        }
+        syncSafe(() => teacherSync.removeMany(ids));
       },
 
       getTeacherById: (id) => get().teachers.find((t) => t.id === id),

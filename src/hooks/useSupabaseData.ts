@@ -48,29 +48,55 @@ export function useSupabaseData() {
 
     async function loadAll() {
       try {
-        const [teachers, groups, subjects, rooms, loads, entries, logs] =
-          await Promise.all([
-            teacherSync.fetchAll(),
-            groupSync.fetchAll(),
-            subjectSync.fetchAll(),
-            roomSync.fetchAll(),
-            subjectLoadSync.fetchAll(),
-            scheduleSync.fetchAll(),
-            changelogSync.fetchAll(),
-          ]);
+        // Promise.allSettled ishlatiladi — bitta jadval xato bo'lsa
+        // qolganlari baribir yuklanadi (partial failure resilience).
+        const results = await Promise.allSettled([
+          teacherSync.fetchAll(),
+          groupSync.fetchAll(),
+          subjectSync.fetchAll(),
+          roomSync.fetchAll(),
+          subjectLoadSync.fetchAll(),
+          scheduleSync.fetchAll(),
+          changelogSync.fetchAll(),
+        ]);
 
+        const [teachers, groups, subjects, rooms, loads, entries, logs] = results;
+
+        // Muvaffaqiyatli natijalarni store'larga yuklash.
         // Supabase dan kelgan ma'lumotlar bo'sh bo'lsa, lokal store'ni
         // ustiga yozmaslik (demo data saqlanib qolishi uchun).
-        // Faqat Supabase da haqiqiy data bo'lganda bulkLoad chaqiriladi.
-        if (teachers.length > 0) useTeacherStore.getState().bulkLoad(teachers);
-        if (groups.length > 0) useGroupStore.getState().bulkLoad(groups);
-        if (subjects.length > 0) useSubjectStore.getState().bulkLoad(subjects);
-        if (rooms.length > 0) useRoomStore.getState().bulkLoad(rooms);
-        if (loads.length > 0) useSubjectLoadStore.getState().bulkLoad(loads);
-        if (entries.length > 0) useTimetableStore.getState().bulkLoad(entries);
-        if (logs.length > 0) useChangelogStore.getState().bulkLoad(logs);
+        if (teachers.status === "fulfilled" && teachers.value.length > 0)
+          useTeacherStore.getState().bulkLoad(teachers.value);
+        if (groups.status === "fulfilled" && groups.value.length > 0)
+          useGroupStore.getState().bulkLoad(groups.value);
+        if (subjects.status === "fulfilled" && subjects.value.length > 0)
+          useSubjectStore.getState().bulkLoad(subjects.value);
+        if (rooms.status === "fulfilled" && rooms.value.length > 0)
+          useRoomStore.getState().bulkLoad(rooms.value);
+        if (loads.status === "fulfilled" && loads.value.length > 0)
+          useSubjectLoadStore.getState().bulkLoad(loads.value);
+        if (entries.status === "fulfilled" && entries.value.length > 0)
+          useTimetableStore.getState().bulkLoad(entries.value);
+        if (logs.status === "fulfilled" && logs.value.length > 0)
+          useChangelogStore.getState().bulkLoad(logs.value);
 
-        setError(null);
+        // Xato bo'lgan jadvallarni log qilish
+        const failures = results.filter(
+          (r): r is PromiseRejectedResult => r.status === "rejected"
+        );
+        if (failures.length > 0) {
+          for (const f of failures) {
+            console.error("Supabase yuklash xatosi:", f.reason);
+          }
+          // Faqat hammasi xato bo'lganda error state o'rnatiladi
+          if (failures.length === results.length) {
+            setError("Barcha jadvallarni yuklashda xatolik");
+          } else {
+            setError(null);
+          }
+        } else {
+          setError(null);
+        }
       } catch (err) {
         console.error("Supabase dan yuklashda xatolik:", err);
         setError(err instanceof Error ? err.message : "Yuklash xatosi");

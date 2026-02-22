@@ -10,18 +10,32 @@ import { useTimetableStore } from "@/stores/useTimetableStore";
 import { useHydration } from "@/hooks/useHydration";
 import { useRoleAccess } from "@/hooks/useRoleAccess";
 import { GlassCard } from "@/components/ui/GlassCard";
+import { Badge } from "@/components/ui/Badge";
 import { Spinner } from "@/components/ui/Spinner";
 import { AlertsPanel } from "@/components/dashboard/AlertsPanel";
-
 import { QuickStats } from "@/components/dashboard/QuickStats";
 import { TeacherWorkloadChart } from "@/components/dashboard/TeacherWorkloadChart";
 import { RoomUtilizationChart } from "@/components/dashboard/RoomUtilizationChart";
+import { DAYS, TIME_SLOTS } from "@/lib/constants";
+import type { DayKey } from "@/lib/types";
+
+// Bugungi kunni DayKey ga aylantirish
+function getTodayKey(): DayKey | null {
+  const dayMap: Record<number, DayKey> = {
+    1: "dushanba", 2: "seshanba", 3: "chorshanba",
+    4: "payshanba", 5: "juma",
+  };
+  return dayMap[new Date().getDay()] || null;
+}
 
 // ─── Teacher Dashboard ──────────────────────────────────────────────────────
 function TeacherDashboard() {
   const { profile } = useRoleAccess();
   const { teachers } = useTeacherStore();
   const { entries } = useTimetableStore();
+  const { getSubjectById } = useSubjectStore();
+  const { getRoomById } = useRoomStore();
+  const { groups } = useGroupStore();
 
   const myTeacher = teachers.find((t) => t.user_id === profile?.id);
   const myEntries = useMemo(() => {
@@ -29,8 +43,28 @@ function TeacherDashboard() {
     return entries.filter((e) => e.teacher_id === myTeacher.id);
   }, [myTeacher, entries]);
 
+  const todayKey = useMemo(() => getTodayKey(), []);
+  const todayLabel = DAYS.find((d) => d.key === todayKey)?.label;
+
+  // Bugungi darslar (vaqt bo'yicha tartiblangan)
+  const todayEntries = useMemo(() => {
+    if (!todayKey) return [];
+    return myEntries
+      .filter((e) => e.day === todayKey)
+      .sort((a, b) => {
+        const aIdx = TIME_SLOTS.findIndex((s) => s.id === a.slot_id);
+        const bIdx = TIME_SLOTS.findIndex((s) => s.id === b.slot_id);
+        return aIdx - bIdx;
+      });
+  }, [myEntries, todayKey]);
+
+  // Haftalik yuklama foizi
+  const maxHours = myTeacher?.max_weekly_hours ?? 0;
+  const usedHours = myEntries.length * 1.5;
+  const loadPercent = maxHours > 0 ? Math.min(Math.round((usedHours / maxHours) * 100), 100) : 0;
+
   return (
-    <div className="max-w-7xl mx-auto space-y-8">
+    <div className="max-w-7xl mx-auto space-y-6">
       <div>
         <h1 className="text-[28px] font-bold tracking-tight md:text-[32px]">
           Xush kelibsiz{profile?.full_name ? `, ${profile.full_name}` : ""}
@@ -41,18 +75,18 @@ function TeacherDashboard() {
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
         <div className="animate-[stagger-fade_0.4s_ease_forwards] opacity-0" style={{ animationDelay: "0ms" }}>
           <GlassCard hover>
             <div className="flex items-start justify-between">
               <div>
-                <p className="text-sm text-[var(--muted)]">Jami darslarim</p>
-                <p className="text-3xl font-bold mt-1 text-[var(--color-accent)]">
+                <p className="text-xs text-[var(--muted)]">Jami darslarim</p>
+                <p className="text-2xl font-bold mt-1 text-[var(--color-accent)]">
                   {myEntries.length}
                 </p>
               </div>
-              <div className="p-2.5 rounded-[12px] bg-blue-50 dark:bg-blue-900/20">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <div className="p-2 rounded-[10px] bg-blue-50 dark:bg-blue-900/20">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                   <rect x="3" y="4" width="18" height="18" rx="2" />
                   <path d="M16 2v4M8 2v4M3 10h18" />
                 </svg>
@@ -64,13 +98,13 @@ function TeacherDashboard() {
           <GlassCard hover>
             <div className="flex items-start justify-between">
               <div>
-                <p className="text-sm text-[var(--muted)]">Max haftalik soat</p>
-                <p className="text-3xl font-bold mt-1 text-[#5856D6]">
-                  {myTeacher?.max_weekly_hours ?? 0}
+                <p className="text-xs text-[var(--muted)]">Bugungi darslar</p>
+                <p className="text-2xl font-bold mt-1 text-emerald-500">
+                  {todayEntries.length}
                 </p>
               </div>
-              <div className="p-2.5 rounded-[12px] bg-purple-50 dark:bg-purple-900/20">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <div className="p-2 rounded-[10px] bg-emerald-50 dark:bg-emerald-900/20">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                   <circle cx="12" cy="12" r="10" />
                   <polyline points="12 6 12 12 16 14" />
                 </svg>
@@ -78,29 +112,100 @@ function TeacherDashboard() {
             </div>
           </GlassCard>
         </div>
+        <div className="col-span-2 sm:col-span-1 animate-[stagger-fade_0.4s_ease_forwards] opacity-0" style={{ animationDelay: "160ms" }}>
+          <GlassCard hover>
+            <div>
+              <p className="text-xs text-[var(--muted)]">Haftalik yuklama</p>
+              <p className="text-2xl font-bold mt-1 text-purple-500">
+                {usedHours}<span className="text-sm font-normal text-[var(--muted)]">/{maxHours} soat</span>
+              </p>
+            </div>
+            <div className="mt-2 h-1.5 rounded-full bg-[var(--surface-secondary)] overflow-hidden">
+              <div
+                className="h-full rounded-full bg-purple-500 transition-all duration-500"
+                style={{ width: `${loadPercent}%` }}
+              />
+            </div>
+          </GlassCard>
+        </div>
+      </div>
+
+      {/* Bugungi darslar */}
+      <div className="animate-[stagger-fade_0.4s_ease_forwards] opacity-0" style={{ animationDelay: "240ms" }}>
+        <GlassCard>
+          <h2 className="text-sm font-semibold mb-3">
+            {todayLabel ? `Bugungi darslar — ${todayLabel}` : "Dam olish kuni"}
+          </h2>
+          {!todayKey ? (
+            <p className="text-sm text-[var(--muted)] py-4 text-center">
+              Bugun dam olish kuni. Yaxshi dam oling!
+            </p>
+          ) : todayEntries.length === 0 ? (
+            <p className="text-sm text-[var(--muted)] py-4 text-center">
+              Bugun darslar yo&apos;q
+            </p>
+          ) : (
+            <div className="space-y-2">
+              {todayEntries.map((entry) => {
+                const slot = TIME_SLOTS.find((s) => s.id === entry.slot_id);
+                const subject = getSubjectById(entry.subject_id);
+                const room = getRoomById(entry.room_id);
+                const entryGroups = Array.isArray(entry.group_ids)
+                  ? entry.group_ids.map((gid) => groups.find((g) => g.id === gid)?.name).filter(Boolean).join(", ")
+                  : "";
+                return (
+                  <div
+                    key={entry.id}
+                    className="flex items-center gap-3 p-3 rounded-[12px] bg-[var(--surface-secondary)]"
+                  >
+                    <div className="text-center min-w-[52px]">
+                      <p className="text-xs font-semibold text-[var(--color-accent)]">{slot?.label}</p>
+                      <p className="text-[10px] text-[var(--muted)]">{slot?.start}</p>
+                    </div>
+                    <div className="h-8 w-px bg-[var(--border)]" />
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium truncate">{subject?.name || "—"}</p>
+                      <div className="flex items-center gap-2 mt-0.5">
+                        {room && <Badge variant="default">{room.name}</Badge>}
+                        {entryGroups && <span className="text-[10px] text-[var(--muted)] truncate">{entryGroups}</span>}
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </GlassCard>
       </div>
 
       {/* Tez harakatlar */}
-      <GlassCard>
-        <h2 className="text-lg font-semibold mb-4">Tez harakatlar</h2>
-        <div className="space-y-3">
-          <Link
-            href="/timetable"
-            className="flex items-center gap-3 p-3 rounded-[12px] hover:bg-[var(--glass-bg)] hover:backdrop-blur-sm transition-all group"
-          >
-            <div className="p-2 rounded-lg bg-blue-100 dark:bg-blue-900/30 text-[var(--color-accent)] group-hover:scale-110 transition-transform">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <rect x="3" y="4" width="18" height="18" rx="2" />
-                <path d="M16 2v4M8 2v4M3 10h18" />
-              </svg>
-            </div>
-            <div>
-              <p className="text-sm font-medium">Dars jadvalimni ko&apos;rish</p>
-              <p className="text-xs text-[var(--muted)]">Haftalik jadval</p>
-            </div>
-          </Link>
-        </div>
-      </GlassCard>
+      <div className="animate-[stagger-fade_0.4s_ease_forwards] opacity-0" style={{ animationDelay: "320ms" }}>
+        <GlassCard>
+          <h2 className="text-sm font-semibold mb-3">Tez harakatlar</h2>
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+            {[
+              { href: "/timetable/by-teacher", label: "Darslarim", desc: "To'liq jadval", iconBg: "bg-blue-100 dark:bg-blue-900/30", iconColor: "text-blue-600 dark:text-blue-400", icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="8" y="2" width="8" height="4" rx="1" ry="1" /><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2" /><path d="M12 11h4M12 16h4M8 11h.01M8 16h.01" /></svg> },
+              { href: "/timetable", label: "Umumiy jadval", desc: "Barcha guruhlar", iconBg: "bg-purple-100 dark:bg-purple-900/30", iconColor: "text-purple-600 dark:text-purple-400", icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="4" width="18" height="18" rx="2" /><path d="M16 2v4M8 2v4M3 10h18" /></svg> },
+              { href: "/timetable/by-room", label: "Xonalar", desc: "Xona jadvali", iconBg: "bg-emerald-100 dark:bg-emerald-900/30", iconColor: "text-emerald-600 dark:text-emerald-400", icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="4" y="2" width="16" height="20" rx="2" ry="2" /><path d="M9 22v-4h6v4M8 6h.01M16 6h.01M12 6h.01M12 10h.01M12 14h.01M16 10h.01M16 14h.01M8 10h.01M8 14h.01" /></svg> },
+              { href: "/notifications", label: "Xabarlar", desc: "Bildirishnomalar", iconBg: "bg-amber-100 dark:bg-amber-900/30", iconColor: "text-amber-600 dark:text-amber-400", icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9" /><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0" /></svg> },
+            ].map((action) => (
+              <Link
+                key={action.href}
+                href={action.href}
+                className="flex flex-col items-center gap-2 p-3 rounded-[12px] hover:bg-[var(--surface-secondary)] transition-all group text-center"
+              >
+                <div className={`p-2.5 rounded-[10px] ${action.iconBg} ${action.iconColor} group-hover:scale-110 transition-transform`}>
+                  {action.icon}
+                </div>
+                <div>
+                  <p className="text-xs font-medium">{action.label}</p>
+                  <p className="text-[10px] text-[var(--muted)]">{action.desc}</p>
+                </div>
+              </Link>
+            ))}
+          </div>
+        </GlassCard>
+      </div>
     </div>
   );
 }
@@ -108,9 +213,45 @@ function TeacherDashboard() {
 // ─── Student Dashboard ──────────────────────────────────────────────────────
 function StudentDashboard() {
   const { profile } = useRoleAccess();
+  const { groups } = useGroupStore();
+  const { entries } = useTimetableStore();
+  const { getSubjectById } = useSubjectStore();
+  const { getTeacherById } = useTeacherStore();
+  const { getRoomById } = useRoomStore();
+
+  // Talaba guruhlarini aniqlash (department_id orqali)
+  const myGroups = useMemo(() => {
+    const deptId = profile?.department_id;
+    if (!deptId) return groups;
+    return groups.filter((g) => g.department_id === deptId);
+  }, [profile, groups]);
+
+  const myGroupIds = useMemo(() => new Set(myGroups.map((g) => g.id)), [myGroups]);
+
+  // Talaba guruhlariga tegishli darslar
+  const myEntries = useMemo(() => {
+    return entries.filter((e) =>
+      Array.isArray(e.group_ids) && e.group_ids.some((gid) => myGroupIds.has(gid))
+    );
+  }, [entries, myGroupIds]);
+
+  const todayKey = useMemo(() => getTodayKey(), []);
+  const todayLabel = DAYS.find((d) => d.key === todayKey)?.label;
+
+  // Bugungi darslar
+  const todayEntries = useMemo(() => {
+    if (!todayKey) return [];
+    return myEntries
+      .filter((e) => e.day === todayKey)
+      .sort((a, b) => {
+        const aIdx = TIME_SLOTS.findIndex((s) => s.id === a.slot_id);
+        const bIdx = TIME_SLOTS.findIndex((s) => s.id === b.slot_id);
+        return aIdx - bIdx;
+      });
+  }, [myEntries, todayKey]);
 
   return (
-    <div className="max-w-7xl mx-auto space-y-8">
+    <div className="max-w-7xl mx-auto space-y-6">
       <div>
         <h1 className="text-[28px] font-bold tracking-tight md:text-[32px]">
           Xush kelibsiz{profile?.full_name ? `, ${profile.full_name}` : ""}
@@ -120,27 +261,120 @@ function StudentDashboard() {
         </p>
       </div>
 
-      {/* Tez harakatlar */}
-      <GlassCard>
-        <h2 className="text-lg font-semibold mb-4">Tez harakatlar</h2>
-        <div className="space-y-3">
-          <Link
-            href="/timetable"
-            className="flex items-center gap-3 p-3 rounded-[12px] hover:bg-[var(--glass-bg)] hover:backdrop-blur-sm transition-all group"
-          >
-            <div className="p-2 rounded-lg bg-blue-100 dark:bg-blue-900/30 text-[var(--color-accent)] group-hover:scale-110 transition-transform">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <rect x="3" y="4" width="18" height="18" rx="2" />
-                <path d="M16 2v4M8 2v4M3 10h18" />
-              </svg>
+      {/* Stats */}
+      <div className="grid grid-cols-2 gap-3">
+        <div className="animate-[stagger-fade_0.4s_ease_forwards] opacity-0" style={{ animationDelay: "0ms" }}>
+          <GlassCard hover>
+            <div className="flex items-start justify-between">
+              <div>
+                <p className="text-xs text-[var(--muted)]">Haftalik darslar</p>
+                <p className="text-2xl font-bold mt-1 text-[var(--color-accent)]">
+                  {myEntries.length}
+                </p>
+              </div>
+              <div className="p-2 rounded-[10px] bg-blue-50 dark:bg-blue-900/20">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <rect x="3" y="4" width="18" height="18" rx="2" />
+                  <path d="M16 2v4M8 2v4M3 10h18" />
+                </svg>
+              </div>
             </div>
-            <div>
-              <p className="text-sm font-medium">Dars jadvalini ko&apos;rish</p>
-              <p className="text-xs text-[var(--muted)]">Guruh bo&apos;yicha haftalik jadval</p>
-            </div>
-          </Link>
+          </GlassCard>
         </div>
-      </GlassCard>
+        <div className="animate-[stagger-fade_0.4s_ease_forwards] opacity-0" style={{ animationDelay: "80ms" }}>
+          <GlassCard hover>
+            <div className="flex items-start justify-between">
+              <div>
+                <p className="text-xs text-[var(--muted)]">Bugungi darslar</p>
+                <p className="text-2xl font-bold mt-1 text-emerald-500">
+                  {todayEntries.length}
+                </p>
+              </div>
+              <div className="p-2 rounded-[10px] bg-emerald-50 dark:bg-emerald-900/20">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <circle cx="12" cy="12" r="10" />
+                  <polyline points="12 6 12 12 16 14" />
+                </svg>
+              </div>
+            </div>
+          </GlassCard>
+        </div>
+      </div>
+
+      {/* Bugungi darslar */}
+      <div className="animate-[stagger-fade_0.4s_ease_forwards] opacity-0" style={{ animationDelay: "160ms" }}>
+        <GlassCard>
+          <h2 className="text-sm font-semibold mb-3">
+            {todayLabel ? `Bugungi darslar — ${todayLabel}` : "Dam olish kuni"}
+          </h2>
+          {!todayKey ? (
+            <p className="text-sm text-[var(--muted)] py-4 text-center">
+              Bugun dam olish kuni. Yaxshi dam oling!
+            </p>
+          ) : todayEntries.length === 0 ? (
+            <p className="text-sm text-[var(--muted)] py-4 text-center">
+              Bugun darslar yo&apos;q
+            </p>
+          ) : (
+            <div className="space-y-2">
+              {todayEntries.map((entry) => {
+                const slot = TIME_SLOTS.find((s) => s.id === entry.slot_id);
+                const subject = getSubjectById(entry.subject_id);
+                const teacher = getTeacherById(entry.teacher_id);
+                const room = getRoomById(entry.room_id);
+                return (
+                  <div
+                    key={entry.id}
+                    className="flex items-center gap-3 p-3 rounded-[12px] bg-[var(--surface-secondary)]"
+                  >
+                    <div className="text-center min-w-[52px]">
+                      <p className="text-xs font-semibold text-[var(--color-accent)]">{slot?.label}</p>
+                      <p className="text-[10px] text-[var(--muted)]">{slot?.start}</p>
+                    </div>
+                    <div className="h-8 w-px bg-[var(--border)]" />
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium truncate">{subject?.name || "—"}</p>
+                      <div className="flex items-center gap-2 mt-0.5">
+                        {room && <Badge variant="default">{room.name}</Badge>}
+                        {teacher && <span className="text-[10px] text-[var(--muted)] truncate">{teacher.short_name}</span>}
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </GlassCard>
+      </div>
+
+      {/* Tez harakatlar */}
+      <div className="animate-[stagger-fade_0.4s_ease_forwards] opacity-0" style={{ animationDelay: "240ms" }}>
+        <GlassCard>
+          <h2 className="text-sm font-semibold mb-3">Tez harakatlar</h2>
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+            {[
+              { href: "/timetable", label: "Jadvalim", desc: "Guruh jadvali", iconBg: "bg-blue-100 dark:bg-blue-900/30", iconColor: "text-blue-600 dark:text-blue-400", icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="4" width="18" height="18" rx="2" /><path d="M16 2v4M8 2v4M3 10h18" /></svg> },
+              { href: "/timetable/by-teacher", label: "O'qituvchilar", desc: "O'qituvchi jadvali", iconBg: "bg-purple-100 dark:bg-purple-900/30", iconColor: "text-purple-600 dark:text-purple-400", icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="10" cy="7" r="4" /><path d="M10.3 15H7a4 4 0 0 0-4 4v2" /><circle cx="17" cy="17" r="3" /><path d="m21 21-1.9-1.9" /></svg> },
+              { href: "/timetable/by-room", label: "Xonalar", desc: "Xona jadvali", iconBg: "bg-emerald-100 dark:bg-emerald-900/30", iconColor: "text-emerald-600 dark:text-emerald-400", icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="4" y="2" width="16" height="20" rx="2" ry="2" /><path d="M9 22v-4h6v4M8 6h.01M16 6h.01M12 6h.01M12 10h.01M12 14h.01M16 10h.01M16 14h.01M8 10h.01M8 14h.01" /></svg> },
+              { href: "/notifications", label: "Xabarlar", desc: "Bildirishnomalar", iconBg: "bg-amber-100 dark:bg-amber-900/30", iconColor: "text-amber-600 dark:text-amber-400", icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9" /><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0" /></svg> },
+            ].map((action) => (
+              <Link
+                key={action.href}
+                href={action.href}
+                className="flex flex-col items-center gap-2 p-3 rounded-[12px] hover:bg-[var(--surface-secondary)] transition-all group text-center"
+              >
+                <div className={`p-2.5 rounded-[10px] ${action.iconBg} ${action.iconColor} group-hover:scale-110 transition-transform`}>
+                  {action.icon}
+                </div>
+                <div>
+                  <p className="text-xs font-medium">{action.label}</p>
+                  <p className="text-[10px] text-[var(--muted)]">{action.desc}</p>
+                </div>
+              </Link>
+            ))}
+          </div>
+        </GlassCard>
+      </div>
     </div>
   );
 }

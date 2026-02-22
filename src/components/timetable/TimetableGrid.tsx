@@ -7,10 +7,12 @@ import {
   useSensor,
   useSensors,
   PointerSensor,
+  TouchSensor,
+  closestCenter,
+  useDroppable,
   type DragStartEvent,
   type DragEndEvent,
 } from "@dnd-kit/core";
-import { useDroppable } from "@dnd-kit/core";
 import { useTimetableStore } from "@/stores/useTimetableStore";
 import { DAYS, TIME_SLOTS, TRACK_LABELS } from "@/lib/constants";
 import { cn } from "@/lib/utils";
@@ -70,6 +72,9 @@ export function TimetableGrid({ groupId, readOnly = false }: TimetableGridProps)
   const sensors = useSensors(
     useSensor(PointerSensor, {
       activationConstraint: { distance: 8 },
+    }),
+    useSensor(TouchSensor, {
+      activationConstraint: { delay: 200, tolerance: 8 },
     })
   );
 
@@ -100,6 +105,10 @@ export function TimetableGrid({ groupId, readOnly = false }: TimetableGridProps)
     [moveEntry, readOnly]
   );
 
+  const handleDragCancel = useCallback(() => {
+    setActiveEntry(null);
+  }, []);
+
   // Group slots by track
   const trackGroups = useMemo(() => {
     const map = new Map<TrackKey, TimeSlot[]>();
@@ -114,8 +123,10 @@ export function TimetableGrid({ groupId, readOnly = false }: TimetableGridProps)
     <>
       <DndContext
         sensors={sensors}
+        collisionDetection={closestCenter}
         onDragStart={handleDragStart}
         onDragEnd={handleDragEnd}
+        onDragCancel={handleDragCancel}
       >
         {/* Mobile Day Tabs */}
         <div className="md:hidden mb-4 flex gap-1 overflow-x-auto pb-1 -mx-1 px-1">
@@ -169,27 +180,21 @@ export function TimetableGrid({ groupId, readOnly = false }: TimetableGridProps)
                         </div>
                       </div>
 
-                      {/* Card or empty */}
-                      <div className="flex-1 min-h-[56px]">
-                        {entry ? (
-                          <div className="group h-full">
-                            <LessonCard
-                              entry={entry}
-                              hasConflict={hasConflict}
-                              onRemove={readOnly ? undefined : () => removeEntry(entry.id)}
-                            />
-                          </div>
-                        ) : readOnly ? (
-                          <div className="w-full h-full min-h-[56px]" />
-                        ) : (
-                          <button
-                            onClick={() => setAssignModal({ day: mobileDay, slot })}
-                            className="w-full h-full min-h-[56px] rounded-[var(--radius-sm)] border-2 border-dashed border-[var(--glass-border)] flex items-center justify-center text-[var(--muted)] text-xs active:bg-[var(--glass-bg)] transition-all duration-300"
-                          >
-                            + Qo&apos;shish
-                          </button>
-                        )}
-                      </div>
+                      {/* Droppable card or empty */}
+                      <MobileDroppableCell
+                        day={mobileDay}
+                        slot={slot}
+                        entry={entry}
+                        groupId={groupId}
+                        hasConflict={hasConflict}
+                        readOnly={readOnly}
+                        onClickEmpty={() => setAssignModal({ day: mobileDay, slot })}
+                        onRemove={
+                          !readOnly && entry
+                            ? () => removeEntry(entry.id)
+                            : undefined
+                        }
+                      />
                     </div>
                   );
                 })}
@@ -371,5 +376,48 @@ const DroppableCell = memo(function DroppableCell({
         </div>
       ) : null}
     </td>
+  );
+});
+
+// ─── Mobile Droppable Cell ──────────────────────────────────────────────────
+const MobileDroppableCell = memo(function MobileDroppableCell({
+  day,
+  slot,
+  entry,
+  hasConflict,
+  readOnly = false,
+  onClickEmpty,
+  onRemove,
+}: DroppableCellProps) {
+  const droppableId = `cell::${day}::${slot.id}`;
+  const { setNodeRef, isOver } = useDroppable({ id: droppableId });
+
+  return (
+    <div
+      ref={readOnly ? undefined : setNodeRef}
+      className={cn(
+        "flex-1 min-h-[56px] rounded-[var(--radius-sm)] transition-colors",
+        !readOnly && isOver && "bg-[var(--color-accent)]/12"
+      )}
+    >
+      {entry ? (
+        <div className="group h-full">
+          <LessonCard
+            entry={entry}
+            hasConflict={hasConflict}
+            onRemove={onRemove}
+          />
+        </div>
+      ) : readOnly ? (
+        <div className="w-full h-full min-h-[56px]" />
+      ) : (
+        <button
+          onClick={onClickEmpty}
+          className="w-full h-full min-h-[56px] rounded-[var(--radius-sm)] border-2 border-dashed border-[var(--glass-border)] flex items-center justify-center text-[var(--muted)] text-xs active:bg-[var(--glass-bg)] transition-all duration-300"
+        >
+          + Qo&apos;shish
+        </button>
+      )}
+    </div>
   );
 });

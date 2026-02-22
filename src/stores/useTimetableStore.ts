@@ -14,6 +14,7 @@ interface TimetableState {
     data: Omit<ScheduleEntry, "id" | "created_at" | "updated_at">
   ) => ScheduleEntry;
   moveEntry: (entryId: ID, newDay: DayKey, newSlotId: string) => void;
+  updateEntry: (entryId: ID, changes: Partial<ScheduleEntry>) => void;
   removeEntry: (entryId: ID) => void;
   clearAll: () => void;
   bulkLoad: (entries: ScheduleEntry[]) => void;
@@ -61,6 +62,19 @@ export const useTimetableStore = create<TimetableState>()(
           scheduleSync
             .update(entryId, { day: newDay, slot_id: newSlotId } as Partial<ScheduleEntry>)
             .catch(console.error);
+        }
+      },
+
+      updateEntry: (entryId, changes) => {
+        set((s) => ({
+          entries: s.entries.map((e) =>
+            e.id === entryId
+              ? { ...e, ...changes, updated_at: new Date().toISOString() }
+              : e
+          ),
+        }));
+        if (isSupabaseConfigured()) {
+          scheduleSync.update(entryId, changes).catch(console.error);
         }
       },
 

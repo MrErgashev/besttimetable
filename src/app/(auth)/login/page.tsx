@@ -69,10 +69,10 @@ const TEST_ACCOUNTS = [
   },
 ];
 
-const STATS = [
-  { icon: Calendar, label: "Darslar", value: 500 },
-  { icon: Users, label: "O\u2018qituvchilar", value: 50 },
-  { icon: Building2, label: "Xonalar", value: 30 },
+const FEATURES = [
+  { icon: Calendar, label: "Dars jadvali" },
+  { icon: Users, label: "O\u2018qituvchilar" },
+  { icon: Building2, label: "Xonalar" },
 ];
 
 /** Vaqtga asoslangan salomlash */
@@ -313,7 +313,7 @@ export default function LoginPage() {
             className="flex gap-3 opacity-0"
             style={{ animation: "float-up 0.8s var(--spring-smooth) 0.55s forwards" }}
           >
-            {STATS.map((stat, i) => (
+            {FEATURES.map((feat) => (
               <div
                 key={stat.label}
                 className="apple-card rounded-[var(--radius-lg)] p-3 flex-1 text-center"

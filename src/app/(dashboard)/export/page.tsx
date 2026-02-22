@@ -27,11 +27,13 @@ export default function ExportPage() {
   const [format, setFormat] = useState<ExportFormat>("pdf");
   const [selectedId, setSelectedId] = useState("");
   const [exporting, setExporting] = useState(false);
+  const [exportMsg, setExportMsg] = useState<{ type: "success" | "error"; text: string } | null>(null);
 
   const ctx = { entries, teachers, subjects, rooms, groups };
 
   async function handleExport() {
     setExporting(true);
+    setExportMsg(null);
     try {
       if (view === "all") {
         const { exportAllGroupsExcel } = await import("@/lib/export/excel");
@@ -61,8 +63,12 @@ export default function ExportPage() {
           exportRoomExcel(selectedId, ctx);
         }
       }
+      setExportMsg({ type: "success", text: "Fayl muvaffaqiyatli yuklab olindi!" });
+      setTimeout(() => setExportMsg(null), 4000);
     } catch (err) {
       console.error("Export error:", err);
+      setExportMsg({ type: "error", text: "Eksport qilishda xatolik yuz berdi. Qaytadan urinib ko'ring." });
+      setTimeout(() => setExportMsg(null), 5000);
     }
     setExporting(false);
   }
@@ -190,6 +196,18 @@ export default function ExportPage() {
               </>
             )}
           </Button>
+
+          {exportMsg && (
+            <div
+              className={`p-3 rounded-xl text-sm ${
+                exportMsg.type === "success"
+                  ? "bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400"
+                  : "bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400"
+              }`}
+            >
+              {exportMsg.text}
+            </div>
+          )}
 
           {entries.length === 0 && (
             <p className="text-xs text-center text-amber-500">

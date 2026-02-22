@@ -176,11 +176,18 @@ export const USER_FIELDS: FieldMapping[] = [
     aliases: ["ism", "name", "fullname", "full name", "ismi", "familiya ism", "f.i.o", "fio"],
   },
   {
-    key: "email",
-    label: "Email",
+    key: "login",
+    label: "Login",
     required: true,
     type: "string",
-    aliases: ["email", "e-mail", "pochta", "elektron pochta", "login"],
+    aliases: ["login", "username", "foydalanuvchi", "email", "e-mail", "pochta"],
+  },
+  {
+    key: "password",
+    label: "Parol",
+    required: false,
+    type: "string",
+    aliases: ["parol", "password", "pass", "kod"],
   },
 ];
 
@@ -225,7 +232,7 @@ export const ENTITY_CONFIG: Record<
     fields: USER_FIELDS,
     label: "Foydalanuvchilar",
     singularLabel: "foydalanuvchi",
-    duplicateCheckKeys: ["email"],
+    duplicateCheckKeys: ["login"],
   },
 };
 

@@ -15,7 +15,7 @@ const SHOW_TEST_ACCOUNTS_KEY = "showTestAccounts";
 const TEST_ACCOUNTS = [
   {
     role: "Super Admin",
-    email: "superadmin@timetable.uz",
+    login: "superadmin@timetable.uz",
     password: "Test1234!",
     icon: Shield,
     color: "text-red-500",
@@ -24,7 +24,7 @@ const TEST_ACCOUNTS = [
   },
   {
     role: "Admin",
-    email: "admin@timetable.uz",
+    login: "admin@timetable.uz",
     password: "Test1234!",
     icon: UserCog,
     color: "text-blue-500",
@@ -33,7 +33,7 @@ const TEST_ACCOUNTS = [
   },
   {
     role: "O'qituvchi",
-    email: "teacher@timetable.uz",
+    login: "teacher@timetable.uz",
     password: "Test1234!",
     icon: BookOpen,
     color: "text-green-500",
@@ -42,7 +42,7 @@ const TEST_ACCOUNTS = [
   },
   {
     role: "Talaba",
-    email: "student@timetable.uz",
+    login: "student@timetable.uz",
     password: "Test1234!",
     icon: GraduationCap,
     color: "text-violet-500",
@@ -51,9 +51,14 @@ const TEST_ACCOUNTS = [
   },
 ];
 
+/** Login yoki email ni Supabase email formatiga aylantirish */
+function toAuthEmail(input: string): string {
+  return input.includes("@") ? input : `${input}@besttimetable.uz`;
+}
+
 export default function LoginPage() {
   const router = useRouter();
-  const [email, setEmail] = useState("");
+  const [login, setLogin] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
@@ -75,15 +80,15 @@ export default function LoginPage() {
     try {
       const supabase = createClient();
       const { error: authError } = await supabase.auth.signInWithPassword({
-        email,
+        email: toAuthEmail(login),
         password,
       });
 
       if (authError) {
         if (authError.message.includes("Invalid login")) {
-          setError("Email yoki parol noto'g'ri");
+          setError("Login yoki parol noto'g'ri");
         } else if (authError.message.includes("Email not confirmed")) {
-          setError("Email tasdiqlanmagan. Pochtangizni tekshiring.");
+          setError("Hisob tasdiqlanmagan. Administratorga murojaat qiling.");
         } else {
           setError(authError.message);
         }
@@ -99,9 +104,9 @@ export default function LoginPage() {
     }
   }
 
-  function fillCredentials(email: string, password: string) {
-    setEmail(email);
-    setPassword(password);
+  function fillCredentials(loginVal: string, pwd: string) {
+    setLogin(loginVal);
+    setPassword(pwd);
     setError("");
   }
 
@@ -123,7 +128,6 @@ export default function LoginPage() {
               alt="Oriental Universiteti"
               width={160}
               height={160}
-              className="drop-shadow-md"
               priority
             />
           </div>
@@ -140,12 +144,13 @@ export default function LoginPage() {
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <Input
-              label="Email"
-              type="email"
-              placeholder="email@example.com"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              label="Login"
+              type="text"
+              placeholder="login yoki email"
+              value={login}
+              onChange={(e) => setLogin(e.target.value)}
               required
+              autoComplete="username"
             />
             <Input
               label="Parol"
@@ -154,6 +159,7 @@ export default function LoginPage() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
+              autoComplete="current-password"
             />
 
             {error && (
@@ -189,9 +195,9 @@ export default function LoginPage() {
             <div className="space-y-2">
               {TEST_ACCOUNTS.map((acc) => (
                 <button
-                  key={acc.email}
+                  key={acc.login}
                   type="button"
-                  onClick={() => fillCredentials(acc.email, acc.password)}
+                  onClick={() => fillCredentials(acc.login, acc.password)}
                   className="w-full flex items-center gap-3 p-2.5 rounded-[var(--radius)]
                     bg-[var(--glass-bg)] backdrop-blur-[var(--glass-blur-light)] hover:bg-[var(--glass-bg-heavy)] border border-[var(--glass-border-subtle)] transition-all duration-300 [transition-timing-function:var(--spring-smooth)] text-left group"
                 >

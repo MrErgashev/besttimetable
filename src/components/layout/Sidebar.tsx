@@ -138,18 +138,18 @@ export function Sidebar() {
   const { signOut } = useAuth();
 
   return (
-    <aside className="fixed left-0 top-0 h-full w-[var(--sidebar-width)] flex-col glass-primary border-r border-[var(--glass-border)] shadow-[var(--shadow-lg)] p-4 z-30 hidden lg:flex">
+    <aside className="fixed left-0 top-0 h-full w-[var(--sidebar-width)] flex-col glass-primary border-r border-[var(--glass-border)] shadow-[var(--shadow-lg)] px-4 pt-2 pb-4 z-30 hidden lg:flex">
       {/* Logo */}
-      <div className="mb-3 px-2">
+      <div className="mb-1 px-2">
         <img
           src="/images/logo-light.png"
           alt="Oriental Universiteti"
-          className="w-full h-20 object-cover object-center block dark:hidden"
+          className="w-full h-12 object-cover object-center block dark:hidden"
         />
         <img
           src="/images/logo-dark.png"
           alt="Oriental Universiteti"
-          className="w-full h-20 object-cover object-center hidden dark:block"
+          className="w-full h-12 object-cover object-center hidden dark:block"
         />
       </div>
 

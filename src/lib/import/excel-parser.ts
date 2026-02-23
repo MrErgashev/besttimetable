@@ -312,6 +312,23 @@ function parseRoomCell(text: string): string {
 }
 
 /**
+ * Matn xona ma'lumotiga o'xshashligini aniqlash.
+ * "Xona No 210", "210", "A-210", "auditoriya 301" kabi matnlar uchun true.
+ * Dars matni sifatida parse qilinmasligi kerak.
+ */
+function isRoomLikeText(text: string): boolean {
+  const t = text.trim().toLowerCase();
+  if (!t) return false;
+  // Faqat raqam (2-4 xona)
+  if (/^\d{2,4}[a-z]?$/.test(t)) return true;
+  // "Xona No 210", "xona 210", "xona №210"
+  if (/^xona\s/i.test(t)) return true;
+  // "auditoriya 301", "аудитория 301"
+  if (/^(auditoriya|аудитория)\s/i.test(t)) return true;
+  return false;
+}
+
+/**
  * Merged cell'larni hisobga olib, to'ldirilgan ma'lumot massivini yaratish.
  * XLSX merged cell'larda faqat yuqori-chap katakda qiymat bo'ladi,
  * qolgan kataklar bo'sh bo'ladi.
@@ -575,6 +592,9 @@ function parseScheduleFormat(
       // FILLED data dan dars hujayrasini o'qish (merged cell'lar to'g'ri ko'rinadi)
       const lessonCell = filledData[r]?.[group.col]?.toString().trim() || "";
       if (!lessonCell) continue;
+
+      // Xona ma'lumotini dars sifatida qabul qilmaslik
+      if (isRoomLikeText(lessonCell)) continue;
 
       // Dars hujayrasini parse qilish (hech qachon null qaytarmaydi)
       const lesson = parseLessonCell(lessonCell);

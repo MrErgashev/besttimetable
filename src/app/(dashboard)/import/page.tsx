@@ -278,6 +278,7 @@ export default function ImportPage() {
       subjects,
       rooms,
       defaultGroupId: selectedGroupId || undefined,
+      autoCreate: true,
     });
 
     setMappingResult(result);
@@ -294,8 +295,32 @@ export default function ImportPage() {
   const handleImport = useCallback(() => {
     if (!mappingResult) return;
     setImporting(true);
-    let count = 0;
 
+    // Avval auto-created entity'larni store'larga qo'shish
+    const { autoCreated } = mappingResult;
+    if (autoCreated.subjects.length > 0) {
+      useSubjectStore.setState((s) => ({
+        subjects: [...s.subjects, ...autoCreated.subjects],
+      }));
+    }
+    if (autoCreated.teachers.length > 0) {
+      useTeacherStore.setState((s) => ({
+        teachers: [...s.teachers, ...autoCreated.teachers],
+      }));
+    }
+    if (autoCreated.rooms.length > 0) {
+      useRoomStore.setState((s) => ({
+        rooms: [...s.rooms, ...autoCreated.rooms],
+      }));
+    }
+    if (autoCreated.groups.length > 0) {
+      useGroupStore.setState((s) => ({
+        groups: [...s.groups, ...autoCreated.groups],
+      }));
+    }
+
+    // Keyin dars yozuvlarni jadvalga qo'shish
+    let count = 0;
     for (const entry of mappingResult.entries) {
       placeEntry(entry);
       count++;
@@ -648,6 +673,41 @@ export default function ImportPage() {
               {parsedFileCount} ta fayldan ({files.filter((f) => f.status === "parsed").map((f) => f.name).join(", ")})
             </div>
 
+            {/* Avtomatik yaratiladigan entity'lar */}
+            {mappingResult.stats.autoCreatedCount > 0 && (
+              <div className="rounded-[var(--radius-sm)] bg-[var(--color-accent)]/5 border border-[var(--color-accent)]/20 p-3">
+                <h3 className="text-sm font-semibold text-[var(--color-accent)] mb-1.5">
+                  Avtomatik yaratiladigan ma&apos;lumotlar:
+                </h3>
+                <div className="flex flex-wrap gap-2">
+                  {mappingResult.autoCreated.subjects.length > 0 && (
+                    <Badge variant="accent">
+                      {mappingResult.autoCreated.subjects.length} ta fan
+                    </Badge>
+                  )}
+                  {mappingResult.autoCreated.teachers.length > 0 && (
+                    <Badge variant="accent">
+                      {mappingResult.autoCreated.teachers.length} ta o&apos;qituvchi
+                    </Badge>
+                  )}
+                  {mappingResult.autoCreated.rooms.length > 0 && (
+                    <Badge variant="accent">
+                      {mappingResult.autoCreated.rooms.length} ta xona
+                    </Badge>
+                  )}
+                  {mappingResult.autoCreated.groups.length > 0 && (
+                    <Badge variant="accent">
+                      {mappingResult.autoCreated.groups.length} ta guruh
+                    </Badge>
+                  )}
+                </div>
+                <p className="text-xs text-[var(--muted)] mt-1.5">
+                  Topilmagan ma&apos;lumotlar import paytida avtomatik yaratiladi.
+                  Keyinroq Fanlar, O&apos;qituvchilar, Xonalar sahifalaridan tahrirlash mumkin.
+                </p>
+              </div>
+            )}
+
             {/* Ziddiyatlar */}
             {conflicts.length > 0 && (
               <div>
@@ -740,6 +800,15 @@ export default function ImportPage() {
               <p className="text-sm text-[var(--muted)] mt-1">
                 {importedCount} ta dars {files.length} ta fayldan muvaffaqiyatli import qilindi
               </p>
+              {mappingResult && mappingResult.stats.autoCreatedCount > 0 && (
+                <p className="text-xs text-[var(--color-accent)] mt-1">
+                  {mappingResult.autoCreated.subjects.length > 0 && `${mappingResult.autoCreated.subjects.length} ta fan, `}
+                  {mappingResult.autoCreated.teachers.length > 0 && `${mappingResult.autoCreated.teachers.length} ta o'qituvchi, `}
+                  {mappingResult.autoCreated.rooms.length > 0 && `${mappingResult.autoCreated.rooms.length} ta xona, `}
+                  {mappingResult.autoCreated.groups.length > 0 && `${mappingResult.autoCreated.groups.length} ta guruh `}
+                  avtomatik yaratildi
+                </p>
+              )}
               {conflicts.length > 0 && (
                 <p className="text-xs text-[var(--color-warning)] mt-2">
                   {conflicts.length} ta ziddiyat aniqlangan edi — jadvalda tekshiring

@@ -164,59 +164,133 @@ function parseGridFormat(data: string[][]): ParsedRow[] {
 
 // ─── Schedule format parser (universitet dars jadvali) ─────────────────────
 
-/** Guruh nomi pattern: 2+ harf, keyin tire, keyin raqamlar (masalan BR-501, IQT-501) */
-const GROUP_NAME_PATTERN = /^[A-Za-z\u0400-\u04FF]{2,}[_-]\d+/;
+/**
+ * Guruh nomi pattern — kengroq:
+ * - "BR-501", "IQT-501", "DI-501" (standart)
+ * - "B-501" (1 harfli prefix)
+ * - "2IT-101" (raqam bilan boshlanadi)
+ * - "M.T-501" (nuqtali)
+ * - "MT 101" (bo'shliqli)
+ * Kamida 1 ta harf bo'lishi shart (sof raqamlarni oldini olish uchun).
+ */
+const GROUP_NAME_PATTERN = /^(?=.*[A-Za-z\u0400-\u04FF])[\dA-Za-z.\u0400-\u04FF]+[_\- ]\d{1,4}$/;
 
 /**
  * Dars hujayrasini parse qilish.
- * Format: "Fan nomi (tur) O'qituvchi ismi"
- * Masalan: "Dinshunoslik (ma'ruza) D. Nishonova"
- *          "Fizika 1,2 (laboratoriya) A. Axunjanov"
+ *
+ * Qo'llab-quvvatlanadigan formatlar:
+ * - "Fan nomi (tur) O'qituvchi ismi" — to'liq format
+ * - "Fan nomi O'qituvchi ismi" — tursiz
+ * - "Fan nomi\nO'qituvchi ismi" — ko'p qatorli
+ * - "Fan nomi (tur)" — o'qituvchisiz
+ * - "Fan nomi" — faqat fan
+ *
+ * Hech qachon null qaytarmaydi — kamida fan nomi sifatida xom matnni qaytaradi.
  */
 function parseLessonCell(text: string): {
   subject: string;
   lessonType: string;
   teacher: string;
-} | null {
+} {
   const trimmed = text.trim();
-  if (!trimmed) return null;
+  if (!trimmed) return { subject: "", lessonType: "", teacher: "" };
 
   // Apostrof variantlarini ASCII apostrofga normalizatsiya qilish
   const normalized = trimmed.replace(/[\u2018\u2019\u02BB\u02BC\u0060]/g, "'");
 
-  // Pattern: Fan nomi (tur) O'qituvchi
-  // Tur: ma'ruza, amaliy, seminar, laboratoriya
-  const match = normalized.match(
-    /^(.+?)\s*\((ma'ruza|amaliy|seminar|laboratoriya|maruza|lab)\)\s*(.+)$/i
-  );
+  // Ko'p qatorli hujayra — newline bilan ajratilgan qismlarni sinash
+  const lines = normalized.split(/\n/).map((l) => l.trim()).filter(Boolean);
 
-  if (match) {
-    let lessonType = match[2].toLowerCase();
-    // Normalize
+  // Dars tur pattern (kengroq)
+  const LESSON_TYPE_PATTERN =
+    /\((ma'ruza|amaliy|seminar|laboratoriya|maruza|lab|tajriba|mustaqil(?:\s+ish)?|kurs\s+ishi|mashg'ulot|mashg`ulot|nazariy|amaliyot)\)/i;
+
+  // O'qituvchi nomi pattern (kengroq):
+  // "D. Nishonova", "Nishonova D.", "prof. I. Karimov", "dots. A. Sobirov",
+  // "Abdullayev Jasur", "Kim S.", "D.Nishonova"
+  const TEACHER_PATTERN =
+    /(?:(?:prof|dots|doc|PhD|DSc|o'qit)\.?\s+)?(?:[A-Z\u0400-\u04FF][a-z\u0400-\u04FF]*\.?\s*[A-Z\u0400-\u04FF][a-z\u0400-\u04FF']+|[A-Z\u0400-\u04FF][a-z\u0400-\u04FF']+\s+[A-Z\u0400-\u04FF]\.?)/;
+
+  // ─── Pattern 1: "Fan (tur) O'qituvchi" — to'liq format ────────────────
+  const fullMatch = normalized.match(
+    /^(.+?)\s*\((ma'ruza|amaliy|seminar|laboratoriya|maruza|lab|tajriba|mustaqil(?:\s+ish)?|kurs\s+ishi|mashg'ulot|mashg`ulot|nazariy|amaliyot)\)\s*(.+)$/i
+  );
+  if (fullMatch) {
+    let lessonType = fullMatch[2].toLowerCase();
     if (lessonType === "maruza") lessonType = "ma'ruza";
     if (lessonType === "lab") lessonType = "laboratoriya";
     return {
-      subject: match[1].trim(),
+      subject: fullMatch[1].trim(),
       lessonType,
-      teacher: match[3].trim(),
+      teacher: fullMatch[3].trim(),
     };
   }
 
-  // Agar qavslar bo'lmasa, to'liq matnni fan deb olish
-  // (ba'zi hollarda tur ko'rsatilmagan bo'lishi mumkin)
-  // Pattern: agar oxirida "I. Familiya" format bo'lsa
-  const teacherMatch = normalized.match(
-    /^(.+?)\s+([A-Z\u0400-\u04FF][a-z\u0400-\u04FF]*\.?\s+[A-Z\u0400-\u04FF][a-z\u0400-\u04FF']+(?:ova|yev|ov|eva|yeva|nov|nova|yevich|ovna)?)$/
+  // ─── Pattern 2: "Fan (tur)" — o'qituvchisiz ──────────────────────────
+  const typeOnlyMatch = normalized.match(
+    /^(.+?)\s*\((ma'ruza|amaliy|seminar|laboratoriya|maruza|lab|tajriba|mustaqil(?:\s+ish)?|kurs\s+ishi|mashg'ulot|mashg`ulot|nazariy|amaliyot)\)\s*$/i
   );
-  if (teacherMatch) {
+  if (typeOnlyMatch) {
+    let lessonType = typeOnlyMatch[2].toLowerCase();
+    if (lessonType === "maruza") lessonType = "ma'ruza";
+    if (lessonType === "lab") lessonType = "laboratoriya";
     return {
-      subject: teacherMatch[1].trim(),
-      lessonType: "",
-      teacher: teacherMatch[2].trim(),
+      subject: typeOnlyMatch[1].trim(),
+      lessonType,
+      teacher: "",
     };
   }
 
-  return null;
+  // ─── Pattern 3: Ko'p qatorli — har bir qismni alohida tekshirish ─────
+  if (lines.length >= 2) {
+    let subject = "";
+    let lessonType = "";
+    let teacher = "";
+
+    for (const line of lines) {
+      const typeMatch = line.match(LESSON_TYPE_PATTERN);
+      const isTeacher = TEACHER_PATTERN.test(line) && !LESSON_TYPE_PATTERN.test(line);
+
+      if (typeMatch && !subject) {
+        // Bu qatorda tur bor — fan nomi ham shu yerda
+        subject = line.replace(LESSON_TYPE_PATTERN, "").trim();
+        lessonType = typeMatch[1].toLowerCase();
+        if (lessonType === "maruza") lessonType = "ma'ruza";
+        if (lessonType === "lab") lessonType = "laboratoriya";
+      } else if (isTeacher && !teacher) {
+        teacher = line;
+      } else if (!subject) {
+        subject = line;
+      }
+    }
+
+    if (subject) {
+      return { subject, lessonType, teacher };
+    }
+  }
+
+  // ─── Pattern 4: "Fan O'qituvchi" — oxirida o'qituvchi nomi ───────────
+  const teacherAtEnd = normalized.match(
+    /^(.+?)\s+((?:(?:prof|dots|doc|PhD|DSc|o'qit)\.?\s+)?(?:[A-Z\u0400-\u04FF][a-z\u0400-\u04FF]*\.?\s*[A-Z\u0400-\u04FF][a-z\u0400-\u04FF']+|[A-Z\u0400-\u04FF][a-z\u0400-\u04FF']+\s+[A-Z\u0400-\u04FF]\.?))$/
+  );
+  if (teacherAtEnd) {
+    // Tekshirish: subject qismi kamida 2 belgi bo'lsin (bo'sh bo'lmasin)
+    const subjectPart = teacherAtEnd[1].trim();
+    if (subjectPart.length >= 2) {
+      return {
+        subject: subjectPart,
+        lessonType: "",
+        teacher: teacherAtEnd[2].trim(),
+      };
+    }
+  }
+
+  // ─── Fallback: butun matnni fan nomi sifatida qaytarish ───────────────
+  return {
+    subject: normalized,
+    lessonType: "",
+    teacher: "",
+  };
 }
 
 /**
@@ -267,24 +341,7 @@ function fillMergedCells(
   return filled;
 }
 
-/**
- * Merged cell lookup yaratish — qaysi cell'lar birlashganini bilish uchun.
- * Kalit: "row:col" → { startRow, startCol, endRow, endCol }
- */
-function buildMergeMap(merges: XLSX.Range[] | undefined): Map<string, XLSX.Range> {
-  const map = new Map<string, XLSX.Range>();
-  if (!merges) return map;
 
-  for (const merge of merges) {
-    for (let r = merge.s.r; r <= merge.e.r; r++) {
-      for (let c = merge.s.c; c <= merge.e.c; c++) {
-        map.set(`${r}:${c}`, merge);
-      }
-    }
-  }
-
-  return map;
-}
 
 /**
  * Schedule format ekanligini aniqlash.
@@ -355,26 +412,59 @@ function findGroupRow(
 /**
  * Kun nomi va vaqt ustunlarini aniqlash.
  * Jadvalda kunlar vertikal — masalan C ustunida "Dushanba", D da slot raqami, E da vaqt.
+ * Vaqt ustunini qat'iy offset bilan emas, yaqin ustunlarni skanerlab topadi.
  */
 function findDayAndTimeColumns(
   data: string[][],
   startRow: number
 ): { dayCol: number; slotCol: number; timeCol: number } | null {
-  // startRow dan keyingi 20 qatorda kun nomini qidirish
   const endRow = Math.min(data.length, startRow + 30);
 
   for (let r = startRow; r < endRow; r++) {
     for (let c = 0; c < Math.min(data[r]?.length || 0, 8); c++) {
       const cell = data[r][c]?.toString().trim() || "";
-      if (normalizeDay(cell)) {
-        // Kun topildi — slot va vaqt ustunlarini aniqlash
-        // Odatda: kun = C, slot = D (yoki kun+1), vaqt = E (yoki kun+2)
-        return {
-          dayCol: c,
-          slotCol: c + 1,
-          timeCol: c + 2,
-        };
+      if (!normalizeDay(cell)) continue;
+
+      // Kun topildi — endi yaqin ustunlarda vaqt/slot ma'lumotini qidirish
+      const dayCol = c;
+      let slotCol = c + 1;
+      let timeCol = c + 2;
+
+      // dayCol + 1 dan dayCol + 5 gacha skanerlash — vaqt formatli ustunni topish
+      // Quyidagi qatorlarda (r dan r+5 gacha) tekshirish
+      let foundTimeCol = -1;
+      let foundSlotCol = -1;
+
+      for (let tc = dayCol + 1; tc <= Math.min(dayCol + 5, (data[r]?.length || 0) - 1); tc++) {
+        // Bir nechta qatorda tekshirish (ba'zi qatorda bo'sh bo'lishi mumkin)
+        for (let tr = r; tr < Math.min(r + 5, endRow); tr++) {
+          const testCell = data[tr]?.[tc]?.toString().trim() || "";
+          if (!testCell) continue;
+
+          // Vaqt formati: 08:30, 8.30, 08:30-10:00
+          if (/\d{1,2}[:.]\d{2}/.test(testCell)) {
+            if (foundTimeCol === -1) foundTimeCol = tc;
+          }
+          // Slot raqam: 1, 2, 3 ... 8 (oddiy raqam)
+          else if (/^\d{1,2}$/.test(testCell)) {
+            const num = parseInt(testCell);
+            if (num >= 1 && num <= 8 && foundSlotCol === -1) {
+              foundSlotCol = tc;
+            }
+          }
+        }
       }
+
+      if (foundTimeCol >= 0) {
+        timeCol = foundTimeCol;
+        slotCol = foundSlotCol >= 0 ? foundSlotCol : (foundTimeCol > dayCol + 1 ? dayCol + 1 : foundTimeCol);
+      } else if (foundSlotCol >= 0) {
+        // Faqat slot raqam topildi, vaqt yo'q — slotCol ni ishlatamiz
+        slotCol = foundSlotCol;
+        timeCol = foundSlotCol; // Vaqt o'rniga slot raqamini ishlatamiz
+      }
+
+      return { dayCol, slotCol, timeCol };
     }
   }
 
@@ -435,14 +525,32 @@ function parseScheduleFormat(
     if (!currentDay) continue;
 
     // ORIGINAL rawData da vaqt tekshirish — faqat haqiqiy slot boshlanish qatorlari
+    // Qo'llab-quvvatlanadigan formatlar:
+    // - Soat:minut: "08:30", "8.30", "08:30-10:00"
+    // - Slot raqam: "1", "2", "3" ... "8"
+    // - Slot + pora: "1-juftlik", "2-para"
     const rawTimeCell = rawData[r]?.[timeCol]?.toString().trim() || "";
-    const hasOriginalTime = /\d{1,2}[:.]\d{2}/.test(rawTimeCell);
+    const rawSlotCell = rawData[r]?.[colInfo.slotCol]?.toString().trim() || "";
 
-    if (!hasOriginalTime) continue;
+    const hasClockTime = /\d{1,2}[:.]\d{2}/.test(rawTimeCell);
+    const hasSlotNumber = /^\d{1,2}$/.test(rawSlotCell) && parseInt(rawSlotCell) >= 1 && parseInt(rawSlotCell) <= 8;
+    const hasSlotInTime = /^\d{1,2}$/.test(rawTimeCell) && parseInt(rawTimeCell) >= 1 && parseInt(rawTimeCell) <= 8;
+    const hasPoraLabel = /\d+.*(?:juftlik|para|pora)/i.test(rawTimeCell) || /\d+.*(?:juftlik|para|pora)/i.test(rawSlotCell);
+
+    if (!hasClockTime && !hasSlotNumber && !hasSlotInTime && !hasPoraLabel) continue;
 
     // Vaqtdan boshlanish vaqtini olish
+    let startTime: string;
     const timeFromFilled = filledData[r]?.[timeCol]?.toString().trim() || rawTimeCell;
-    const startTime = timeFromFilled.match(/(\d{1,2}[:.]\d{2})/)?.[1]?.replace(".", ":") || timeFromFilled;
+    const clockMatch = timeFromFilled.match(/(\d{1,2}[:.]\d{2})/);
+
+    if (clockMatch) {
+      startTime = clockMatch[1].replace(".", ":");
+    } else {
+      // Slot raqamidan vaqtni olish — mapper.ts dagi matchSlot hal qiladi
+      const slotNum = rawSlotCell || rawTimeCell;
+      startTime = slotNum;
+    }
 
     // Xona qatorini topish — keyingi 1-3 qator ichida "xona" so'zi bor qator
     let roomRowIdx = -1;
@@ -453,7 +561,7 @@ function parseScheduleFormat(
       // Guruh ustunlarida "xona" so'zi bor-yo'qligini tekshirish
       const hasRoom = groups.some((g) => {
         const cell = candidateRow[g.col]?.toString().trim().toLowerCase() || "";
-        return cell.includes("xona") || cell.includes("аудитория") || /^\d{3,4}[A-Za-z]?$/.test(cell.trim());
+        return cell.includes("xona") || cell.includes("аудитория") || cell.includes("auditoriya") || /^\d{2,4}[A-Za-z]?$/.test(cell.trim());
       });
 
       if (hasRoom) {
@@ -468,9 +576,9 @@ function parseScheduleFormat(
       const lessonCell = filledData[r]?.[group.col]?.toString().trim() || "";
       if (!lessonCell) continue;
 
-      // Dars hujayrasini parse qilish
+      // Dars hujayrasini parse qilish (hech qachon null qaytarmaydi)
       const lesson = parseLessonCell(lessonCell);
-      if (!lesson) continue;
+      if (!lesson.subject) continue;
 
       // Xona qatoridan xonani olish (FILLED data dan)
       let roomText = "";

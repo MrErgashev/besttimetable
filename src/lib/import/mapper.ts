@@ -7,6 +7,8 @@
  * - "Matematika" → subject.id
  * - "Aliyev I." → teacher.id
  * - "301-xona" → room.id
+ *
+ * autoCreate rejimda: topilmagan entity'lar avtomatik yaratiladi.
  */
 
 import type {
@@ -18,8 +20,8 @@ import type {
   ScheduleEntry,
 } from "@/lib/types";
 import { DAYS, TIME_SLOTS } from "@/lib/constants";
+import { SUBJECT_COLORS } from "@/lib/constants";
 import type { ParsedRow } from "./excel-parser";
-import { nanoid } from "nanoid";
 
 // ─── Fuzzy matching ─────────────────────────────────────────────────────────
 
@@ -144,15 +146,110 @@ function matchSlot(text: string): string | null {
   return slot?.id || null;
 }
 
+// ─── Auto-create helpers ────────────────────────────────────────────────────
+
+function createSubject(name: string, colorIndex: number): Subject {
+  const now = new Date().toISOString();
+  return {
+    id: crypto.randomUUID(),
+    name: name.trim(),
+    short_name: name.trim().substring(0, 3).toUpperCase(),
+    color: SUBJECT_COLORS[colorIndex % SUBJECT_COLORS.length],
+    requires_lab: false,
+    created_at: now,
+    updated_at: now,
+  };
+}
+
+function parseTeacherName(text: string): { first_name: string; last_name: string; short_name: string } {
+  const trimmed = text.trim();
+  // "Aliyev I." yoki "Aliyev Islom" yoki "I. Aliyev" formatlarini parse qilish
+  const parts = trimmed.split(/\s+/);
+  if (parts.length >= 2) {
+    // Birinchi so'z katta harfdan boshlansa va ikkinchi so'z qisqa bo'lsa → "Familiya I."
+    return {
+      last_name: parts[0],
+      first_name: parts.slice(1).join(" "),
+      short_name: trimmed,
+    };
+  }
+  return {
+    last_name: trimmed,
+    first_name: "",
+    short_name: trimmed,
+  };
+}
+
+function createTeacher(name: string): Teacher {
+  const now = new Date().toISOString();
+  const parsed = parseTeacherName(name);
+  return {
+    id: crypto.randomUUID(),
+    first_name: parsed.first_name,
+    last_name: parsed.last_name,
+    short_name: parsed.short_name,
+    max_weekly_hours: 18,
+    created_at: now,
+    updated_at: now,
+  };
+}
+
+function createRoom(name: string): Room {
+  const now = new Date().toISOString();
+  return {
+    id: crypto.randomUUID(),
+    name: name.trim(),
+    capacity: 30,
+    type: "oddiy",
+    created_at: now,
+    updated_at: now,
+  };
+}
+
+function createGroup(name: string): Group {
+  const now = new Date().toISOString();
+  // Kursni guruh nomidan aniqlashga harakat qilish (masalan, "MT-11" → 1-kurs)
+  const courseMatch = name.match(/\d+/);
+  let course = 1;
+  if (courseMatch) {
+    const num = parseInt(courseMatch[0]);
+    // 2 xonali raqamda birinchi raqam kurs (11→1, 21→2, 31→3)
+    if (num >= 10) {
+      course = Math.floor(num / 10);
+    } else {
+      course = num;
+    }
+    if (course < 1 || course > 6) course = 1;
+  }
+
+  return {
+    id: crypto.randomUUID(),
+    name: name.trim(),
+    course,
+    department_id: "default",
+    track: "kunduzgi",
+    student_count: 25,
+    created_at: now,
+    updated_at: now,
+  };
+}
+
 // ─── Main mapper ────────────────────────────────────────────────────────────
 
 export interface MappingResult {
   entries: Omit<ScheduleEntry, "id" | "created_at" | "updated_at">[];
   unmapped: { row: ParsedRow; reason: string }[];
+  autoCreated: {
+    subjects: Subject[];
+    teachers: Teacher[];
+    rooms: Room[];
+    groups: Group[];
+  };
   stats: {
     total: number;
     mapped: number;
     unmapped: number;
+    autoCreatedCount: number;
   };
 }
 
@@ -162,6 +259,7 @@ export interface MapperContext {
   subjects: Subject[];
   rooms: Room[];
   defaultGroupId?: string;
+  autoCreate?: boolean;
 }
 
 export function mapParsedRows(
@@ -170,6 +268,20 @@ export function mapParsedRows(
 ): MappingResult {
   const entries: MappingResult["entries"] = [];
   const unmapped: MappingResult["unmapped"] = [];
+
+  // Auto-create tracking — duplikatlarni oldini olish
+  const createdSubjects = new Map<string, Subject>();
+  const createdTeachers = new Map<string, Teacher>();
+  const createdRooms = new Map<string, Room>();
+  const createdGroups = new Map<string, Group>();
+
+  // Mutable copies for auto-create lookup
+  const allSubjects = [...ctx.subjects];
+  const allTeachers = [...ctx.teachers];
+  const allRooms = [...ctx.rooms];
+  const allGroups = [...ctx.groups];
+
+  let subjectColorIndex = ctx.subjects.length;
 
   for (const row of rows) {
     const reasons: string[] = [];
@@ -186,43 +298,86 @@ export function mapParsedRows(
       reasons.push("Vaqt sloti topilmadi");
     }
 
-    // Fan topish
-    const subject = row.subject
-      ? findBestMatch(row.subject, ctx.subjects, (s) => [s.name, s.short_name])
+    // Fan topish (yoki yaratish)
+    let subject = row.subject
+      ? findBestMatch(row.subject, allSubjects, (s) => [s.name, s.short_name])
       : null;
     if (!subject && row.subject) {
-      reasons.push(`Fan topilmadi: "${row.subject}"`);
+      if (ctx.autoCreate) {
+        const key = normalize(row.subject);
+        if (createdSubjects.has(key)) {
+          subject = createdSubjects.get(key)!;
+        } else {
+          subject = createSubject(row.subject, subjectColorIndex++);
+          createdSubjects.set(key, subject);
+          allSubjects.push(subject);
+        }
+      } else {
+        reasons.push(`Fan topilmadi: "${row.subject}"`);
+      }
     }
 
-    // O'qituvchi topish
-    const teacher = row.teacher
-      ? findBestMatch(row.teacher, ctx.teachers, (t) => [
+    // O'qituvchi topish (yoki yaratish)
+    let teacher = row.teacher
+      ? findBestMatch(row.teacher, allTeachers, (t) => [
           t.short_name,
           `${t.last_name} ${t.first_name}`,
           t.last_name,
         ])
       : null;
     if (!teacher && row.teacher) {
-      reasons.push(`O'qituvchi topilmadi: "${row.teacher}"`);
+      if (ctx.autoCreate) {
+        const key = normalize(row.teacher);
+        if (createdTeachers.has(key)) {
+          teacher = createdTeachers.get(key)!;
+        } else {
+          teacher = createTeacher(row.teacher);
+          createdTeachers.set(key, teacher);
+          allTeachers.push(teacher);
+        }
+      } else {
+        reasons.push(`O'qituvchi topilmadi: "${row.teacher}"`);
+      }
     }
 
-    // Xona topish
-    const room = row.room
-      ? findBestMatch(row.room, ctx.rooms, (r) => [
+    // Xona topish (yoki yaratish)
+    let room = row.room
+      ? findBestMatch(row.room, allRooms, (r) => [
           r.name,
           `${r.name} (${r.building})`,
         ])
       : null;
     if (!room && row.room) {
-      reasons.push(`Xona topilmadi: "${row.room}"`);
+      if (ctx.autoCreate) {
+        const key = normalize(row.room);
+        if (createdRooms.has(key)) {
+          room = createdRooms.get(key)!;
+        } else {
+          room = createRoom(row.room);
+          createdRooms.set(key, room);
+          allRooms.push(room);
+        }
+      } else {
+        reasons.push(`Xona topilmadi: "${row.room}"`);
+      }
     }
 
-    // Guruh topish
-    const group = row.group
-      ? findBestMatch(row.group, ctx.groups, (g) => [g.name])
+    // Guruh topish (yoki yaratish)
+    let group = row.group
+      ? findBestMatch(row.group, allGroups, (g) => [g.name])
       : ctx.defaultGroupId
-      ? ctx.groups.find((g) => g.id === ctx.defaultGroupId) || null
+      ? allGroups.find((g) => g.id === ctx.defaultGroupId) || null
       : null;
+    if (!group && row.group && ctx.autoCreate) {
+      const key = normalize(row.group);
+      if (createdGroups.has(key)) {
+        group = createdGroups.get(key)!;
+      } else {
+        group = createGroup(row.group);
+        createdGroups.set(key, group);
+        allGroups.push(group);
+      }
+    }
 
     if (reasons.length > 0 || !day || !slotId || !subject || !teacher || !room) {
       unmapped.push({
@@ -245,13 +400,29 @@ export function mapParsedRows(
     });
   }
 
+  const autoCreatedSubjects = Array.from(createdSubjects.values());
+  const autoCreatedTeachers = Array.from(createdTeachers.values());
+  const autoCreatedRooms = Array.from(createdRooms.values());
+  const autoCreatedGroups = Array.from(createdGroups.values());
+
   return {
     entries,
     unmapped,
+    autoCreated: {
+      subjects: autoCreatedSubjects,
+      teachers: autoCreatedTeachers,
+      rooms: autoCreatedRooms,
+      groups: autoCreatedGroups,
+    },
     stats: {
       total: rows.length,
       mapped: entries.length,
       unmapped: unmapped.length,
+      autoCreatedCount:
+        autoCreatedSubjects.length +
+        autoCreatedTeachers.length +
+        autoCreatedRooms.length +
+        autoCreatedGroups.length,
     },
   };
 }

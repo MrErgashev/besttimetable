@@ -285,11 +285,13 @@ export default function ImportPage() {
     setMappingResult(result);
 
     // Ziddiyatlarni aniqlash
-    const detectedConflicts = detectConflicts(result.entries, existingEntries);
+    // Agar "tozalash" yoqilgan bo'lsa, mavjud jadval bilan solishtirish kerak emas
+    const entriesToCheck = clearBefore ? [] : existingEntries;
+    const detectedConflicts = detectConflicts(result.entries, entriesToCheck);
     setConflicts(detectedConflicts);
 
     setStep("mapping");
-  }, [files, teachers, groups, subjects, rooms, selectedGroupId, existingEntries]);
+  }, [files, teachers, groups, subjects, rooms, selectedGroupId, existingEntries, clearBefore]);
 
   // ─── Import ────────────────────────────────────────────────────────────
 
@@ -664,7 +666,7 @@ export default function ImportPage() {
                 <div className="text-2xl font-bold text-[var(--color-success)]">
                   {mappingResult.stats.mapped}
                 </div>
-                <div className="text-xs text-[var(--muted)]">Moslashtirildi</div>
+                <div className="text-xs text-[var(--muted)]">Dars yozuvlari</div>
               </div>
               <div className="text-center">
                 <div className="text-2xl font-bold text-[var(--color-warning)]">
@@ -673,6 +675,14 @@ export default function ImportPage() {
                 <div className="text-xs text-[var(--muted)]">Moslashtirilmadi</div>
               </div>
             </div>
+
+            {/* Birlashtirish haqida tushuntirish */}
+            {mappingResult.stats.total > mappingResult.stats.mapped + mappingResult.stats.unmapped && (
+              <div className="text-xs text-[var(--color-accent)] bg-[var(--color-accent)]/5 rounded-[var(--radius-sm)] px-3 py-2">
+                {mappingResult.stats.total} qatordan {mappingResult.stats.total - mappingResult.stats.mapped - mappingResult.stats.unmapped} ta
+                umumiy dars (bir nechta guruhga) birlashtirildi — natija: {mappingResult.stats.mapped} ta dars yozuvi
+              </div>
+            )}
 
             {/* Fayllar bo'yicha statistika */}
             <div className="text-xs text-[var(--muted)]">

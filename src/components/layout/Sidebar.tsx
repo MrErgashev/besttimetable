@@ -140,16 +140,16 @@ export function Sidebar() {
   return (
     <aside className="fixed left-0 top-0 h-full w-[var(--sidebar-width)] flex-col glass-primary border-r border-[var(--glass-border)] shadow-[var(--shadow-lg)] p-4 z-30 hidden lg:flex">
       {/* Logo */}
-      <div className="mb-8 px-2">
+      <div className="mb-2 px-2 overflow-hidden">
         <img
           src="/images/logo-light.png"
           alt="Oriental Universiteti"
-          className="w-full h-auto block dark:hidden"
+          className="w-full h-auto -my-[27%] block dark:hidden"
         />
         <img
           src="/images/logo-dark.png"
           alt="Oriental Universiteti"
-          className="w-full h-auto hidden dark:block"
+          className="w-full h-auto -my-[27%] hidden dark:block"
         />
       </div>
 

@@ -137,26 +137,48 @@ function matchDay(text: string): DayKey | null {
 
 function matchSlot(text: string): string | null {
   const cleaned = text.trim();
+  if (!cleaned) return null;
 
   // To'g'ridan-to'g'ri ID tekshirish
   const directSlot = TIME_SLOTS.find((s) => s.id === cleaned);
   if (directSlot) return directSlot.id;
 
-  // Vaqt oralig'i tekshirish (08:30-10:00)
+  // Vaqt oralig'i tekshirish (08:30-10:00, 8.30, 08:30)
   const timeMatch = cleaned.match(/(\d{1,2})[:.h](\d{2})/);
   if (timeMatch) {
     const hour = parseInt(timeMatch[1]);
     const minute = parseInt(timeMatch[2]);
     const startStr = `${hour.toString().padStart(2, "0")}:${minute.toString().padStart(2, "0")}`;
-    const slot = TIME_SLOTS.find((s) => s.start === startStr);
-    if (slot) return slot.id;
+
+    // Aniq start vaqti bo'yicha
+    const slotByStart = TIME_SLOTS.find((s) => s.start === startStr);
+    if (slotByStart) return slotByStart.id;
+
+    // End vaqti bo'yicha (ba'zi faylda tugash vaqti yozilgan bo'lishi mumkin)
+    const slotByEnd = TIME_SLOTS.find((s) => s.end === startStr);
+    if (slotByEnd) return slotByEnd.id;
+
+    // 30 daqiqa toleransiya bilan eng yaqin slotni topish
+    const inputMinutes = hour * 60 + minute;
+    let bestSlot: (typeof TIME_SLOTS)[number] | null = null;
+    let bestDiff = Infinity;
+    for (const s of TIME_SLOTS) {
+      const [sh, sm] = s.start.split(":").map(Number);
+      const slotMinutes = sh * 60 + sm;
+      const diff = Math.abs(inputMinutes - slotMinutes);
+      if (diff < bestDiff && diff <= 30) {
+        bestDiff = diff;
+        bestSlot = s;
+      }
+    }
+    if (bestSlot) return bestSlot.id;
   }
 
-  // Juftlik raqami (1-juftlik, 2-juftlik, ...)
+  // Juftlik raqami (1-juftlik, 2-juftlik, 1-para, ...)
   const poraMatch = cleaned.match(/(\d+)/);
   if (poraMatch) {
     const num = parseInt(poraMatch[1]);
-    if (num >= 1 && num <= 8) {
+    if (num >= 1 && num <= TIME_SLOTS.length) {
       return TIME_SLOTS[num - 1]?.id || null;
     }
   }
@@ -405,10 +427,48 @@ export function mapParsedRows(
       }
     }
 
-    if (reasons.length > 0 || !day || !slotId || !subject || !teacher || !room) {
+    // Minimal talab: kun + vaqt slot + fan (o'qituvchi va xona ixtiyoriy)
+    if (!day || !slotId || !subject) {
+      if (!day) reasons.push("Kun topilmadi");
+      if (!slotId) reasons.push("Vaqt sloti topilmadi");
+      if (!subject && !row.subject) reasons.push("Fan topilmadi");
       unmapped.push({
         row,
-        reason: reasons.join("; ") || "Kerakli ma'lumotlar to'liq emas",
+        reason: reasons.join("; ") || "Kerakli ma'lumotlar to'liq emas (kun, vaqt, fan kerak)",
+      });
+      continue;
+    }
+
+    // O'qituvchi yoki xona topilmasa, autoCreate rejimda placeholder yaratish
+    if (!teacher && ctx.autoCreate && !row.teacher) {
+      const placeholderKey = "__belgilanmagan_teacher__";
+      if (createdTeachers.has(placeholderKey)) {
+        teacher = createdTeachers.get(placeholderKey)!;
+      } else {
+        teacher = createTeacher("Belgilanmagan");
+        createdTeachers.set(placeholderKey, teacher);
+        allTeachers.push(teacher);
+      }
+    }
+
+    if (!room && ctx.autoCreate && !row.room) {
+      const placeholderKey = "__belgilanmagan_room__";
+      if (createdRooms.has(placeholderKey)) {
+        room = createdRooms.get(placeholderKey)!;
+      } else {
+        room = createRoom("Belgilanmagan");
+        createdRooms.set(placeholderKey, room);
+        allRooms.push(room);
+      }
+    }
+
+    // Agar hali ham teacher/room yo'q bo'lsa, unmapped ga qo'shish
+    if (!teacher || !room) {
+      if (!teacher) reasons.push("O'qituvchi topilmadi");
+      if (!room) reasons.push("Xona topilmadi");
+      unmapped.push({
+        row,
+        reason: reasons.join("; "),
       });
       continue;
     }
@@ -426,13 +486,18 @@ export function mapParsedRows(
     });
   }
 
+  // ─── Umumiy darslarni birlashtirish (potok/merged cell) ──────────────────
+  // Bir xil day + slot + subject + teacher + room bo'lgan entry'lar = bitta dars,
+  // bir nechta guruhga berilgan. group_ids massivini birlashtiramiz.
+  const mergedEntries = mergeSharedLessons(entries);
+
   const autoCreatedSubjects = Array.from(createdSubjects.values());
   const autoCreatedTeachers = Array.from(createdTeachers.values());
   const autoCreatedRooms = Array.from(createdRooms.values());
   const autoCreatedGroups = Array.from(createdGroups.values());
 
   return {
-    entries,
+    entries: mergedEntries,
     unmapped,
     autoCreated: {
       subjects: autoCreatedSubjects,
@@ -442,7 +507,7 @@ export function mapParsedRows(
     },
     stats: {
       total: rows.length,
-      mapped: entries.length,
+      mapped: mergedEntries.length,
       unmapped: unmapped.length,
       autoCreatedCount:
         autoCreatedSubjects.length +
@@ -451,4 +516,36 @@ export function mapParsedRows(
         autoCreatedGroups.length,
     },
   };
+}
+
+// ─── Umumiy darslarni birlashtirish ──────────────────────────────────────────
+
+/**
+ * Bir xil day + slot_id + subject_id + teacher_id + room_id bo'lgan
+ * entry'larni bitta entry'ga birlashtirish.
+ * Masalan: D. Nishonova bir vaqtda BR-501, IQT-501, DI-501 ga dars bersa,
+ * 3 ta alohida entry emas, 1 ta entry group_ids: [br, iqt, di] bo'ladi.
+ */
+function mergeSharedLessons(
+  entries: MappingResult["entries"]
+): MappingResult["entries"] {
+  const merged = new Map<string, MappingResult["entries"][number]>();
+
+  for (const entry of entries) {
+    const key = `${entry.day}::${entry.slot_id}::${entry.subject_id}::${entry.teacher_id}::${entry.room_id}`;
+
+    if (merged.has(key)) {
+      const existing = merged.get(key)!;
+      // group_ids larni birlashtirish (duplikat bo'lmasin)
+      for (const gid of entry.group_ids) {
+        if (!existing.group_ids.includes(gid)) {
+          existing.group_ids.push(gid);
+        }
+      }
+    } else {
+      merged.set(key, { ...entry, group_ids: [...entry.group_ids] });
+    }
+  }
+
+  return Array.from(merged.values());
 }

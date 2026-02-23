@@ -150,6 +150,7 @@ export default function ImportPage() {
   const [error, setError] = useState("");
   const [dragOver, setDragOver] = useState(false);
   const [parsing, setParsing] = useState(false);
+  const [clearBefore, setClearBefore] = useState(true);
 
   // ─── File handling ─────────────────────────────────────────────────────
 
@@ -296,6 +297,11 @@ export default function ImportPage() {
     if (!mappingResult) return;
     setImporting(true);
 
+    // Import oldidan mavjud jadval darslarini tozalash
+    if (clearBefore) {
+      useTimetableStore.getState().clearAll();
+    }
+
     // Avval auto-created entity'larni store'larga qo'shish
     const { autoCreated } = mappingResult;
     if (autoCreated.subjects.length > 0) {
@@ -329,7 +335,7 @@ export default function ImportPage() {
     setImportedCount(count);
     setImporting(false);
     setStep("result");
-  }, [mappingResult, placeEntry]);
+  }, [mappingResult, placeEntry, clearBefore]);
 
   // ─── Reset ─────────────────────────────────────────────────────────────
 
@@ -753,6 +759,16 @@ export default function ImportPage() {
                 </div>
               </div>
             )}
+
+            <label className="flex items-center gap-2 text-sm">
+              <input
+                type="checkbox"
+                checked={clearBefore}
+                onChange={(e) => setClearBefore(e.target.checked)}
+                className="rounded"
+              />
+              Import qilishdan oldin mavjud jadval darslarini tozalash
+            </label>
 
             <div className="flex gap-3">
               <Button

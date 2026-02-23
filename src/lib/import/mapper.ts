@@ -34,19 +34,40 @@ function normalize(text: string): string {
     .trim();
 }
 
-/** Ikki string orasidagi o'xshashlik (0-1) */
+/** Levenshtein edit distance */
+function levenshteinDistance(a: string, b: string): number {
+  const m = a.length;
+  const n = b.length;
+  const dp: number[][] = Array.from({ length: m + 1 }, () =>
+    Array(n + 1).fill(0)
+  );
+  for (let i = 0; i <= m; i++) dp[i][0] = i;
+  for (let j = 0; j <= n; j++) dp[0][j] = j;
+  for (let i = 1; i <= m; i++) {
+    for (let j = 1; j <= n; j++) {
+      const cost = a[i - 1] === b[j - 1] ? 0 : 1;
+      dp[i][j] = Math.min(
+        dp[i - 1][j] + 1,
+        dp[i][j - 1] + 1,
+        dp[i - 1][j - 1] + cost
+      );
+    }
+  }
+  return dp[m][n];
+}
+
+/** Ikki string orasidagi o'xshashlik (0-1), Levenshtein asosida */
 function similarity(a: string, b: string): number {
   const na = normalize(a);
   const nb = normalize(b);
   if (na === nb) return 1;
-  if (na.includes(nb) || nb.includes(na)) return 0.8;
-
-  // Simple character overlap
-  const setA = new Set(na.split(""));
-  const setB = new Set(nb.split(""));
-  let common = 0;
-  for (const c of setA) if (setB.has(c)) common++;
-  return common / Math.max(setA.size, setB.size);
+  if (na.length >= 3 && nb.length >= 3) {
+    if (na.includes(nb) || nb.includes(na)) return 0.85;
+  }
+  const maxLen = Math.max(na.length, nb.length);
+  if (maxLen === 0) return 1;
+  const dist = levenshteinDistance(na, nb);
+  return 1 - dist / maxLen;
 }
 
 function findBestMatch<T extends { id: string }>(
@@ -286,7 +307,7 @@ export function mapParsedRows(
 
   // autoCreate rejimda faqat aniq moslik (0.95+) qabul qilinadi.
   // Bu "D. Nishonova" vs "Ergashev M." kabi noto'g'ri mosliklarni oldini oladi.
-  const matchThreshold = ctx.autoCreate ? 0.95 : 0.5;
+  const matchThreshold = ctx.autoCreate ? 0.85 : 0.6;
 
   for (const row of rows) {
     const reasons: string[] = [];

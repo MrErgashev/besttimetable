@@ -181,9 +181,12 @@ function parseLessonCell(text: string): {
   const trimmed = text.trim();
   if (!trimmed) return null;
 
+  // Apostrof variantlarini ASCII apostrofga normalizatsiya qilish
+  const normalized = trimmed.replace(/[\u2018\u2019\u02BB\u02BC\u0060]/g, "'");
+
   // Pattern: Fan nomi (tur) O'qituvchi
   // Tur: ma'ruza, amaliy, seminar, laboratoriya
-  const match = trimmed.match(
+  const match = normalized.match(
     /^(.+?)\s*\((ma'ruza|amaliy|seminar|laboratoriya|maruza|lab)\)\s*(.+)$/i
   );
 
@@ -202,7 +205,7 @@ function parseLessonCell(text: string): {
   // Agar qavslar bo'lmasa, to'liq matnni fan deb olish
   // (ba'zi hollarda tur ko'rsatilmagan bo'lishi mumkin)
   // Pattern: agar oxirida "I. Familiya" format bo'lsa
-  const teacherMatch = trimmed.match(
+  const teacherMatch = normalized.match(
     /^(.+?)\s+([A-Z\u0400-\u04FF][a-z\u0400-\u04FF]*\.?\s+[A-Z\u0400-\u04FF][a-z\u0400-\u04FF']+(?:ova|yev|ov|eva|yeva|nov|nova|yevich|ovna)?)$/
   );
   if (teacherMatch) {

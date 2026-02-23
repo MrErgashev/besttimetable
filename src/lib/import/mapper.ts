@@ -52,7 +52,8 @@ function similarity(a: string, b: string): number {
 function findBestMatch<T extends { id: string }>(
   text: string,
   items: T[],
-  getNames: (item: T) => string[]
+  getNames: (item: T) => string[],
+  minScore: number = 0.5
 ): T | null {
   if (!text.trim()) return null;
 
@@ -70,7 +71,7 @@ function findBestMatch<T extends { id: string }>(
     }
   }
 
-  return bestScore >= 0.5 ? best : null;
+  return bestScore >= minScore ? best : null;
 }
 
 // ─── Day matching ───────────────────────────────────────────────────────────
@@ -283,6 +284,10 @@ export function mapParsedRows(
 
   let subjectColorIndex = ctx.subjects.length;
 
+  // autoCreate rejimda faqat aniq moslik (0.95+) qabul qilinadi.
+  // Bu "D. Nishonova" vs "Ergashev M." kabi noto'g'ri mosliklarni oldini oladi.
+  const matchThreshold = ctx.autoCreate ? 0.95 : 0.5;
+
   for (const row of rows) {
     const reasons: string[] = [];
 
@@ -300,7 +305,7 @@ export function mapParsedRows(
 
     // Fan topish (yoki yaratish)
     let subject = row.subject
-      ? findBestMatch(row.subject, allSubjects, (s) => [s.name, s.short_name])
+      ? findBestMatch(row.subject, allSubjects, (s) => [s.name, s.short_name], matchThreshold)
       : null;
     if (!subject && row.subject) {
       if (ctx.autoCreate) {
@@ -323,7 +328,7 @@ export function mapParsedRows(
           t.short_name,
           `${t.last_name} ${t.first_name}`,
           t.last_name,
-        ])
+        ], matchThreshold)
       : null;
     if (!teacher && row.teacher) {
       if (ctx.autoCreate) {
@@ -345,7 +350,7 @@ export function mapParsedRows(
       ? findBestMatch(row.room, allRooms, (r) => [
           r.name,
           `${r.name} (${r.building})`,
-        ])
+        ], matchThreshold)
       : null;
     if (!room && row.room) {
       if (ctx.autoCreate) {
@@ -364,7 +369,7 @@ export function mapParsedRows(
 
     // Guruh topish (yoki yaratish)
     let group = row.group
-      ? findBestMatch(row.group, allGroups, (g) => [g.name])
+      ? findBestMatch(row.group, allGroups, (g) => [g.name], matchThreshold)
       : ctx.defaultGroupId
       ? allGroups.find((g) => g.id === ctx.defaultGroupId) || null
       : null;

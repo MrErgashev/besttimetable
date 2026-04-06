@@ -156,6 +156,16 @@ export default function LoginPage() {
       });
 
       if (authError) {
+        // Supabase serverga ulanib bo'lmasa — demo rejimga o'tish
+        if (
+          authError.message.includes("Failed to fetch") ||
+          authError.message.includes("NetworkError") ||
+          authError.message.includes("fetch")
+        ) {
+          router.push("/");
+          router.refresh();
+          return;
+        }
         if (authError.message.includes("Invalid login")) {
           setError("Login yoki parol noto\u2018g\u2018ri");
         } else if (authError.message.includes("Email not confirmed")) {
@@ -171,9 +181,9 @@ export default function LoginPage() {
       router.push("/");
       router.refresh();
     } catch {
-      setError("Tizimga kirishda xatolik yuz berdi");
-      triggerShake();
-      setLoading(false);
+      // Tarmoq xatoligi — demo rejimga o'tish
+      router.push("/");
+      router.refresh();
     }
   }
 

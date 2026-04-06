@@ -25,9 +25,15 @@ export async function updateSession(request: NextRequest) {
     }
   );
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  // Supabase serverga ulanib bo'lmasa — demo rejimga o'tish
+  let user = null;
+  try {
+    const { data } = await supabase.auth.getUser();
+    user = data.user;
+  } catch {
+    // Supabase serverga ulanib bo'lmadi — auth tekshirmasdan o'tkazish
+    return supabaseResponse;
+  }
 
   // Public routes that don't require auth
   const publicRoutes = ["/login", "/register"];

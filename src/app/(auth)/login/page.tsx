@@ -75,7 +75,7 @@ const STATS = [
 
 /** Login yoki email ni Supabase email formatiga aylantirish */
 function toAuthEmail(input: string): string {
-  return input.includes("@") ? input : `${input}@besttimetable.uz`;
+  return input.includes("@") ? input : `${input}@timetable.uz`;
 }
 
 function AnimatedCounter({ value, delay = 600 }: { value: number; delay?: number }) {
@@ -140,6 +140,13 @@ export default function LoginPage() {
     e.preventDefault();
     setError("");
     setLoading(true);
+
+    // Demo rejimda — Supabase yo'q, shunchaki dashboard ga o'tish
+    if (!isSupabaseConfigured()) {
+      router.push("/");
+      router.refresh();
+      return;
+    }
 
     try {
       const supabase = createClient();

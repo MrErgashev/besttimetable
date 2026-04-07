@@ -57,6 +57,10 @@ src/
       changelog/page.tsx    # O'zgarishlar tarixi
       settings/page.tsx     # Sozlamalar
       demo-data/page.tsx    # Demo ma'lumotlar boshqaruvi (faqat super_admin)
+    api/                # Server API routes
+      users/
+        create/route.ts # Foydalanuvchi yaratish (admin/super_admin, service role key bilan)
+        delete/route.ts # Foydalanuvchi o'chirish (admin/super_admin, service role key bilan)
     layout.tsx          # Root layout (lang="uz", PWA metadata)
     error.tsx           # Global error boundary
     not-found.tsx       # 404 sahifa
@@ -80,7 +84,7 @@ src/
     constants.ts        # DAYS, TIME_SLOTS, TRACK_LABELS, ROOM_TYPE_LABELS, SUBJECT_COLORS, NAV_ITEMS, ROLE_LABELS, DEFAULT_CONSTRAINTS
     utils.ts            # cn(), formatDate(), formatShortDate(), getCurrentWeekRange(), truncate(), getColorByIndex()
     demo-data.ts        # Demo ma'lumotlar generatori
-    supabase/           # client.ts, server.ts, middleware.ts, database.types.ts, helpers.ts, sync.ts
+    supabase/           # client.ts, server.ts, middleware.ts, database.types.ts, helpers.ts, sync.ts, admin.ts
     generator/          # Jadval generatsiya algoritmlari
     export/             # excel.ts, pdf.ts
     import/             # excel-parser.ts, word-parser.ts, mapper.ts, column-mapping.ts, master-data-parser.ts, master-data-validator.ts, paste-parser.ts, template-generator.ts
@@ -97,7 +101,7 @@ supabase/
 public/
   manifest.json         # PWA manifest
   icons/                # icon-192.png, icon-512.png
-  images/               # oriental-logo.png, oriental-logo.svg
+  images/               # oriental-logo.png, oriental-logo.svg, logo-dark.png, logo-light.png
 ```
 
 ## Konfiguratsiya Fayllari
@@ -499,6 +503,19 @@ Barcha entity jadvallar uchun CRUD service. Store'lar optimistic update qiladi, 
 |----------|--------|
 | `isSupabaseConfigured()` | `NEXT_PUBLIC_SUPABASE_URL` sozlanganligini tekshiradi (demo rejim aniqlash uchun) |
 
+### Supabase Admin (`src/lib/supabase/admin.ts`)
+
+`createAdminClient()` — `SUPABASE_SERVICE_ROLE_KEY` bilan server tomonida ishlatiladigan admin client (RLS chetlab o'tadi). Faqat API route'larda chaqirish kerak — brauzerga eksport qilinmaydi.
+
+## API Routes (`src/app/api/`)
+
+Server-side API endpointlar. Faqat `admin` yoki `super_admin` roli kira oladi. Demo rejimda ishlamaydi.
+
+| Route | Method | Vazifa |
+|-------|--------|--------|
+| `/api/users/create` | POST | Bir nechta foydalanuvchini yaratadi (max 100). `SUPABASE_SERVICE_ROLE_KEY` bo'lsa Admin API orqali (email tasdiqlamasdan), aks holda oddiy `signUp()` orqali. Rol `teacher` bo'lsa `teachers` jadvaliga ham yozadi. |
+| `/api/users/delete` | POST | Foydalanuvchini `auth.users` va `app_users` dan o'chiradi. O'zini o'chirishga yo'l qo'ymaydi. `SUPABASE_SERVICE_ROLE_KEY` talab qilinadi. |
+
 ## Middleware (`src/middleware.ts`)
 
 - `NEXT_PUBLIC_SUPABASE_URL` sozlanmagan bo'lsa → **demo rejim** (auth tekshirmaydi)
@@ -512,10 +529,13 @@ Barcha entity jadvallar uchun CRUD service. Store'lar optimistic update qiladi, 
 ```
 NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
+SUPABASE_SERVICE_ROLE_KEY=your-service-role-key  # Foydalanuvchi yaratish/o'chirish API'lari uchun (server-only, sir)
 TELEGRAM_BOT_TOKEN=optional
 ```
 
 Agar `NEXT_PUBLIC_SUPABASE_URL` sozlanmagan bo'lsa, ilova **demo rejimda** ishlaydi — barcha auth tekshiruvlari o'tkazib yuboriladi va rol `super_admin` sifatida belgilanadi.
+
+`SUPABASE_SERVICE_ROLE_KEY` brauzerga oshkor etilmasligi kerak — faqat server route'larda (`src/app/api/`) ishlatiladi.
 
 ## Xatolarni Boshqarish
 

@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
+import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 import { isSupabaseConfigured } from "@/lib/supabase/helpers";
 import { Button } from "@/components/ui/Button";
@@ -434,6 +435,21 @@ export default function LoginPage() {
                   )}
                 </Button>
               </form>
+
+              {/* Mehmon (talaba) tezkor kirish — parol kerak emas */}
+              <div className="mt-4 pt-4 border-t border-[var(--glass-border-subtle)]">
+                <Link
+                  href="/guest"
+                  className="flex items-center justify-center gap-2 w-full h-11 rounded-[var(--radius)] bg-[var(--glass-bg)] backdrop-blur-[var(--glass-blur-light)] border border-[var(--glass-border-subtle)] text-sm font-medium text-[var(--foreground)] hover:bg-[var(--glass-bg-heavy)] transition-all duration-300 [transition-timing-function:var(--spring-smooth)] press-effect"
+                >
+                  <GraduationCap className="w-4 h-4 text-[var(--color-accent)]" />
+                  Talaba sifatida tezkor kirish
+                  <ArrowRight className="w-4 h-4 text-[var(--muted)]" />
+                </Link>
+                <p className="mt-2 text-center text-[11px] text-[var(--muted-light)]">
+                  Parol kerak emas — guruhingizni tanlab jadvalni ko&apos;ring
+                </p>
+              </div>
             </div>
           </div>
 

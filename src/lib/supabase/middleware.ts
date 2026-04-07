@@ -36,18 +36,20 @@ export async function updateSession(request: NextRequest) {
   }
 
   // Public routes that don't require auth
-  const publicRoutes = ["/login", "/register"];
-  const isPublicRoute = publicRoutes.some((route) =>
-    request.nextUrl.pathname.startsWith(route)
-  );
+  const pathname = request.nextUrl.pathname;
+  const authRoutes = ["/login", "/register"];
+  const isAuthRoute = authRoutes.some((route) => pathname.startsWith(route));
+  // Mehmon (talaba) yo'li — auth talab qilmaydi va autentifikatsiya
+  // qilingan foydalanuvchi uchun ham ochiq qoladi (yo'naltirilmaydi).
+  const isGuestRoute = pathname === "/guest" || pathname.startsWith("/guest/");
 
-  if (!user && !isPublicRoute) {
+  if (!user && !isAuthRoute && !isGuestRoute) {
     const url = request.nextUrl.clone();
     url.pathname = "/login";
     return NextResponse.redirect(url);
   }
 
-  if (user && isPublicRoute) {
+  if (user && isAuthRoute) {
     const url = request.nextUrl.clone();
     url.pathname = "/";
     return NextResponse.redirect(url);
